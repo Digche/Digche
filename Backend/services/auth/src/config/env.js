@@ -15,7 +15,9 @@ export const env = {
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET
+  secret: process.env.JWT_SECRET,
+  accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
+  refreshTokenExpiresDays: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30)
   },
 
   otp: {
