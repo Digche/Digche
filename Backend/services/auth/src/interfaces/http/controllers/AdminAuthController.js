@@ -1,4 +1,9 @@
 export class AdminAuthController {
+  constructor({ requestAdminOtp, verifyAdminOtp }) {
+    this.requestAdminOtp = requestAdminOtp;
+    this.verifyAdminOtp = verifyAdminOtp;
+  }
+
   health = (req, res) => {
     res.json({
       service: "auth-service",
@@ -7,15 +12,32 @@ export class AdminAuthController {
     });
   };
 
-  requestOtp = async (req, res) => {
-    res.status(501).json({
-      message: "Admin OTP request is not implemented yet"
-    });
+  requestOtp = async (req, res, next) => {
+    try {
+      const result = await this.requestAdminOtp.execute({
+        phone: req.body.phone
+      });
+
+      res.json({
+        message: "OTP sent successfully",
+        phone: result.phone,
+        expiresAt: result.expiresAt
+      });
+    } catch (error) {
+      next(error);
+    }
   };
 
-  verifyOtp = async (req, res) => {
-    res.status(501).json({
-      message: "Admin OTP verification is not implemented yet"
-    });
+  verifyOtp = async (req, res, next) => {
+    try {
+      const result = await this.verifyAdminOtp.execute({
+        phone: req.body.phone,
+        code: req.body.code
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   };
 }

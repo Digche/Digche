@@ -1,4 +1,9 @@
 export class PublicAuthController {
+  constructor({ requestPublicOtp, verifyPublicOtp }) {
+    this.requestPublicOtp = requestPublicOtp;
+    this.verifyPublicOtp = verifyPublicOtp;
+  }
+
   health = (req, res) => {
     res.json({
       service: "auth-service",
@@ -7,15 +12,33 @@ export class PublicAuthController {
     });
   };
 
-  requestOtp = async (req, res) => {
-    res.status(501).json({
-      message: "Public OTP request is not implemented yet"
-    });
+  requestOtp = async (req, res, next) => {
+    try {
+      const result = await this.requestPublicOtp.execute({
+        phone: req.body.phone
+      });
+
+      res.json({
+        message: "OTP sent successfully",
+        phone: result.phone,
+        expiresAt: result.expiresAt
+      });
+    } catch (error) {
+      next(error);
+    }
   };
 
-  verifyOtp = async (req, res) => {
-    res.status(501).json({
-      message: "Public OTP verification is not implemented yet"
-    });
+  verifyOtp = async (req, res, next) => {
+    try {
+      const result = await this.verifyPublicOtp.execute({
+        phone: req.body.phone,
+        code: req.body.code,
+        role: req.body.role
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   };
 }

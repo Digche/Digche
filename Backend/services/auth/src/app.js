@@ -2,11 +2,15 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 
-import publicAuthRoutes from "./interfaces/http/routes/publicAuthRoutes.js";
-import adminAuthRoutes from "./interfaces/http/routes/adminAuthRoutes.js";
+import { createContainer } from "./container.js";
+import { createPublicAuthRoutes } from "./interfaces/http/routes/publicAuthRoutes.js";
+import { createAdminAuthRoutes } from "./interfaces/http/routes/adminAuthRoutes.js";
+import { errorHandler } from "./interfaces/http/middlewares/errorHandler.js";
 
 export function createApp() {
   const app = express();
+
+  const container = createContainer();
 
   app.use(helmet());
   app.use(cors());
@@ -19,8 +23,10 @@ export function createApp() {
     });
   });
 
-  app.use("/auth", publicAuthRoutes);
-  app.use("/admin/auth", adminAuthRoutes);
+  app.use("/auth", createPublicAuthRoutes(container.publicAuthController));
+  app.use("/admin/auth", createAdminAuthRoutes(container.adminAuthController));
+
+  app.use(errorHandler);
 
   return app;
 }

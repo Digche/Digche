@@ -15,13 +15,15 @@ export const env = {
   },
 
   jwt: {
-  secret: process.env.JWT_SECRET,
-  accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
-  refreshTokenExpiresDays: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30)
+    secret: process.env.JWT_SECRET,
+    accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
+    refreshTokenExpiresDays: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30)
   },
 
   otp: {
     expiresMinutes: Number(process.env.OTP_EXPIRES_MINUTES || 2),
     rateLimitPerHour: Number(process.env.OTP_RATE_LIMIT_PER_HOUR || 5)
-  }
+  },
+
+  initialManagerPhone: process.env.INITIAL_MANAGER_PHONE
 };

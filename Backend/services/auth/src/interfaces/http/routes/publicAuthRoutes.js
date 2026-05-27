@@ -1,13 +1,12 @@
 import { Router } from "express";
-import { PublicAuthController } from "../controllers/PublicAuthController.js";
 
-const router = Router();
+export function createPublicAuthRoutes(controller) {
+  const router = Router();
 
-const controller = new PublicAuthController();
+  router.get("/health", controller.health);
 
-router.get("/health", controller.health);
+  router.post("/request-otp", controller.requestOtp);
+  router.post("/verify-otp", controller.verifyOtp);
 
-router.post("/request-otp", controller.requestOtp);
-router.post("/verify-otp", controller.verifyOtp);
-
-export default router;
+  return router;
+}
