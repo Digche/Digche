@@ -20,6 +20,8 @@ services:
       - ./services/auth/.env
     ports:
       - "3001:3001"
+    volumes:
+      - ./docs:/docs:ro
     depends_on:
       - auth-db
     networks:

@@ -1,0 +1,424 @@
+openapi: 3.0.3
+info:
+  title: Food Platform Auth Service API
+  version: 1.0.0
+  description: |
+    Auth service for public users, chefs, admins and manager login flows.
+
+servers:
+  - url: http://localhost:8080
+    description: Local Gateway
+  - url: http://localhost:3001
+    description: Direct Auth Service - development only
+
+tags:
+  - name: Public Auth
+    description: Public client and chef authentication
+  - name: Admin Auth
+    description: Admin panel authentication
+
+paths:
+  /auth/health:
+    get:
+      tags:
+        - Public Auth
+      summary: Public auth health check
+      responses:
+        "200":
+          description: Public auth is healthy
+
+  /auth/request-otp:
+    post:
+      tags:
+        - Public Auth
+      summary: Request OTP for public login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestOtpInput"
+            examples:
+              default:
+                value:
+                  phone: "09121234567"
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpSentResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/verify-otp:
+    post:
+      tags:
+        - Public Auth
+      summary: Verify OTP and login as client or chef
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyPublicOtpInput"
+            examples:
+              client:
+                value:
+                  phone: "09121234567"
+                  code: "123456"
+                  role: "client"
+              chef:
+                value:
+                  phone: "09121234567"
+                  code: "123456"
+                  role: "chef"
+      responses:
+        "200":
+          description: Public session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicAuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/refresh:
+    post:
+      tags:
+        - Public Auth
+      summary: Refresh public access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshInput"
+      responses:
+        "200":
+          description: Public session refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicAuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout:
+    post:
+      tags:
+        - Public Auth
+      summary: Logout public session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshInput"
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+
+  /admin/auth/health:
+    get:
+      tags:
+        - Admin Auth
+      summary: Admin auth health check
+      responses:
+        "200":
+          description: Admin auth is healthy
+
+  /admin/auth/request-otp:
+    post:
+      tags:
+        - Admin Auth
+      summary: Request OTP for admin panel login
+      description: Only active admin or manager phone numbers can request OTP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestOtpInput"
+            examples:
+              default:
+                value:
+                  phone: "09121234567"
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpSentResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /admin/auth/verify-otp:
+    post:
+      tags:
+        - Admin Auth
+      summary: Verify OTP and login to admin panel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyAdminOtpInput"
+            examples:
+              default:
+                value:
+                  phone: "09121234567"
+                  code: "123456"
+      responses:
+        "200":
+          description: Admin session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/auth/refresh:
+    post:
+      tags:
+        - Admin Auth
+      summary: Refresh admin access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshInput"
+      responses:
+        "200":
+          description: Admin session refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /admin/auth/logout:
+    post:
+      tags:
+        - Admin Auth
+      summary: Logout admin session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshInput"
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+
+components:
+  schemas:
+    RequestOtpInput:
+      type: object
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+          example: "09121234567"
+
+    VerifyPublicOtpInput:
+      type: object
+      required:
+        - phone
+        - code
+        - role
+      properties:
+        phone:
+          type: string
+          example: "09121234567"
+        code:
+          type: string
+          example: "123456"
+        role:
+          type: string
+          enum:
+            - client
+            - chef
+          example: client
+
+    VerifyAdminOtpInput:
+      type: object
+      required:
+        - phone
+        - code
+      properties:
+        phone:
+          type: string
+          example: "09121234567"
+        code:
+          type: string
+          example: "123456"
+
+    RefreshInput:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: "refresh_token_here"
+
+    OtpSentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: OTP sent successfully
+        phone:
+          type: string
+          example: "+989121234567"
+        expiresAt:
+          type: string
+          format: date-time
+
+    PublicUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phone:
+          type: string
+          example: "+989121234567"
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+              - client
+              - chef
+        selectedRole:
+          type: string
+          enum:
+            - client
+            - chef
+        chef:
+          type: object
+          nullable: true
+          properties:
+            status:
+              type: string
+              enum:
+                - pending
+                - active
+                - rejected
+                - disabled
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phone:
+          type: string
+          example: "+989121234567"
+        role:
+          type: string
+          enum:
+            - admin
+            - manager
+        isManager:
+          type: boolean
+
+    PublicAuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/PublicUser"
+
+    AdminAuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        admin:
+          $ref: "#/components/schemas/AdminUser"
+
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Logged out successfully
+        success:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: UNAUTHORIZED
+            message:
+              type: string
+              example: Invalid or expired OTP code
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    TooManyRequests:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"

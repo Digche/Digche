@@ -6,6 +6,7 @@ import { createContainer } from "./container.js";
 import { createPublicAuthRoutes } from "./interfaces/http/routes/publicAuthRoutes.js";
 import { createAdminAuthRoutes } from "./interfaces/http/routes/adminAuthRoutes.js";
 import { errorHandler } from "./interfaces/http/middlewares/errorHandler.js";
+import { setupSwagger } from "./interfaces/http/swagger.js";
 
 export function createApp() {
   const app = express();
@@ -15,6 +16,8 @@ export function createApp() {
   app.use(helmet());
   app.use(cors());
   app.use(express.json());
+
+  setupSwagger(app);
 
   app.get("/health", (req, res) => {
     res.json({
