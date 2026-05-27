@@ -10,6 +10,8 @@ import { LogoutSession } from "./application/use-cases/LogoutSession.js";
 import { AddAdminUser } from "./application/use-cases/AddAdminUser.js";
 import { ListAdminUsers } from "./application/use-cases/ListAdminUsers.js";
 import { DisableAdminUser } from "./application/use-cases/DisableAdminUser.js";
+import { RequestPublicPhoneChangeOtp } from "./application/use-cases/RequestPublicPhoneChangeOtp.js";
+import { VerifyPublicPhoneChangeOtp } from "./application/use-cases/VerifyPublicPhoneChangeOtp.js";
 
 import { SequelizeUserRepository } from "./infrastructure/database/repositories/SequelizeUserRepository.js";
 import { SequelizeChefAccountRepository } from "./infrastructure/database/repositories/SequelizeChefAccountRepository.js";
@@ -63,6 +65,26 @@ export function createContainer() {
   });
 
   const verifyPublicOtp = new VerifyPublicOtp({
+    userRepository,
+    chefAccountRepository,
+    otpRepository,
+    refreshTokenRepository,
+    otpHasher,
+    tokenService,
+    refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
+  });
+
+  const requestPublicPhoneChangeOtp = new RequestPublicPhoneChangeOtp({
+    userRepository,
+    otpRepository,
+    otpCodeGenerator,
+    otpHasher,
+    otpSender,
+    otpExpiresMinutes: env.otp.expiresMinutes,
+    otpRateLimitPerHour: env.otp.rateLimitPerHour
+  });
+
+  const verifyPublicPhoneChangeOtp = new VerifyPublicPhoneChangeOtp({
     userRepository,
     chefAccountRepository,
     otpRepository,
@@ -127,7 +149,9 @@ export function createContainer() {
     requestPublicOtp,
     verifyPublicOtp,
     refreshPublicSession,
-    logoutSession
+    logoutSession,
+    requestPublicPhoneChangeOtp,
+    verifyPublicPhoneChangeOtp
   });
 
   const adminAuthController = new AdminAuthController({

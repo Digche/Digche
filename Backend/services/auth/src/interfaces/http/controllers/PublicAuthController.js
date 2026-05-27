@@ -3,12 +3,16 @@ export class PublicAuthController {
     requestPublicOtp,
     verifyPublicOtp,
     refreshPublicSession,
-    logoutSession
+    logoutSession,
+    requestPublicPhoneChangeOtp,
+    verifyPublicPhoneChangeOtp
   }) {
     this.requestPublicOtp = requestPublicOtp;
     this.verifyPublicOtp = verifyPublicOtp;
     this.refreshPublicSession = refreshPublicSession;
     this.logoutSession = logoutSession;
+    this.requestPublicPhoneChangeOtp = requestPublicPhoneChangeOtp;
+    this.verifyPublicPhoneChangeOtp = verifyPublicPhoneChangeOtp;
   }
 
   health = (req, res) => {
@@ -87,6 +91,39 @@ export class PublicAuthController {
           ...(req.auth.chef ? { chef: req.auth.chef } : {})
         }
       });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  requestPhoneChangeOtp = async (req, res, next) => {
+    try {
+      const result = await this.requestPublicPhoneChangeOtp.execute({
+        userId: req.auth.userId,
+        currentPhone: req.auth.phone,
+        newPhone: req.body.newPhone
+      });
+
+      res.json({
+        message: "OTP sent successfully",
+        newPhone: result.newPhone,
+        expiresAt: result.expiresAt
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  verifyPhoneChange = async (req, res, next) => {
+    try {
+      const result = await this.verifyPublicPhoneChangeOtp.execute({
+        userId: req.auth.userId,
+        currentSelectedRole: req.auth.selectedRole,
+        newPhone: req.body.newPhone,
+        code: req.body.code
+      });
+
+      res.json(result);
     } catch (error) {
       next(error);
     }

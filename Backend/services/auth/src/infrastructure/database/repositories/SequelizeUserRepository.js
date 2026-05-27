@@ -67,6 +67,27 @@ export class SequelizeUserRepository {
     return true;
   }
 
+  async updatePhone(userId, newPhone) {
+    const user = await UserModel.findByPk(userId, {
+      include: [
+        {
+          model: UserRoleModel,
+          as: "roles"
+        }
+      ]
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    user.phone = newPhone;
+
+    await user.save();
+
+    return this.toDomain(user);
+  }
+
   toDomain(userModel) {
     const roles = userModel.roles
       ? userModel.roles.map((userRole) => userRole.role)

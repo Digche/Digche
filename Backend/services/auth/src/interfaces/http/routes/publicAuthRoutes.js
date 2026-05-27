@@ -13,5 +13,17 @@ export function createPublicAuthRoutes(controller, publicAuthMiddleware) {
 
   router.get("/me", publicAuthMiddleware, controller.me);
 
+  router.post(
+    "/change-phone/request-otp",
+    publicAuthMiddleware,
+    controller.requestPhoneChangeOtp
+  );
+
+  router.post(
+    "/change-phone/verify",
+    publicAuthMiddleware,
+    controller.verifyPhoneChange
+  );
+
   return router;
 }

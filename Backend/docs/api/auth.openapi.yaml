@@ -154,6 +154,81 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /auth/change-phone/request-otp:
+    post:
+      tags:
+        - Public Auth
+      summary: Request OTP for changing public user phone
+      description: Sends an OTP to the new phone number. Requires public access token.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestPhoneChangeOtpInput"
+            examples:
+              default:
+                value:
+                  newPhone: "09121234567"
+      responses:
+        "200":
+          description: OTP sent to new phone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhoneChangeOtpSentResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Phone number is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/change-phone/verify:
+    post:
+      tags:
+        - Public Auth
+      summary: Verify OTP and change public user phone
+      description: Changes the authenticated user's phone number, revokes previous refresh tokens, and returns a new access token and refresh token.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyPhoneChangeInput"
+            examples:
+              default:
+                value:
+                  newPhone: "09121234567"
+                  code: "123456"
+      responses:
+        "200":
+          description: Phone number changed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicAuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Phone number is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/auth/health:
     get:
       tags:
@@ -429,6 +504,28 @@ components:
           type: string
           example: "refresh_token_here"
 
+    RequestPhoneChangeOtpInput:
+      type: object
+      required:
+        - newPhone
+      properties:
+        newPhone:
+          type: string
+          example: "09121234567"
+
+    VerifyPhoneChangeInput:
+      type: object
+      required:
+        - newPhone
+        - code
+      properties:
+        newPhone:
+          type: string
+          example: "09121234567"
+        code:
+          type: string
+          example: "123456"
+
     AddAdminUserInput:
       type: object
       required:
@@ -445,6 +542,19 @@ components:
           type: string
           example: OTP sent successfully
         phone:
+          type: string
+          example: "+989121234567"
+        expiresAt:
+          type: string
+          format: date-time
+
+    PhoneChangeOtpSentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: OTP sent successfully
+        newPhone:
           type: string
           example: "+989121234567"
         expiresAt:

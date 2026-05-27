@@ -14,4 +14,8 @@ export class UserRepository {
   async addRole(userId, role) {
     throw new Error("UserRepository.addRole is not implemented");
   }
+
+  async updatePhone(userId, newPhone) {
+    throw new Error("UserRepository.updatePhone is not implemented");
+  }
 }
