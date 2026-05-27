@@ -3,12 +3,16 @@ export class AdminAuthController {
     requestAdminOtp,
     verifyAdminOtp,
     refreshAdminSession,
-    logoutSession
+    logoutSession,
+    requestAdminPhoneChangeOtp,
+    verifyAdminPhoneChangeOtp
   }) {
     this.requestAdminOtp = requestAdminOtp;
     this.verifyAdminOtp = verifyAdminOtp;
     this.refreshAdminSession = refreshAdminSession;
     this.logoutSession = logoutSession;
+    this.requestAdminPhoneChangeOtp = requestAdminPhoneChangeOtp;
+    this.verifyAdminPhoneChangeOtp = verifyAdminPhoneChangeOtp;
   }
 
   health = (req, res) => {
@@ -85,6 +89,33 @@ export class AdminAuthController {
           isManager: req.auth.isManager
         }
       });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  requestPhoneChangeOtp = async (req, res, next) => {
+    try {
+      const result = await this.requestAdminPhoneChangeOtp.execute({
+        adminId: req.auth.adminId,
+        newPhone: req.body.newPhone
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  verifyPhoneChange = async (req, res, next) => {
+    try {
+      const result = await this.verifyAdminPhoneChangeOtp.execute({
+        adminId: req.auth.adminId,
+        newPhone: req.body.newPhone,
+        code: req.body.code
+      });
+
+      res.json(result);
     } catch (error) {
       next(error);
     }

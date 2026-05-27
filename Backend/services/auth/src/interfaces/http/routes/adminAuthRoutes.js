@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAdminRole } from "../middlewares/requireAdminRole.js";
 
 export function createAdminAuthRoutes(controller, adminAuthMiddleware) {
   const router = Router();
@@ -12,6 +13,20 @@ export function createAdminAuthRoutes(controller, adminAuthMiddleware) {
   router.post("/logout", controller.logout);
 
   router.get("/me", adminAuthMiddleware, controller.me);
+
+  router.post(
+    "/change-phone/request-otp",
+    adminAuthMiddleware,
+    requireAdminRole("manager"),
+    controller.requestPhoneChangeOtp
+  );
+
+  router.post(
+    "/change-phone/verify",
+    adminAuthMiddleware,
+    requireAdminRole("manager"),
+    controller.verifyPhoneChange
+  );
 
   return router;
 }

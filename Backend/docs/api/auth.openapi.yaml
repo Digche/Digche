@@ -356,6 +356,85 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /admin/auth/change-phone/request-otp:
+    post:
+      tags:
+        - Admin Auth
+      summary: Request OTP for changing manager phone
+      description: Sends an OTP to the new phone number. Only manager can use this endpoint.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestPhoneChangeOtpInput"
+            examples:
+              default:
+                value:
+                  newPhone: "09121234567"
+      responses:
+        "200":
+          description: OTP sent to new manager phone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhoneChangeOtpSentResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Phone number is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /admin/auth/change-phone/verify:
+    post:
+      tags:
+        - Admin Auth
+      summary: Verify OTP and change manager phone
+      description: Changes the authenticated manager's phone number, revokes previous refresh tokens, and returns a new access token and refresh token.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyPhoneChangeInput"
+            examples:
+              default:
+                value:
+                  newPhone: "09121234567"
+                  code: "123456"
+      responses:
+        "200":
+          description: Manager phone changed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Phone number is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/admin-users:
     post:
       tags:

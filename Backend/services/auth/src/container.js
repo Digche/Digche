@@ -13,6 +13,8 @@ import { DisableAdminUser } from "./application/use-cases/DisableAdminUser.js";
 import { RequestPublicPhoneChangeOtp } from "./application/use-cases/RequestPublicPhoneChangeOtp.js";
 import { VerifyPublicPhoneChangeOtp } from "./application/use-cases/VerifyPublicPhoneChangeOtp.js";
 import { ChangeAdminUserPhone } from "./application/use-cases/ChangeAdminUserPhone.js";
+import { RequestAdminPhoneChangeOtp } from "./application/use-cases/RequestAdminPhoneChangeOtp.js";
+import { VerifyAdminPhoneChangeOtp } from "./application/use-cases/VerifyAdminPhoneChangeOtp.js";
 
 import { SequelizeUserRepository } from "./infrastructure/database/repositories/SequelizeUserRepository.js";
 import { SequelizeChefAccountRepository } from "./infrastructure/database/repositories/SequelizeChefAccountRepository.js";
@@ -114,6 +116,25 @@ export function createContainer() {
     refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
   });
 
+  const requestAdminPhoneChangeOtp = new RequestAdminPhoneChangeOtp({
+    adminUserRepository,
+    otpRepository,
+    otpCodeGenerator,
+    otpHasher,
+    otpSender,
+    otpExpiresMinutes: env.otp.expiresMinutes,
+    otpRateLimitPerHour: env.otp.rateLimitPerHour
+  });
+
+  const verifyAdminPhoneChangeOtp = new VerifyAdminPhoneChangeOtp({
+    adminUserRepository,
+    otpRepository,
+    refreshTokenRepository,
+    otpHasher,
+    tokenService,
+    refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
+  });
+
   const refreshPublicSession = new RefreshPublicSession({
     userRepository,
     chefAccountRepository,
@@ -164,7 +185,9 @@ export function createContainer() {
     requestAdminOtp,
     verifyAdminOtp,
     refreshAdminSession,
-    logoutSession
+    logoutSession,
+    requestAdminPhoneChangeOtp,
+    verifyAdminPhoneChangeOtp
   });
 
   const adminUserController = new AdminUserController({
