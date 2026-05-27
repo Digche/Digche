@@ -22,6 +22,9 @@ import { JwtTokenService } from "./infrastructure/security/JwtTokenService.js";
 import { PublicAuthController } from "./interfaces/http/controllers/PublicAuthController.js";
 import { AdminAuthController } from "./interfaces/http/controllers/AdminAuthController.js";
 
+import { createPublicAuthMiddleware } from "./interfaces/http/middlewares/publicAuthMiddleware.js";
+import { createAdminAuthMiddleware } from "./interfaces/http/middlewares/adminAuthMiddleware.js";
+
 export function createContainer() {
   const userRepository = new SequelizeUserRepository();
   const chefAccountRepository = new SequelizeChefAccountRepository();
@@ -36,6 +39,14 @@ export function createContainer() {
   const tokenService = new JwtTokenService({
     secret: env.jwt.secret,
     accessTokenExpiresIn: env.jwt.accessTokenExpiresIn
+  });
+
+  const publicAuthMiddleware = createPublicAuthMiddleware({
+    tokenService
+  });
+
+  const adminAuthMiddleware = createAdminAuthMiddleware({
+    tokenService
   });
 
   const requestPublicOtp = new RequestPublicOtp({
@@ -112,6 +123,8 @@ export function createContainer() {
 
   return {
     publicAuthController,
-    adminAuthController
+    adminAuthController,
+    publicAuthMiddleware,
+    adminAuthMiddleware
   };
 }
