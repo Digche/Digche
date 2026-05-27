@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-export function createPublicAuthRoutes(controller) {
+export function createPublicAuthRoutes(controller, publicAuthMiddleware) {
   const router = Router();
 
   router.get("/health", controller.health);
@@ -10,6 +10,8 @@ export function createPublicAuthRoutes(controller) {
 
   router.post("/refresh", controller.refresh);
   router.post("/logout", controller.logout);
+
+  router.get("/me", publicAuthMiddleware, controller.me);
 
   return router;
 }

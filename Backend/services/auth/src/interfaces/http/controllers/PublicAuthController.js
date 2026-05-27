@@ -75,4 +75,20 @@ export class PublicAuthController {
       next(error);
     }
   };
+
+  me = async (req, res, next) => {
+    try {
+      res.json({
+        user: {
+          id: req.auth.userId,
+          phone: req.auth.phone,
+          roles: req.auth.roles,
+          selectedRole: req.auth.selectedRole,
+          ...(req.auth.chef ? { chef: req.auth.chef } : {})
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

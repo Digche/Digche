@@ -26,8 +26,21 @@ export function createApp() {
     });
   });
 
-  app.use("/auth", createPublicAuthRoutes(container.publicAuthController));
-  app.use("/admin/auth", createAdminAuthRoutes(container.adminAuthController));
+  app.use(
+    "/auth",
+    createPublicAuthRoutes(
+      container.publicAuthController,
+      container.publicAuthMiddleware
+    )
+  );
+
+  app.use(
+    "/admin/auth",
+    createAdminAuthRoutes(
+      container.adminAuthController,
+      container.adminAuthMiddleware
+    )
+  );
 
   app.use(errorHandler);
 

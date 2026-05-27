@@ -74,4 +74,19 @@ export class AdminAuthController {
       next(error);
     }
   };
+
+  me = async (req, res, next) => {
+    try {
+      res.json({
+        admin: {
+          id: req.auth.adminId,
+          phone: req.auth.phone,
+          role: req.auth.role,
+          isManager: req.auth.isManager
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

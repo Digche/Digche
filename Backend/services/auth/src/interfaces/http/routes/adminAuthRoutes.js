@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-export function createAdminAuthRoutes(controller) {
+export function createAdminAuthRoutes(controller, adminAuthMiddleware) {
   const router = Router();
 
   router.get("/health", controller.health);
@@ -10,6 +10,8 @@ export function createAdminAuthRoutes(controller) {
 
   router.post("/refresh", controller.refresh);
   router.post("/logout", controller.logout);
+
+  router.get("/me", adminAuthMiddleware, controller.me);
 
   return router;
 }
