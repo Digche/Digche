@@ -5,6 +5,7 @@ import helmet from "helmet";
 import { createContainer } from "./container.js";
 import { createPublicAuthRoutes } from "./interfaces/http/routes/publicAuthRoutes.js";
 import { createAdminAuthRoutes } from "./interfaces/http/routes/adminAuthRoutes.js";
+import { createAdminUserRoutes } from "./interfaces/http/routes/adminUserRoutes.js";
 import { errorHandler } from "./interfaces/http/middlewares/errorHandler.js";
 import { setupSwagger } from "./interfaces/http/swagger.js";
 
@@ -38,6 +39,14 @@ export function createApp() {
     "/admin/auth",
     createAdminAuthRoutes(
       container.adminAuthController,
+      container.adminAuthMiddleware
+    )
+  );
+
+  app.use(
+    "/admin/admin-users",
+    createAdminUserRoutes(
+      container.adminUserController,
       container.adminAuthMiddleware
     )
   );

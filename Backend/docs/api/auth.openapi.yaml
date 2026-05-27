@@ -16,6 +16,8 @@ tags:
     description: Public client and chef authentication
   - name: Admin Auth
     description: Admin panel authentication
+  - name: Admin Users
+    description: Admin user management by manager
 
 paths:
   /auth/health:
@@ -279,6 +281,44 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /admin/admin-users:
+    post:
+      tags:
+        - Admin Users
+      summary: Add a new admin user
+      description: Only manager can add a new admin phone number to the admin panel allowlist.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddAdminUserInput"
+            examples:
+              default:
+                value:
+                  phone: "09121234567"
+      responses:
+        "201":
+          description: Admin user created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddAdminUserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Admin user already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -337,6 +377,15 @@ components:
         refreshToken:
           type: string
           example: "refresh_token_here"
+
+    AddAdminUserInput:
+      type: object
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+          example: "09121234567"
 
     OtpSentResponse:
       type: object
@@ -401,6 +450,30 @@ components:
         isManager:
           type: boolean
 
+    AdminUserWithStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phone:
+          type: string
+          example: "+989121234567"
+        role:
+          type: string
+          enum:
+            - admin
+          example: admin
+        status:
+          type: string
+          enum:
+            - active
+            - disabled
+          example: active
+        createdBy:
+          type: string
+          format: uuid
+
     PublicAuthResponse:
       type: object
       properties:
@@ -420,6 +493,12 @@ components:
           type: string
         admin:
           $ref: "#/components/schemas/AdminUser"
+
+    AddAdminUserResponse:
+      type: object
+      properties:
+        admin:
+          $ref: "#/components/schemas/AdminUserWithStatus"
 
     LogoutResponse:
       type: object

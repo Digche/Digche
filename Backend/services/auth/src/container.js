@@ -7,6 +7,7 @@ import { VerifyAdminOtp } from "./application/use-cases/VerifyAdminOtp.js";
 import { RefreshPublicSession } from "./application/use-cases/RefreshPublicSession.js";
 import { RefreshAdminSession } from "./application/use-cases/RefreshAdminSession.js";
 import { LogoutSession } from "./application/use-cases/LogoutSession.js";
+import { AddAdminUser } from "./application/use-cases/AddAdminUser.js";
 
 import { SequelizeUserRepository } from "./infrastructure/database/repositories/SequelizeUserRepository.js";
 import { SequelizeChefAccountRepository } from "./infrastructure/database/repositories/SequelizeChefAccountRepository.js";
@@ -21,6 +22,7 @@ import { JwtTokenService } from "./infrastructure/security/JwtTokenService.js";
 
 import { PublicAuthController } from "./interfaces/http/controllers/PublicAuthController.js";
 import { AdminAuthController } from "./interfaces/http/controllers/AdminAuthController.js";
+import { AdminUserController } from "./interfaces/http/controllers/AdminUserController.js";
 
 import { createPublicAuthMiddleware } from "./interfaces/http/middlewares/publicAuthMiddleware.js";
 import { createAdminAuthMiddleware } from "./interfaces/http/middlewares/adminAuthMiddleware.js";
@@ -107,6 +109,10 @@ export function createContainer() {
     tokenService
   });
 
+  const addAdminUser = new AddAdminUser({
+    adminUserRepository
+  });
+
   const publicAuthController = new PublicAuthController({
     requestPublicOtp,
     verifyPublicOtp,
@@ -121,9 +127,14 @@ export function createContainer() {
     logoutSession
   });
 
+  const adminUserController = new AdminUserController({
+    addAdminUser
+  });
+
   return {
     publicAuthController,
     adminAuthController,
+    adminUserController,
     publicAuthMiddleware,
     adminAuthMiddleware
   };
