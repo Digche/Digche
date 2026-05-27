@@ -4,22 +4,29 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-  "dev": "node --watch src/server.js",
-  "start": "node src/server.js",
-  "db:migrate": "node src/infrastructure/database/migrate.js",
-  "db:seed:manager": "node src/infrastructure/database/seed-manager.js"
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:migrate": "node src/infrastructure/database/migrate.js",
+    "db:seed:manager": "node src/infrastructure/database/seed-manager.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration"
   },
   "dependencies": {
-  "bcryptjs": "^2.4.3",
-  "cors": "^2.8.5",
-  "dotenv": "^16.4.7",
-  "express": "^4.21.2",
-  "helmet": "^8.0.0",
-  "jsonwebtoken": "^9.0.2",
-  "pg": "^8.13.1",
-  "sequelize": "^6.37.5",
-  "swagger-ui-express": "^5.0.1",
-  "yamljs": "^0.3.0"
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "sequelize": "^6.37.5",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "supertest": "^7.2.2",
+    "vitest": "^2.1.8"
+  }
 }
