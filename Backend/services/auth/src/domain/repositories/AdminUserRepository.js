@@ -15,6 +15,10 @@ export class AdminUserRepository {
     throw new Error("AdminUserRepository.list is not implemented");
   }
 
+  async updatePhone(id, newPhone) {
+    throw new Error("AdminUserRepository.updatePhone is not implemented");
+  }
+
   async disable(id) {
     throw new Error("AdminUserRepository.disable is not implemented");
   }

@@ -413,6 +413,54 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /admin/admin-users/{id}/phone:
+    patch:
+      tags:
+        - Admin Users
+      summary: Change admin user phone
+      description: Only manager can change a normal admin user's phone number. Managers cannot change their own phone or another manager's phone from this endpoint. Previous refresh tokens for the target admin will be revoked.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Admin user id
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeAdminUserPhoneInput"
+            examples:
+              default:
+                value:
+                  newPhone: "09121234567"
+      responses:
+        "200":
+          description: Admin phone changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChangeAdminUserPhoneResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Phone number is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/admin-users/{id}/disable:
     patch:
       tags:
@@ -525,6 +573,15 @@ components:
         code:
           type: string
           example: "123456"
+
+    ChangeAdminUserPhoneInput:
+      type: object
+      required:
+        - newPhone
+      properties:
+        newPhone:
+          type: string
+          example: "09121234567"
 
     AddAdminUserInput:
       type: object
@@ -678,6 +735,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AdminUserWithStatus"
+
+    ChangeAdminUserPhoneResponse:
+      type: object
+      properties:
+        admin:
+          $ref: "#/components/schemas/AdminUserWithStatus"
 
     DisableAdminUserResponse:
       type: object

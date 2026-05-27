@@ -12,6 +12,7 @@ import { ListAdminUsers } from "./application/use-cases/ListAdminUsers.js";
 import { DisableAdminUser } from "./application/use-cases/DisableAdminUser.js";
 import { RequestPublicPhoneChangeOtp } from "./application/use-cases/RequestPublicPhoneChangeOtp.js";
 import { VerifyPublicPhoneChangeOtp } from "./application/use-cases/VerifyPublicPhoneChangeOtp.js";
+import { ChangeAdminUserPhone } from "./application/use-cases/ChangeAdminUserPhone.js";
 
 import { SequelizeUserRepository } from "./infrastructure/database/repositories/SequelizeUserRepository.js";
 import { SequelizeChefAccountRepository } from "./infrastructure/database/repositories/SequelizeChefAccountRepository.js";
@@ -145,6 +146,11 @@ export function createContainer() {
     adminUserRepository
   });
 
+  const changeAdminUserPhone = new ChangeAdminUserPhone({
+    adminUserRepository,
+    refreshTokenRepository
+  });
+
   const publicAuthController = new PublicAuthController({
     requestPublicOtp,
     verifyPublicOtp,
@@ -164,7 +170,8 @@ export function createContainer() {
   const adminUserController = new AdminUserController({
     addAdminUser,
     listAdminUsers,
-    disableAdminUser
+    disableAdminUser,
+    changeAdminUserPhone
   });
 
   return {

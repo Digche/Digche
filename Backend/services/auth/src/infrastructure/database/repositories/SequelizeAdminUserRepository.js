@@ -44,6 +44,20 @@ export class SequelizeAdminUserRepository {
     return adminUsers.map((adminUser) => this.toDomain(adminUser));
   }
 
+  async updatePhone(id, newPhone) {
+    const adminUser = await AdminUserModel.findByPk(id);
+
+    if (!adminUser) {
+      return null;
+    }
+
+    adminUser.phone = newPhone;
+
+    await adminUser.save();
+
+    return this.toDomain(adminUser);
+  }
+
   async disable(id) {
     const adminUser = await AdminUserModel.findByPk(id);
 

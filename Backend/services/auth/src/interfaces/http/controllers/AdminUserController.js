@@ -2,11 +2,13 @@ export class AdminUserController {
   constructor({
     addAdminUser,
     listAdminUsers,
-    disableAdminUser
+    disableAdminUser,
+    changeAdminUserPhone
   }) {
     this.addAdminUser = addAdminUser;
     this.listAdminUsers = listAdminUsers;
     this.disableAdminUser = disableAdminUser;
+    this.changeAdminUserPhone = changeAdminUserPhone;
   }
 
   add = async (req, res, next) => {
@@ -25,6 +27,20 @@ export class AdminUserController {
   list = async (req, res, next) => {
     try {
       const result = await this.listAdminUsers.execute();
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  changePhone = async (req, res, next) => {
+    try {
+      const result = await this.changeAdminUserPhone.execute({
+        adminId: req.params.id,
+        newPhone: req.body.newPhone,
+        requestedBy: req.auth.adminId
+      });
 
       res.json(result);
     } catch (error) {

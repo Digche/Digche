@@ -19,6 +19,13 @@ export function createAdminUserRoutes(controller, adminAuthMiddleware) {
   );
 
   router.patch(
+    "/:id/phone",
+    adminAuthMiddleware,
+    requireAdminRole("manager"),
+    controller.changePhone
+  );
+
+  router.patch(
     "/:id/disable",
     adminAuthMiddleware,
     requireAdminRole("manager"),
