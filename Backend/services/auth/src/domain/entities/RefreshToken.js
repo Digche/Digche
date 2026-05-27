@@ -5,6 +5,8 @@ export class RefreshToken {
     ownerType,
     tokenHash,
     expiresAt,
+    scope,
+    selectedRole = null,
     revokedAt = null,
     createdAt = null
   }) {
@@ -24,11 +26,17 @@ export class RefreshToken {
       throw new Error("RefreshToken expiresAt is required");
     }
 
+    if (!scope) {
+      throw new Error("RefreshToken scope is required");
+    }
+
     this.id = id;
     this.ownerId = ownerId;
     this.ownerType = ownerType;
     this.tokenHash = tokenHash;
     this.expiresAt = expiresAt;
+    this.scope = scope;
+    this.selectedRole = selectedRole;
     this.revokedAt = revokedAt;
     this.createdAt = createdAt;
   }

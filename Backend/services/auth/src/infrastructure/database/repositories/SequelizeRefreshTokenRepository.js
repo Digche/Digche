@@ -6,6 +6,8 @@ export class SequelizeRefreshTokenRepository {
     const createdRefreshToken = await RefreshTokenModel.create({
       ownerId: refreshToken.ownerId,
       ownerType: refreshToken.ownerType,
+      scope: refreshToken.scope,
+      selectedRole: refreshToken.selectedRole,
       tokenHash: refreshToken.tokenHash,
       expiresAt: refreshToken.expiresAt,
       revokedAt: refreshToken.revokedAt
@@ -64,6 +66,8 @@ export class SequelizeRefreshTokenRepository {
       id: refreshTokenModel.id,
       ownerId: refreshTokenModel.ownerId,
       ownerType: refreshTokenModel.ownerType,
+      scope: refreshTokenModel.scope,
+      selectedRole: refreshTokenModel.selectedRole,
       tokenHash: refreshTokenModel.tokenHash,
       expiresAt: refreshTokenModel.expiresAt,
       revokedAt: refreshTokenModel.revokedAt,

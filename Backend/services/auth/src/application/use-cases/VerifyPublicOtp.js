@@ -8,6 +8,7 @@ import { USER_ROLES } from "../../domain/constants/roles.js";
 import { CHEF_STATUS } from "../../domain/constants/statuses.js";
 import { OTP_PURPOSES } from "../../domain/constants/otpPurposes.js";
 import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
+import { AUTH_SCOPES } from "../../domain/constants/authScopes.js";
 import { PhoneNumber } from "../../domain/value-objects/PhoneNumber.js";
 
 export class VerifyPublicOtp {
@@ -101,7 +102,7 @@ export class VerifyPublicOtp {
       phone: user.phone,
       roles: user.roles,
       selectedRole: role,
-      scope: "public",
+      scope: AUTH_SCOPES.PUBLIC,
       ...roleData
     };
 
@@ -118,6 +119,8 @@ export class VerifyPublicOtp {
       new RefreshToken({
         ownerId: user.id,
         ownerType: TOKEN_OWNER_TYPES.USER,
+        scope: AUTH_SCOPES.PUBLIC,
+        selectedRole: role,
         tokenHash: refreshTokenHash,
         expiresAt
       })

@@ -1,8 +1,10 @@
 import { ForbiddenError, UnauthorizedError, AppError } from "../errors/AppError.js";
 
 import { RefreshToken } from "../../domain/entities/RefreshToken.js";
+
 import { OTP_PURPOSES } from "../../domain/constants/otpPurposes.js";
 import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
+import { AUTH_SCOPES } from "../../domain/constants/authScopes.js";
 import { PhoneNumber } from "../../domain/value-objects/PhoneNumber.js";
 
 export class VerifyAdminOtp {
@@ -56,7 +58,7 @@ export class VerifyAdminOtp {
       sub: adminUser.id,
       phone: adminUser.phone,
       role: adminUser.role,
-      scope: "admin",
+      scope: AUTH_SCOPES.ADMIN,
       isManager: adminUser.isManager()
     };
 
@@ -73,6 +75,8 @@ export class VerifyAdminOtp {
       new RefreshToken({
         ownerId: adminUser.id,
         ownerType: TOKEN_OWNER_TYPES.ADMIN,
+        scope: AUTH_SCOPES.ADMIN,
+        selectedRole: adminUser.role,
         tokenHash: refreshTokenHash,
         expiresAt
       })

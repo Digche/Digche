@@ -207,6 +207,14 @@ export async function up({ queryInterface, DataTypes, transaction }) {
         type: DataTypes.STRING(50),
         allowNull: false
       },
+      scope: {
+        type: DataTypes.STRING(50),
+        allowNull: false
+      },
+      selected_role: {
+        type: DataTypes.STRING(50),
+        allowNull: true
+      },
       token_hash: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -230,6 +238,11 @@ export async function up({ queryInterface, DataTypes, transaction }) {
 
   await queryInterface.addIndex("refresh_tokens", ["owner_id", "owner_type"], {
     name: "refresh_tokens_owner_id_owner_type_index",
+    transaction
+  });
+
+  await queryInterface.addIndex("refresh_tokens", ["scope"], {
+    name: "refresh_tokens_scope_index",
     transaction
   });
 

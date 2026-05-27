@@ -19,6 +19,15 @@ export const RefreshTokenModel = sequelize.define(
       allowNull: false,
       field: "owner_type"
     },
+    scope: {
+      type: DataTypes.STRING(50),
+      allowNull: false
+    },
+    selectedRole: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: "selected_role"
+    },
     tokenHash: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -44,6 +53,9 @@ export const RefreshTokenModel = sequelize.define(
     indexes: [
       {
         fields: ["owner_id", "owner_type"]
+      },
+      {
+        fields: ["scope"]
       },
       {
         fields: ["token_hash"]
