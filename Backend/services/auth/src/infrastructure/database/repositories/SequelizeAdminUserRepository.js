@@ -36,6 +36,14 @@ export class SequelizeAdminUserRepository {
     return this.toDomain(createdAdminUser);
   }
 
+  async list() {
+    const adminUsers = await AdminUserModel.findAll({
+      order: [["createdAt", "DESC"]]
+    });
+
+    return adminUsers.map((adminUser) => this.toDomain(adminUser));
+  }
+
   async disable(id) {
     const adminUser = await AdminUserModel.findByPk(id);
 

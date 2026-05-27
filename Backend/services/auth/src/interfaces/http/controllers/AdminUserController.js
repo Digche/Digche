@@ -1,6 +1,12 @@
 export class AdminUserController {
-  constructor({ addAdminUser }) {
+  constructor({
+    addAdminUser,
+    listAdminUsers,
+    disableAdminUser
+  }) {
     this.addAdminUser = addAdminUser;
+    this.listAdminUsers = listAdminUsers;
+    this.disableAdminUser = disableAdminUser;
   }
 
   add = async (req, res, next) => {
@@ -11,6 +17,29 @@ export class AdminUserController {
       });
 
       res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  list = async (req, res, next) => {
+    try {
+      const result = await this.listAdminUsers.execute();
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  disable = async (req, res, next) => {
+    try {
+      const result = await this.disableAdminUser.execute({
+        adminId: req.params.id,
+        requestedBy: req.auth.adminId
+      });
+
+      res.json(result);
     } catch (error) {
       next(error);
     }

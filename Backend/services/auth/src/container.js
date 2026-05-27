@@ -8,6 +8,8 @@ import { RefreshPublicSession } from "./application/use-cases/RefreshPublicSessi
 import { RefreshAdminSession } from "./application/use-cases/RefreshAdminSession.js";
 import { LogoutSession } from "./application/use-cases/LogoutSession.js";
 import { AddAdminUser } from "./application/use-cases/AddAdminUser.js";
+import { ListAdminUsers } from "./application/use-cases/ListAdminUsers.js";
+import { DisableAdminUser } from "./application/use-cases/DisableAdminUser.js";
 
 import { SequelizeUserRepository } from "./infrastructure/database/repositories/SequelizeUserRepository.js";
 import { SequelizeChefAccountRepository } from "./infrastructure/database/repositories/SequelizeChefAccountRepository.js";
@@ -113,6 +115,14 @@ export function createContainer() {
     adminUserRepository
   });
 
+  const listAdminUsers = new ListAdminUsers({
+    adminUserRepository
+  });
+
+  const disableAdminUser = new DisableAdminUser({
+    adminUserRepository
+  });
+
   const publicAuthController = new PublicAuthController({
     requestPublicOtp,
     verifyPublicOtp,
@@ -128,7 +138,9 @@ export function createContainer() {
   });
 
   const adminUserController = new AdminUserController({
-    addAdminUser
+    addAdminUser,
+    listAdminUsers,
+    disableAdminUser
   });
 
   return {

@@ -11,6 +11,10 @@ export class AdminUserRepository {
     throw new Error("AdminUserRepository.create is not implemented");
   }
 
+  async list() {
+    throw new Error("AdminUserRepository.list is not implemented");
+  }
+
   async disable(id) {
     throw new Error("AdminUserRepository.disable is not implemented");
   }

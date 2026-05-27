@@ -11,5 +11,19 @@ export function createAdminUserRoutes(controller, adminAuthMiddleware) {
     controller.add
   );
 
+  router.get(
+    "/",
+    adminAuthMiddleware,
+    requireAdminRole("manager"),
+    controller.list
+  );
+
+  router.patch(
+    "/:id/disable",
+    adminAuthMiddleware,
+    requireAdminRole("manager"),
+    controller.disable
+  );
+
   return router;
 }
