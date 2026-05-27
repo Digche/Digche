@@ -4,6 +4,9 @@ import { RequestPublicOtp } from "./application/use-cases/RequestPublicOtp.js";
 import { VerifyPublicOtp } from "./application/use-cases/VerifyPublicOtp.js";
 import { RequestAdminOtp } from "./application/use-cases/RequestAdminOtp.js";
 import { VerifyAdminOtp } from "./application/use-cases/VerifyAdminOtp.js";
+import { RefreshPublicSession } from "./application/use-cases/RefreshPublicSession.js";
+import { RefreshAdminSession } from "./application/use-cases/RefreshAdminSession.js";
+import { LogoutSession } from "./application/use-cases/LogoutSession.js";
 
 import { SequelizeUserRepository } from "./infrastructure/database/repositories/SequelizeUserRepository.js";
 import { SequelizeChefAccountRepository } from "./infrastructure/database/repositories/SequelizeChefAccountRepository.js";
@@ -73,14 +76,38 @@ export function createContainer() {
     refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
   });
 
+  const refreshPublicSession = new RefreshPublicSession({
+    userRepository,
+    chefAccountRepository,
+    refreshTokenRepository,
+    tokenService,
+    refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
+  });
+
+  const refreshAdminSession = new RefreshAdminSession({
+    adminUserRepository,
+    refreshTokenRepository,
+    tokenService,
+    refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
+  });
+
+  const logoutSession = new LogoutSession({
+    refreshTokenRepository,
+    tokenService
+  });
+
   const publicAuthController = new PublicAuthController({
     requestPublicOtp,
-    verifyPublicOtp
+    verifyPublicOtp,
+    refreshPublicSession,
+    logoutSession
   });
 
   const adminAuthController = new AdminAuthController({
     requestAdminOtp,
-    verifyAdminOtp
+    verifyAdminOtp,
+    refreshAdminSession,
+    logoutSession
   });
 
   return {

@@ -1,7 +1,14 @@
 export class PublicAuthController {
-  constructor({ requestPublicOtp, verifyPublicOtp }) {
+  constructor({
+    requestPublicOtp,
+    verifyPublicOtp,
+    refreshPublicSession,
+    logoutSession
+  }) {
     this.requestPublicOtp = requestPublicOtp;
     this.verifyPublicOtp = verifyPublicOtp;
+    this.refreshPublicSession = refreshPublicSession;
+    this.logoutSession = logoutSession;
   }
 
   health = (req, res) => {
@@ -37,6 +44,33 @@ export class PublicAuthController {
       });
 
       res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  refresh = async (req, res, next) => {
+    try {
+      const result = await this.refreshPublicSession.execute({
+        refreshToken: req.body.refreshToken
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  logout = async (req, res, next) => {
+    try {
+      const result = await this.logoutSession.execute({
+        refreshToken: req.body.refreshToken
+      });
+
+      res.json({
+        message: "Logged out successfully",
+        ...result
+      });
     } catch (error) {
       next(error);
     }

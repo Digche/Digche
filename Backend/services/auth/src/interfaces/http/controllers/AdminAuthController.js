@@ -1,7 +1,14 @@
 export class AdminAuthController {
-  constructor({ requestAdminOtp, verifyAdminOtp }) {
+  constructor({
+    requestAdminOtp,
+    verifyAdminOtp,
+    refreshAdminSession,
+    logoutSession
+  }) {
     this.requestAdminOtp = requestAdminOtp;
     this.verifyAdminOtp = verifyAdminOtp;
+    this.refreshAdminSession = refreshAdminSession;
+    this.logoutSession = logoutSession;
   }
 
   health = (req, res) => {
@@ -36,6 +43,33 @@ export class AdminAuthController {
       });
 
       res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  refresh = async (req, res, next) => {
+    try {
+      const result = await this.refreshAdminSession.execute({
+        refreshToken: req.body.refreshToken
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  logout = async (req, res, next) => {
+    try {
+      const result = await this.logoutSession.execute({
+        refreshToken: req.body.refreshToken
+      });
+
+      res.json({
+        message: "Logged out successfully",
+        ...result
+      });
     } catch (error) {
       next(error);
     }
