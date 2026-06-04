@@ -1,0 +1,251 @@
+.authScreen {
+  min-height: 100svh;
+  width: 100%;
+  background: #f7a45a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(28px, 6.5vh, 78px) clamp(18px, 7.2vw, 118px);
+}
+
+.authCard {
+  width: min(100%, 1364px);
+  height: min(82svh, 880px);
+  min-height: 720px;
+  background: #ffffff;
+  border-radius: 11px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 49% 51%;
+  direction: ltr;
+}
+
+.heroPanel {
+  position: relative;
+  min-height: 100%;
+  background: #ead0ad;
+}
+
+.heroImage {
+  object-fit: cover;
+  object-position: center center;
+}
+
+.formPanel {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px clamp(52px, 5vw, 76px) 50px;
+  direction: rtl;
+}
+
+.formWrap {
+  width: min(100%, 610px);
+  transform: translateY(-3px);
+}
+
+.titleBlock {
+  margin: 0 0 58px;
+}
+
+.title {
+  margin: 0;
+  color: #171717;
+  font-size: clamp(35px, 2.75vw, 47px);
+  font-weight: 400;
+  line-height: 1.25;
+  text-align: center;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  direction: rtl;
+  white-space: nowrap;
+}
+
+.titleText {
+  display: inline-block;
+}
+
+.brandLogo {
+  width: clamp(105px, 8vw, 128px);
+  height: auto;
+  object-fit: contain;
+  transform: translateY(-6px);
+  flex-shrink: 0;
+}
+
+.titleDivider {
+  width: 100%;
+  height: 2px;
+  margin-top: 5px;
+  background: rgba(84, 84, 84, 0.56);
+}
+
+.form {
+  width: 100%;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.field {
+  position: relative;
+  width: 100%;
+}
+
+.input,
+.select {
+  width: 100%;
+  height: 48px;
+  border: 0;
+  border-bottom: 2px solid rgba(74, 74, 74, 0.56);
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  color: #222222;
+  font-size: clamp(20px, 1.42vw, 24px);
+  font-weight: 400;
+  line-height: 1;
+  text-align: right;
+  direction: rtl;
+  padding: 0 0 13px;
+}
+
+.input::placeholder {
+  color: #cfcfcf;
+  opacity: 1;
+}
+
+.input:focus,
+.select:focus {
+  border-bottom-color: rgba(74, 74, 74, 0.82);
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.select {
+  appearance: none;
+  color: #cfcfcf;
+  cursor: pointer;
+  padding-left: 44px;
+}
+
+.select:valid {
+  color: #222222;
+}
+
+.selectIcon {
+  position: absolute;
+  left: 2px;
+  top: 11px;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  color: rgba(74, 74, 74, 0.75);
+}
+
+.submitButton {
+  display: block;
+  width: min(314px, 52%);
+  height: 51px;
+  margin: 38px auto 0;
+  border: 0;
+  border-radius: 9px;
+  background: #89b948;
+  color: #101010;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.submitButton:hover {
+  filter: brightness(0.97);
+}
+
+.submitButton:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 1024px) {
+  .authScreen {
+    padding: 28px;
+  }
+
+  .authCard {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .heroPanel {
+    min-height: 420px;
+  }
+
+  .formPanel {
+    padding: 42px 32px 46px;
+  }
+
+  .formWrap {
+    transform: none;
+  }
+
+  .titleBlock {
+    margin-bottom: 40px;
+  }
+
+  .title {
+    font-size: 34px;
+    gap: 12px;
+  }
+
+  .brandLogo {
+    width: 105px;
+    transform: translateY(-5px);
+  }
+
+  .fields {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .authScreen {
+    padding: 16px;
+  }
+
+  .heroPanel {
+    min-height: 300px;
+  }
+
+  .formPanel {
+    padding: 34px 22px 40px;
+  }
+
+  .title {
+    font-size: 30px;
+    gap: 9px;
+  }
+
+  .brandLogo {
+    width: 88px;
+    transform: translateY(-4px);
+  }
+
+  .fields {
+    gap: 24px;
+  }
+
+  .submitButton {
+    width: 70%;
+  }
+}
