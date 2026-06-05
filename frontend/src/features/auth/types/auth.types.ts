@@ -1,7 +1,7 @@
 export type AuthRole = "customer" | "chef" | "admin";
 
 export type AuthFormValues = {
-  fullName: string;
+  username: string;
   phoneNumber: string;
   role: AuthRole | "";
   password: string;

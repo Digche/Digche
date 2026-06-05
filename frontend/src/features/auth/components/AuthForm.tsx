@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AuthInput } from "./AuthInput";
 import { AuthPasswordInput } from "./AuthPasswordInput";
+import { AuthPhoneNumberInput } from "./AuthPhoneNumberInput";
 import { AuthRoleSelect } from "./AuthRoleSelect";
 import { AuthUsernameInput } from "./AuthUsernameInput";
 import styles from "./AuthPage.module.css";
@@ -21,12 +21,11 @@ export function AuthForm() {
           autoComplete="username"
         />
 
-        <AuthInput
+        <AuthPhoneNumberInput
           label="شماره تلفن"
           name="phoneNumber"
-          type="tel"
-          inputMode="tel"
           autoComplete="tel"
+          required
         />
 
         <AuthRoleSelect />
