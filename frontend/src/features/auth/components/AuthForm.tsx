@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AuthInput } from "./AuthInput";
 import { AuthPasswordInput } from "./AuthPasswordInput";
 import { AuthRoleSelect } from "./AuthRoleSelect";
+import { AuthUsernameInput } from "./AuthUsernameInput";
 import styles from "./AuthPage.module.css";
 
 export function AuthForm() {
@@ -14,11 +15,10 @@ export function AuthForm() {
   return (
     <form className={styles.form} dir="rtl">
       <div className={styles.fields}>
-        <AuthInput
+        <AuthUsernameInput
           label="نام کاربری"
-          name="fullName"
-          type="text"
-          autoComplete="name"
+          name="username"
+          autoComplete="username"
         />
 
         <AuthInput
