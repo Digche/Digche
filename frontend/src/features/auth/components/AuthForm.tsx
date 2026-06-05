@@ -1,8 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import { AuthInput } from "./AuthInput";
+import { AuthPasswordInput } from "./AuthPasswordInput";
 import { AuthRoleSelect } from "./AuthRoleSelect";
 import styles from "./AuthPage.module.css";
 
 export function AuthForm() {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
+    useState(false);
+
   return (
     <form className={styles.form} dir="rtl">
       <div className={styles.fields}>
@@ -23,18 +31,22 @@ export function AuthForm() {
 
         <AuthRoleSelect />
 
-        <AuthInput
+        <AuthPasswordInput
           label="رمز عبور"
           name="password"
-          type="password"
           autoComplete="new-password"
+          isVisible={isPasswordVisible}
+          onToggleVisibility={() => setIsPasswordVisible((prev) => !prev)}
         />
 
-        <AuthInput
+        <AuthPasswordInput
           label="تکرار رمز عبور"
           name="confirmPassword"
-          type="password"
           autoComplete="new-password"
+          isVisible={isConfirmPasswordVisible}
+          onToggleVisibility={() =>
+            setIsConfirmPasswordVisible((prev) => !prev)
+          }
         />
       </div>
 
