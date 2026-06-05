@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+  /* اگر رنگ خاصی مثل رنگ قهوه‌ای لوگو را می‌خواهید اینجا تعریف کنید */
+  --color-brand-brown: #A65D39;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  direction: rtl; /* برای راست‌چین شدن کل سایت */
+}
