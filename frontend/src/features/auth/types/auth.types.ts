@@ -1,9 +1,15 @@
-export type AuthRole = "customer" | "chef" | "admin";
+import { AUTH_ROLE_OPTIONS } from "../constants/auth-role-options";
+
+export type AuthRole = (typeof AUTH_ROLE_OPTIONS)[number]["value"];
+
+export type AuthMode = "login" | "signup";
+
+export type AuthStep = "phone" | "verification" | "profile";
 
 export type AuthFormValues = {
-  username: string;
   phoneNumber: string;
-  role: AuthRole | "";
-  password: string;
-  confirmPassword: string;
+  verificationCode: string;
+  firstName: string;
+  lastName: string;
+  username: string;
 };

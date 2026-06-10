@@ -1,25 +1,22 @@
-import type {
-  ChangeEvent,
-  ClipboardEvent,
-  InputHTMLAttributes,
-  KeyboardEvent,
-} from "react";
-import {
-  isAllowedUsernameValue,
-  sanitizeUsername,
-} from "../utils/username";
+import type { ChangeEvent, InputHTMLAttributes, KeyboardEvent } from "react";
+import { isAllowedUsernameValue, sanitizeUsername } from "../utils/username";
 import styles from "./AuthPage.module.css";
 
-type AuthUsernameInputProps = InputHTMLAttributes<HTMLInputElement> & {
+type AuthUsernameInputProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "value"
+> & {
   label: string;
+  value: string;
+  onValueChange: (value: string) => void;
 };
 
 export function AuthUsernameInput({
   label,
   id,
-  onChange,
+  value,
+  onValueChange,
   onKeyDown,
-  onPaste,
   ...props
 }: AuthUsernameInputProps) {
   const inputId = id ?? props.name;
@@ -39,50 +36,17 @@ export function AuthUsernameInput({
     onKeyDown?.(event);
   }
 
-  function handlePaste(event: ClipboardEvent<HTMLInputElement>) {
-    const pastedText = event.clipboardData.getData("text");
-    const sanitizedText = sanitizeUsername(pastedText);
-
-    if (pastedText !== sanitizedText) {
-      event.preventDefault();
-
-      if (sanitizedText.length > 0) {
-        const input = event.currentTarget;
-        const selectionStart = input.selectionStart ?? input.value.length;
-        const selectionEnd = input.selectionEnd ?? input.value.length;
-
-        input.setRangeText(
-          sanitizedText,
-          selectionStart,
-          selectionEnd,
-          "end"
-        );
-
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-    }
-
-    onPaste?.(event);
-  }
-
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    const input = event.currentTarget;
-    const sanitizedValue = sanitizeUsername(input.value);
-
-    if (input.value !== sanitizedValue) {
-      input.value = sanitizedValue;
-    }
-
-    onChange?.(event);
+    onValueChange(sanitizeUsername(event.currentTarget.value));
   }
 
   return (
-    <div className={styles.field}>
+    <label className={styles.field} htmlFor={inputId}>
+      <span className={styles.fieldLabel}>{label}</span>
+
       <input
         id={inputId}
         className={styles.input}
-        placeholder={label}
-        aria-label={label}
         type="text"
         inputMode="text"
         autoCapitalize="none"
@@ -90,11 +54,12 @@ export function AuthUsernameInput({
         spellCheck={false}
         pattern="[A-Za-z0-9]*"
         title="فقط حروف انگلیسی و اعداد انگلیسی مجاز هستند."
-        {...props}
+        aria-label={label}
+        value={value}
         onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
         onChange={handleChange}
+        {...props}
       />
-    </div>
+    </label>
   );
 }

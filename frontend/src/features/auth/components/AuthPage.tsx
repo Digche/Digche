@@ -3,33 +3,24 @@ import { AuthForm } from "./AuthForm";
 import { AuthHero } from "./AuthHero";
 import styles from "./AuthPage.module.css";
 
-
 export function AuthPage() {
   return (
     <main className={styles.authScreen}>
-      <section className={styles.authCard} aria-label="ورود به دیگچه">
+      <section className={styles.authCard} aria-label="ورود و ثبت نام دیگچه">
         <AuthHero />
 
         <div className={styles.formPanel}>
           <div className={styles.formWrap}>
-            <header className={styles.titleBlock}>
-             <h1 className={styles.title}>
-                <span className={styles.titleText}>به</span>
-
-                <Image
-                    src="/images/digcheh-logo.png"
-                    alt="دیگچه"
-                    width={165}
-                    height={80}
-                    priority
-                    className={styles.brandLogo}
-                />
-
-                <span className={styles.titleText}>خوش آمدید!</span>
-            </h1>
-
-              <div className={styles.titleDivider} aria-hidden="true" />
-            </header>
+            <div className={styles.brandHeader}>
+              <Image
+                src="/images/digcheh-logo.png"
+                alt="دیگچه"
+                width={150}
+                height={110}
+                priority
+                className={styles.brandLogo}
+              />
+            </div>
 
             <AuthForm />
           </div>

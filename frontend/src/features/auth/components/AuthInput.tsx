@@ -10,10 +10,11 @@ export function AuthInput({ label, id, ...props }: AuthInputProps) {
 
   return (
     <label className={styles.field} htmlFor={inputId}>
+      <span className={styles.fieldLabel}>{label}</span>
+
       <input
         id={inputId}
         className={styles.input}
-        placeholder={label}
         aria-label={label}
         {...props}
       />

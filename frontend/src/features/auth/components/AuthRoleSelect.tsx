@@ -1,42 +1,33 @@
 import { AUTH_ROLE_OPTIONS } from "../constants/auth-role-options";
+import type { AuthRole } from "../types/auth.types";
 import styles from "./AuthPage.module.css";
 
-export function AuthRoleSelect() {
+type AuthRoleSelectProps = {
+  value: AuthRole;
+  onChange: (role: AuthRole) => void;
+};
+
+export function AuthRoleSelect({ value, onChange }: AuthRoleSelectProps) {
   return (
-    <label className={`${styles.field} ${styles.selectWrap}`} htmlFor="role">
-      <select
-        id="role"
-        name="role"
-        required
-        defaultValue=""
-        aria-label="انتخاب نقش"
-        className={styles.select}
-      >
-        <option value="" disabled>
-          انتخاب نقش
-        </option>
+    <div className={styles.roleTabs} aria-label="انتخاب نوع کاربر" role="tablist">
+      {AUTH_ROLE_OPTIONS.map((role) => {
+        const isActive = value === role.value;
 
-        {AUTH_ROLE_OPTIONS.map((role) => (
-          <option key={role.value} value={role.value}>
+        return (
+          <button
+            key={role.value}
+            className={`${styles.roleTab} ${
+              isActive ? styles.roleTabActive : ""
+            }`}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(role.value)}
+          >
             {role.label}
-          </option>
-        ))}
-      </select>
-
-      <svg
-        className={styles.selectIcon}
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M6 9l6 6 6-6"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </label>
+          </button>
+        );
+      })}
+    </div>
   );
 }
