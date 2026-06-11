@@ -13,16 +13,20 @@ export class RequestAdminOtp {
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter = null,
     otpExpiresMinutes,
-    otpRateLimitPerHour
+    otpRateLimitPerHour,
+    otpCooldownSeconds = 60
   }) {
     this.adminUserRepository = adminUserRepository;
     this.otpRepository = otpRepository;
     this.otpCodeGenerator = otpCodeGenerator;
     this.otpHasher = otpHasher;
     this.otpSender = otpSender;
+    this.otpRateLimiter = otpRateLimiter;
     this.otpExpiresMinutes = otpExpiresMinutes;
     this.otpRateLimitPerHour = otpRateLimitPerHour;
+    this.otpCooldownSeconds = otpCooldownSeconds;
   }
 
   async execute({ phone }) {
@@ -35,15 +39,10 @@ export class RequestAdminOtp {
       throw new ForbiddenError("You are not allowed to access admin panel");
     }
 
-    const recentOtpCount =
-      await this.otpRepository.countCreatedInLastHour(
-        normalizedPhone,
-        OTP_PURPOSES.ADMIN_LOGIN
-      );
-
-    if (recentOtpCount >= this.otpRateLimitPerHour) {
-      throw new TooManyRequestsError("OTP request limit exceeded");
-    }
+    await this.enforceRateLimit({
+      phone: normalizedPhone,
+      purpose: OTP_PURPOSES.ADMIN_LOGIN
+    });
 
     const code = this.otpCodeGenerator.generate();
     const codeHash = await this.otpHasher.hash(code);
@@ -71,5 +70,27 @@ export class RequestAdminOtp {
       phone: normalizedPhone,
       expiresAt
     };
+  }
+
+  async enforceRateLimit({ phone, purpose }) {
+    if (this.otpRateLimiter) {
+      await this.otpRateLimiter.checkAndIncrement({
+        phone,
+        purpose,
+        maxPerHour: this.otpRateLimitPerHour,
+        cooldownSeconds: this.otpCooldownSeconds
+      });
+
+      return;
+    }
+
+    const recentOtpCount = await this.otpRepository.countCreatedInLastHour(
+      phone,
+      purpose
+    );
+
+    if (recentOtpCount >= this.otpRateLimitPerHour) {
+      throw new TooManyRequestsError("OTP request limit exceeded");
+    }
   }
 }

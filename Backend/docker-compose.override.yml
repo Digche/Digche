@@ -1,0 +1,12 @@
+services:
+  auth-service:
+    ports:
+      - "3001:3001"
+
+  auth-db:
+    ports:
+      - "5433:5432"
+
+  auth-redis:
+    ports:
+      - "6379:6379"

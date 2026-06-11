@@ -9,18 +9,24 @@ import {
 } from "./helpers/createTestAuthApp.js";
 
 import { USER_ROLES } from "../../../src/domain/constants/roles.js";
+import { CHEF_STATUS } from "../../../src/domain/constants/statuses.js";
 import { OTP_PURPOSES } from "../../../src/domain/constants/otpPurposes.js";
 import { TOKEN_OWNER_TYPES } from "../../../src/domain/constants/tokenOwnerTypes.js";
 
-function makePublicContext() {
+function makePublicContext(overrides = {}) {
   const context = createBaseTestContext({
-    users: [
+    users: overrides.users ?? [
       {
         id: "user-1",
         phone: "+989121234567",
+        firstName: "Ali",
+        lastName: "Ahmadi",
+        username: "ali_ahmadi",
         roles: [USER_ROLES.CLIENT]
       }
-    ]
+    ],
+    chefAccounts: overrides.chefAccounts || [],
+    ...overrides
   });
 
   return {
@@ -43,15 +49,19 @@ describe("Public auth HTTP routes", () => {
     });
   });
 
-  it("runs the public client OTP login flow through HTTP", async () => {
+  it("requests OTP with selected public role", async () => {
     const { app, context } = makePublicContext();
 
-    const requestOtpResponse = await request(app)
+    const response = await request(app)
       .post("/auth/request-otp")
-      .send({ phone: "09121234567" });
+      .send({ phone: "09121234567", role: USER_ROLES.CLIENT });
 
-    expect(requestOtpResponse.status).toBe(200);
-    expect(requestOtpResponse.body.phone).toBe("+989121234567");
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      message: "OTP sent successfully",
+      phone: "+989121234567",
+      role: USER_ROLES.CLIENT
+    });
     expect(context.otpSender.sentMessages).toEqual([
       {
         phone: "+989121234567",
@@ -59,6 +69,14 @@ describe("Public auth HTTP routes", () => {
         purpose: OTP_PURPOSES.PUBLIC_LOGIN
       }
     ]);
+  });
+
+  it("returns registration token for a new public user", async () => {
+    const { app, context } = makePublicContext({ users: [] });
+
+    await request(app)
+      .post("/auth/request-otp")
+      .send({ phone: "09121234567", role: USER_ROLES.CLIENT });
 
     const verifyResponse = await request(app)
       .post("/auth/verify-otp")
@@ -66,11 +84,106 @@ describe("Public auth HTTP routes", () => {
 
     expect(verifyResponse.status).toBe(200);
     expect(verifyResponse.body).toMatchObject({
+      requiresRegistration: true,
+      registrationToken: "registration-token-1",
+      phone: "+989121234567",
+      role: USER_ROLES.CLIENT
+    });
+    expect(context.userRepository.createdUsers).toHaveLength(0);
+  });
+
+  it("completes client registration and creates a public session", async () => {
+    const { app, context } = makePublicContext({ users: [] });
+
+    await request(app)
+      .post("/auth/request-otp")
+      .send({ phone: "09121234567", role: USER_ROLES.CLIENT });
+
+    const verifyResponse = await request(app)
+      .post("/auth/verify-otp")
+      .send({ phone: "09121234567", code: "123456", role: USER_ROLES.CLIENT });
+
+    const completeResponse = await request(app)
+      .post("/auth/register/complete")
+      .send({
+        registrationToken: verifyResponse.body.registrationToken,
+        firstName: "Ali",
+        lastName: "Ahmadi",
+        username: "ali_ahmadi"
+      });
+
+    expect(completeResponse.status).toBe(201);
+    expect(completeResponse.body).toMatchObject({
       accessToken: "access-token-1",
       refreshToken: "refresh-token-1",
       user: {
         id: "user-1",
         phone: "+989121234567",
+        firstName: "Ali",
+        lastName: "Ahmadi",
+        username: "ali_ahmadi",
+        roles: [USER_ROLES.CLIENT],
+        selectedRole: USER_ROLES.CLIENT
+      }
+    });
+    expect(context.refreshTokenRepository.createdRefreshTokens).toHaveLength(1);
+  });
+
+  it("completes chef registration with active chef account", async () => {
+    const { app, context } = makePublicContext({ users: [] });
+
+    await request(app)
+      .post("/auth/request-otp")
+      .send({ phone: "09121234567", role: USER_ROLES.CHEF });
+
+    const verifyResponse = await request(app)
+      .post("/auth/verify-otp")
+      .send({ phone: "09121234567", code: "123456", role: USER_ROLES.CHEF });
+
+    const completeResponse = await request(app)
+      .post("/auth/register/complete")
+      .send({
+        registrationToken: verifyResponse.body.registrationToken,
+        firstName: "Sara",
+        lastName: "Chef",
+        username: "sara_chef"
+      });
+
+    expect(completeResponse.status).toBe(201);
+    expect(completeResponse.body.user).toMatchObject({
+      selectedRole: USER_ROLES.CHEF,
+      chef: {
+        status: CHEF_STATUS.ACTIVE
+      }
+    });
+    expect(context.chefAccountRepository.createdChefAccounts[0]).toMatchObject({
+      userId: "user-1",
+      status: CHEF_STATUS.ACTIVE
+    });
+  });
+
+  it("logs in an existing completed client", async () => {
+    const { app, context } = makePublicContext();
+
+    await request(app)
+      .post("/auth/request-otp")
+      .send({ phone: "09121234567", role: USER_ROLES.CLIENT });
+
+    const verifyResponse = await request(app)
+      .post("/auth/verify-otp")
+      .send({ phone: "09121234567", code: "123456", role: USER_ROLES.CLIENT });
+
+    expect(verifyResponse.status).toBe(200);
+    expect(verifyResponse.body).toMatchObject({
+      requiresRegistration: false,
+      accessToken: "access-token-1",
+      refreshToken: "refresh-token-1",
+      user: {
+        id: "user-1",
+        phone: "+989121234567",
+        firstName: "Ali",
+        lastName: "Ahmadi",
+        username: "ali_ahmadi",
         roles: [USER_ROLES.CLIENT],
         selectedRole: USER_ROLES.CLIENT
       }
@@ -102,6 +215,9 @@ describe("Public auth HTTP routes", () => {
     expect(response.body.user).toEqual({
       id: "user-1",
       phone: "+989121234567",
+      firstName: "Ali",
+      lastName: "Ahmadi",
+      username: "ali_ahmadi",
       roles: [USER_ROLES.CLIENT],
       selectedRole: USER_ROLES.CLIENT
     });
@@ -143,6 +259,9 @@ describe("Public auth HTTP routes", () => {
     expect(verifyResponse.body.user).toMatchObject({
       id: "user-1",
       phone: "+989127778888",
+      firstName: "Ali",
+      lastName: "Ahmadi",
+      username: "ali_ahmadi",
       selectedRole: USER_ROLES.CLIENT
     });
     expect(context.userRepository.updatedPhones).toEqual([

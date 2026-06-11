@@ -1,4 +1,8 @@
-import { AppError, ForbiddenError, TooManyRequestsError } from "../errors/AppError.js";
+import {
+  AppError,
+  ForbiddenError,
+  TooManyRequestsError
+} from "../errors/AppError.js";
 
 import { ADMIN_ROLES } from "../../domain/constants/roles.js";
 import { ADMIN_STATUS } from "../../domain/constants/statuses.js";
@@ -13,16 +17,20 @@ export class RequestAdminPhoneChangeOtp {
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter = null,
     otpExpiresMinutes,
-    otpRateLimitPerHour
+    otpRateLimitPerHour,
+    otpCooldownSeconds = 60
   }) {
     this.adminUserRepository = adminUserRepository;
     this.otpRepository = otpRepository;
     this.otpCodeGenerator = otpCodeGenerator;
     this.otpHasher = otpHasher;
     this.otpSender = otpSender;
+    this.otpRateLimiter = otpRateLimiter;
     this.otpExpiresMinutes = otpExpiresMinutes;
     this.otpRateLimitPerHour = otpRateLimitPerHour;
+    this.otpCooldownSeconds = otpCooldownSeconds;
   }
 
   async execute({ adminId, newPhone }) {
@@ -66,14 +74,10 @@ export class RequestAdminPhoneChangeOtp {
       );
     }
 
-    const recentOtpCount = await this.otpRepository.countCreatedInLastHour(
-      normalizedNewPhone,
-      OTP_PURPOSES.ADMIN_CHANGE_PHONE
-    );
-
-    if (recentOtpCount >= this.otpRateLimitPerHour) {
-      throw new TooManyRequestsError("OTP request limit exceeded");
-    }
+    await this.enforceRateLimit({
+      phone: normalizedNewPhone,
+      purpose: OTP_PURPOSES.ADMIN_CHANGE_PHONE
+    });
 
     const code = this.otpCodeGenerator.generate();
     const codeHash = await this.otpHasher.hash(code);
@@ -102,5 +106,27 @@ export class RequestAdminPhoneChangeOtp {
       newPhone: normalizedNewPhone,
       expiresAt
     };
+  }
+
+  async enforceRateLimit({ phone, purpose }) {
+    if (this.otpRateLimiter) {
+      await this.otpRateLimiter.checkAndIncrement({
+        phone,
+        purpose,
+        maxPerHour: this.otpRateLimitPerHour,
+        cooldownSeconds: this.otpCooldownSeconds
+      });
+
+      return;
+    }
+
+    const recentOtpCount = await this.otpRepository.countCreatedInLastHour(
+      phone,
+      purpose
+    );
+
+    if (recentOtpCount >= this.otpRateLimitPerHour) {
+      throw new TooManyRequestsError("OTP request limit exceeded");
+    }
   }
 }

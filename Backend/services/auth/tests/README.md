@@ -22,8 +22,15 @@ npm run test:watch
 
 ## Current coverage focus
 
-- Public OTP login, `/auth/me`, phone change with OTP, logout.
+- Public OTP request with selected role: `client` or `chef`.
+- Public OTP verification for completed users.
+- New public registration flow:
+  - `verify-otp` returns `requiresRegistration` and `registrationToken`.
+  - `register/complete` creates/completes user profile.
+  - chef registration creates an active chef account.
+- Public refresh token rotation keeps `firstName`, `lastName`, and `username` in the new session.
+- Public phone change keeps profile fields and revokes old refresh tokens.
 - Admin OTP login, `/admin/auth/me`, manager phone change with OTP.
 - Manager-only admin user management: add, list, change normal admin phone, disable.
 - Token scope isolation: public token is rejected on admin routes and admin token is rejected on public routes.
-- Refresh token revocation after phone changes and logout.
+- Logout refresh-token revocation.

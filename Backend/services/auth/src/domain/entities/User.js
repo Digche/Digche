@@ -2,6 +2,9 @@ export class User {
   constructor({
     id = null,
     phone,
+    firstName = null,
+    lastName = null,
+    username = null,
     roles = [],
     createdAt = null,
     updatedAt = null
@@ -12,6 +15,9 @@ export class User {
 
     this.id = id;
     this.phone = phone;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.username = username;
     this.roles = roles;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
@@ -19,5 +25,9 @@ export class User {
 
   hasRole(role) {
     return this.roles.includes(role);
+  }
+
+  hasCompletedProfile() {
+    return Boolean(this.firstName && this.lastName && this.username);
   }
 }
