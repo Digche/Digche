@@ -32,5 +32,16 @@ export const env = {
     template: process.env.KAVENEGAR_TEMPLATE
   },
 
+  cache: {
+    provider: process.env.CACHE_PROVIDER || "redis"
+  },
+
+  redis: {
+    host: process.env.REDIS_HOST || "auth-redis",
+    port: Number(process.env.REDIS_PORT || 6379),
+    password: process.env.REDIS_PASSWORD || null,
+    keyPrefix: process.env.REDIS_KEY_PREFIX || "auth:"
+  },
+
   initialManagerPhone: process.env.INITIAL_MANAGER_PHONE
 };
