@@ -24,6 +24,7 @@ services:
       - ./docs:/docs:ro
     depends_on:
       - auth-db
+      - auth-redis
     networks:
       - food_network
 
@@ -41,8 +42,20 @@ services:
     networks:
       - food_network
 
+  auth-redis:
+    image: redis:7-alpine
+    container_name: auth_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - auth_redis_data:/data
+    networks:
+      - food_network
+
 volumes:
   auth_db_data:
+  auth_redis_data:
 
 networks:
   food_network:
