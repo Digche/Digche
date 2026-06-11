@@ -29,13 +29,15 @@ export class PublicAuthController {
     try {
       const result = await this.requestPublicOtp.execute({
         phone: req.body.phone,
-        role: req.body.role
+        role: req.body.role,
+        flow: req.body.flow
       });
 
       res.json({
         message: "OTP sent successfully",
         phone: result.phone,
         role: result.role,
+        flow: result.flow,
         expiresAt: result.expiresAt
       });
     } catch (error) {
@@ -48,7 +50,8 @@ export class PublicAuthController {
       const result = await this.verifyPublicOtp.execute({
         phone: req.body.phone,
         code: req.body.code,
-        role: req.body.role
+        role: req.body.role,
+        flow: req.body.flow
       });
 
       res.json(result);

@@ -6,6 +6,7 @@ import { USER_ROLES } from "../../domain/constants/roles.js";
 import { OTP_PURPOSES } from "../../domain/constants/otpPurposes.js";
 import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
 import { AUTH_SCOPES } from "../../domain/constants/authScopes.js";
+import { PUBLIC_AUTH_FLOWS } from "../../domain/constants/authFlows.js";
 import { PhoneNumber } from "../../domain/value-objects/PhoneNumber.js";
 
 export class VerifyPublicOtp {
@@ -27,8 +28,9 @@ export class VerifyPublicOtp {
     this.refreshTokenExpiresDays = refreshTokenExpiresDays;
   }
 
-  async execute({ phone, code, role }) {
+  async execute({ phone, code, role, flow }) {
     const normalizedPhone = PhoneNumber.normalize(phone);
+    const normalizedFlow = this.normalizeFlow(flow);
 
     if (!code) {
       throw new AppError("OTP code is required", 400, "OTP_CODE_REQUIRED");
@@ -57,10 +59,24 @@ export class VerifyPublicOtp {
 
     const user = await this.userRepository.findByPhone(normalizedPhone);
 
+    if (
+      normalizedFlow === PUBLIC_AUTH_FLOWS.REGISTER &&
+      user &&
+      user.hasRole(role) &&
+      user.hasCompletedProfile()
+    ) {
+      throw new AppError(
+        "Public account already exists for this phone and role",
+        409,
+        "PUBLIC_ACCOUNT_ALREADY_EXISTS"
+      );
+    }
+
     if (!user || !user.hasRole(role) || !user.hasCompletedProfile()) {
       return this.createRegistrationRequiredResponse({
         phone: normalizedPhone,
-        role
+        role,
+        flow: normalizedFlow
       });
     }
 
@@ -72,7 +88,8 @@ export class VerifyPublicOtp {
       if (!chefAccount) {
         return this.createRegistrationRequiredResponse({
           phone: normalizedPhone,
-          role
+          role,
+          flow: normalizedFlow
         });
       }
 
@@ -119,6 +136,7 @@ export class VerifyPublicOtp {
 
     return {
       requiresRegistration: false,
+      flow: normalizedFlow,
       accessToken,
       refreshToken,
       user: {
@@ -134,10 +152,11 @@ export class VerifyPublicOtp {
     };
   }
 
-  createRegistrationRequiredResponse({ phone, role }) {
+  createRegistrationRequiredResponse({ phone, role, flow }) {
     const registrationToken = this.tokenService.signRegistrationToken({
       phone,
       role,
+      flow,
       scope: "public_registration",
       jti: this.tokenService.generateTokenId()
     });
@@ -146,7 +165,22 @@ export class VerifyPublicOtp {
       requiresRegistration: true,
       registrationToken,
       phone,
-      role
+      role,
+      flow
     };
+  }
+
+  normalizeFlow(flow) {
+    const normalizedFlow = String(flow || "").trim();
+
+    if (!Object.values(PUBLIC_AUTH_FLOWS).includes(normalizedFlow)) {
+      throw new AppError(
+        "Invalid public auth flow",
+        400,
+        "INVALID_PUBLIC_AUTH_FLOW"
+      );
+    }
+
+    return normalizedFlow;
   }
 }

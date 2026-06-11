@@ -8,6 +8,7 @@ import { USER_ROLES } from "../../domain/constants/roles.js";
 import { CHEF_STATUS } from "../../domain/constants/statuses.js";
 import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
 import { AUTH_SCOPES } from "../../domain/constants/authScopes.js";
+import { PUBLIC_AUTH_FLOWS } from "../../domain/constants/authFlows.js";
 import { PhoneNumber } from "../../domain/value-objects/PhoneNumber.js";
 
 export class CompletePublicRegistration {
@@ -39,8 +40,16 @@ export class CompletePublicRegistration {
       );
     }
 
-    const normalizedFirstName = this.normalizeName(firstName, "FIRST_NAME_REQUIRED");
-    const normalizedLastName = this.normalizeName(lastName, "LAST_NAME_REQUIRED");
+    const normalizedFirstName = this.normalizeName(
+      firstName,
+      "FIRST_NAME_REQUIRED"
+    );
+
+    const normalizedLastName = this.normalizeName(
+      lastName,
+      "LAST_NAME_REQUIRED"
+    );
+
     const normalizedUsername = this.normalizeUsername(username);
 
     let registrationPayload;
@@ -58,23 +67,32 @@ export class CompletePublicRegistration {
 
     const normalizedPhone = PhoneNumber.normalize(registrationPayload.phone);
     const role = registrationPayload.role;
+    const flow = this.normalizeFlow(registrationPayload.flow);
 
     if (![USER_ROLES.CLIENT, USER_ROLES.CHEF].includes(role)) {
       throw new AppError("Invalid public role", 400, "INVALID_PUBLIC_ROLE");
     }
 
+    let user = await this.userRepository.findByPhone(normalizedPhone);
+
+    if (user && user.hasRole(role) && user.hasCompletedProfile()) {
+      throw new AppError(
+        "Public account already exists for this phone and role",
+        409,
+        "PUBLIC_ACCOUNT_ALREADY_EXISTS"
+      );
+    }
+
     const existingUsernameUser =
       await this.userRepository.findByUsername(normalizedUsername);
 
-    if (existingUsernameUser) {
+    if (existingUsernameUser && (!user || existingUsernameUser.id !== user.id)) {
       throw new AppError(
         "Username is already in use",
         409,
         "USERNAME_ALREADY_IN_USE"
       );
     }
-
-    let user = await this.userRepository.findByPhone(normalizedPhone);
 
     if (!user) {
       user = await this.userRepository.create(
@@ -86,15 +104,15 @@ export class CompletePublicRegistration {
           roles: []
         })
       );
-    } else {
-      if (user.username && user.username !== normalizedUsername) {
+    } else if (user.hasCompletedProfile()) {
+      if (user.username !== normalizedUsername) {
         throw new AppError(
           "User already has completed profile",
           409,
           "USER_PROFILE_ALREADY_COMPLETED"
         );
       }
-
+    } else {
       user = await this.userRepository.completeProfile(user.id, {
         firstName: normalizedFirstName,
         lastName: normalizedLastName,
@@ -163,6 +181,8 @@ export class CompletePublicRegistration {
     );
 
     return {
+      requiresRegistration: false,
+      flow,
       accessToken,
       refreshToken,
       user: {
@@ -224,5 +244,19 @@ export class CompletePublicRegistration {
     }
 
     return normalizedUsername;
+  }
+
+  normalizeFlow(flow) {
+    const normalizedFlow = String(flow || "").trim();
+
+    if (!Object.values(PUBLIC_AUTH_FLOWS).includes(normalizedFlow)) {
+      throw new AppError(
+        "Invalid public auth flow",
+        400,
+        "INVALID_PUBLIC_AUTH_FLOW"
+      );
+    }
+
+    return normalizedFlow;
   }
 }

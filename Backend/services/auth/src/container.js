@@ -71,6 +71,7 @@ export function createContainer() {
   });
 
   const requestPublicOtp = new RequestPublicOtp({
+    userRepository,
     otpRepository,
     otpCodeGenerator,
     otpHasher,
