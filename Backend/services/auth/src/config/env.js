@@ -22,8 +22,14 @@ export const env = {
   },
 
   otp: {
+    provider: process.env.OTP_PROVIDER || "dev",
     expiresMinutes: Number(process.env.OTP_EXPIRES_MINUTES || 2),
     rateLimitPerHour: Number(process.env.OTP_RATE_LIMIT_PER_HOUR || 5)
+  },
+
+  kavenegar: {
+    apiKey: process.env.KAVENEGAR_API_KEY,
+    template: process.env.KAVENEGAR_TEMPLATE
   },
 
   initialManagerPhone: process.env.INITIAL_MANAGER_PHONE

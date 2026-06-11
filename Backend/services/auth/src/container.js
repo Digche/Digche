@@ -25,7 +25,8 @@ import { SequelizeRefreshTokenRepository } from "./infrastructure/database/repos
 
 import { CryptoOtpCodeGenerator } from "./infrastructure/otp/CryptoOtpCodeGenerator.js";
 import { BcryptOtpHasher } from "./infrastructure/otp/BcryptOtpHasher.js";
-import { DevOtpSender } from "./infrastructure/otp/DevOtpSender.js";
+import { createOtpSender } from "./infrastructure/otp/createOtpSender.js";
+
 import { JwtTokenService } from "./infrastructure/security/JwtTokenService.js";
 
 import { PublicAuthController } from "./interfaces/http/controllers/PublicAuthController.js";
@@ -44,7 +45,7 @@ export function createContainer() {
 
   const otpCodeGenerator = new CryptoOtpCodeGenerator();
   const otpHasher = new BcryptOtpHasher();
-  const otpSender = new DevOtpSender();
+  const otpSender = createOtpSender({ env });
 
   const tokenService = new JwtTokenService({
     secret: env.jwt.secret,
