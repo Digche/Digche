@@ -10,15 +10,19 @@ export class RequestPublicOtp {
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter = null,
     otpExpiresMinutes,
-    otpRateLimitPerHour
+    otpRateLimitPerHour,
+    otpCooldownSeconds = 60
   }) {
     this.otpRepository = otpRepository;
     this.otpCodeGenerator = otpCodeGenerator;
     this.otpHasher = otpHasher;
     this.otpSender = otpSender;
+    this.otpRateLimiter = otpRateLimiter;
     this.otpExpiresMinutes = otpExpiresMinutes;
     this.otpRateLimitPerHour = otpRateLimitPerHour;
+    this.otpCooldownSeconds = otpCooldownSeconds;
   }
 
   async execute({ phone, role }) {
@@ -28,14 +32,10 @@ export class RequestPublicOtp {
       throw new AppError("Invalid public role", 400, "INVALID_PUBLIC_ROLE");
     }
 
-    const recentOtpCount = await this.otpRepository.countCreatedInLastHour(
-      normalizedPhone,
-      OTP_PURPOSES.PUBLIC_LOGIN
-    );
-
-    if (recentOtpCount >= this.otpRateLimitPerHour) {
-      throw new TooManyRequestsError("OTP request limit exceeded");
-    }
+    await this.enforceRateLimit({
+      phone: normalizedPhone,
+      purpose: OTP_PURPOSES.PUBLIC_LOGIN
+    });
 
     const code = this.otpCodeGenerator.generate();
     const codeHash = await this.otpHasher.hash(code);
@@ -64,5 +64,27 @@ export class RequestPublicOtp {
       role,
       expiresAt
     };
+  }
+
+  async enforceRateLimit({ phone, purpose }) {
+    if (this.otpRateLimiter) {
+      await this.otpRateLimiter.checkAndIncrement({
+        phone,
+        purpose,
+        maxPerHour: this.otpRateLimitPerHour,
+        cooldownSeconds: this.otpCooldownSeconds
+      });
+
+      return;
+    }
+
+    const recentOtpCount = await this.otpRepository.countCreatedInLastHour(
+      phone,
+      purpose
+    );
+
+    if (recentOtpCount >= this.otpRateLimitPerHour) {
+      throw new TooManyRequestsError("OTP request limit exceeded");
+    }
   }
 }

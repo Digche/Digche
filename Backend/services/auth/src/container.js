@@ -26,6 +26,9 @@ import { SequelizeRefreshTokenRepository } from "./infrastructure/database/repos
 import { CryptoOtpCodeGenerator } from "./infrastructure/otp/CryptoOtpCodeGenerator.js";
 import { BcryptOtpHasher } from "./infrastructure/otp/BcryptOtpHasher.js";
 import { createOtpSender } from "./infrastructure/otp/createOtpSender.js";
+import { CacheOtpRateLimiter } from "./infrastructure/otp/CacheOtpRateLimiter.js";
+
+import { createCacheService } from "./infrastructure/cache/createCacheService.js";
 
 import { JwtTokenService } from "./infrastructure/security/JwtTokenService.js";
 
@@ -42,6 +45,12 @@ export function createContainer() {
   const adminUserRepository = new SequelizeAdminUserRepository();
   const otpRepository = new SequelizeOtpRepository();
   const refreshTokenRepository = new SequelizeRefreshTokenRepository();
+
+  const cacheService = createCacheService({ env });
+
+  const otpRateLimiter = new CacheOtpRateLimiter({
+    cacheService
+  });
 
   const otpCodeGenerator = new CryptoOtpCodeGenerator();
   const otpHasher = new BcryptOtpHasher();
@@ -66,8 +75,10 @@ export function createContainer() {
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter,
     otpExpiresMinutes: env.otp.expiresMinutes,
-    otpRateLimitPerHour: env.otp.rateLimitPerHour
+    otpRateLimitPerHour: env.otp.rateLimitPerHour,
+    otpCooldownSeconds: env.otp.cooldownSeconds
   });
 
   const verifyPublicOtp = new VerifyPublicOtp({
@@ -94,8 +105,10 @@ export function createContainer() {
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter,
     otpExpiresMinutes: env.otp.expiresMinutes,
-    otpRateLimitPerHour: env.otp.rateLimitPerHour
+    otpRateLimitPerHour: env.otp.rateLimitPerHour,
+    otpCooldownSeconds: env.otp.cooldownSeconds
   });
 
   const verifyPublicPhoneChangeOtp = new VerifyPublicPhoneChangeOtp({
@@ -114,8 +127,10 @@ export function createContainer() {
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter,
     otpExpiresMinutes: env.otp.expiresMinutes,
-    otpRateLimitPerHour: env.otp.rateLimitPerHour
+    otpRateLimitPerHour: env.otp.rateLimitPerHour,
+    otpCooldownSeconds: env.otp.cooldownSeconds
   });
 
   const verifyAdminOtp = new VerifyAdminOtp({
@@ -133,8 +148,10 @@ export function createContainer() {
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter,
     otpExpiresMinutes: env.otp.expiresMinutes,
-    otpRateLimitPerHour: env.otp.rateLimitPerHour
+    otpRateLimitPerHour: env.otp.rateLimitPerHour,
+    otpCooldownSeconds: env.otp.cooldownSeconds
   });
 
   const verifyAdminPhoneChangeOtp = new VerifyAdminPhoneChangeOtp({
@@ -214,6 +231,7 @@ export function createContainer() {
     adminAuthController,
     adminUserController,
     publicAuthMiddleware,
-    adminAuthMiddleware
+    adminAuthMiddleware,
+    cacheService
   };
 }
