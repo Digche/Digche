@@ -1,7 +1,8 @@
 import { OtpCode } from "../../domain/entities/OtpCode.js";
 import { PhoneNumber } from "../../domain/value-objects/PhoneNumber.js";
 import { OTP_PURPOSES } from "../../domain/constants/otpPurposes.js";
-import { TooManyRequestsError } from "../errors/AppError.js";
+import { USER_ROLES } from "../../domain/constants/roles.js";
+import { AppError, TooManyRequestsError } from "../errors/AppError.js";
 
 export class RequestPublicOtp {
   constructor({
@@ -20,14 +21,17 @@ export class RequestPublicOtp {
     this.otpRateLimitPerHour = otpRateLimitPerHour;
   }
 
-  async execute({ phone }) {
+  async execute({ phone, role }) {
     const normalizedPhone = PhoneNumber.normalize(phone);
 
-    const recentOtpCount =
-      await this.otpRepository.countCreatedInLastHour(
-        normalizedPhone,
-        OTP_PURPOSES.PUBLIC_LOGIN
-      );
+    if (!Object.values(USER_ROLES).includes(role)) {
+      throw new AppError("Invalid public role", 400, "INVALID_PUBLIC_ROLE");
+    }
+
+    const recentOtpCount = await this.otpRepository.countCreatedInLastHour(
+      normalizedPhone,
+      OTP_PURPOSES.PUBLIC_LOGIN
+    );
 
     if (recentOtpCount >= this.otpRateLimitPerHour) {
       throw new TooManyRequestsError("OTP request limit exceeded");
@@ -57,6 +61,7 @@ export class RequestPublicOtp {
 
     return {
       phone: normalizedPhone,
+      role,
       expiresAt
     };
   }

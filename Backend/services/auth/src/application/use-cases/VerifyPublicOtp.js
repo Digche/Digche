@@ -1,11 +1,8 @@
 import { AppError, ForbiddenError, UnauthorizedError } from "../errors/AppError.js";
 
-import { User } from "../../domain/entities/User.js";
-import { ChefAccount } from "../../domain/entities/ChefAccount.js";
 import { RefreshToken } from "../../domain/entities/RefreshToken.js";
 
 import { USER_ROLES } from "../../domain/constants/roles.js";
-import { CHEF_STATUS } from "../../domain/constants/statuses.js";
 import { OTP_PURPOSES } from "../../domain/constants/otpPurposes.js";
 import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
 import { AUTH_SCOPES } from "../../domain/constants/authScopes.js";
@@ -56,34 +53,27 @@ export class VerifyPublicOtp {
       throw new UnauthorizedError("Invalid or expired OTP code");
     }
 
-    let user = await this.userRepository.findByPhone(normalizedPhone);
+    await this.otpRepository.consume(otpCode.id);
 
-    if (!user) {
-      user = await this.userRepository.create(
-        new User({
-          phone: normalizedPhone,
-          roles: []
-        })
-      );
-    }
+    const user = await this.userRepository.findByPhone(normalizedPhone);
 
-    if (!user.hasRole(role)) {
-      await this.userRepository.addRole(user.id, role);
-      user.roles = [...user.roles, role];
+    if (!user || !user.hasRole(role) || !user.hasCompletedProfile()) {
+      return this.createRegistrationRequiredResponse({
+        phone: normalizedPhone,
+        role
+      });
     }
 
     const roleData = {};
 
     if (role === USER_ROLES.CHEF) {
-      let chefAccount = await this.chefAccountRepository.findByUserId(user.id);
+      const chefAccount = await this.chefAccountRepository.findByUserId(user.id);
 
       if (!chefAccount) {
-        chefAccount = await this.chefAccountRepository.create(
-          new ChefAccount({
-            userId: user.id,
-            status: CHEF_STATUS.PENDING
-          })
-        );
+        return this.createRegistrationRequiredResponse({
+          phone: normalizedPhone,
+          role
+        });
       }
 
       if (chefAccount.isDisabled()) {
@@ -95,11 +85,12 @@ export class VerifyPublicOtp {
       };
     }
 
-    await this.otpRepository.consume(otpCode.id);
-
     const accessTokenPayload = {
       sub: user.id,
       phone: user.phone,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
       roles: user.roles,
       selectedRole: role,
       scope: AUTH_SCOPES.PUBLIC,
@@ -127,15 +118,35 @@ export class VerifyPublicOtp {
     );
 
     return {
+      requiresRegistration: false,
       accessToken,
       refreshToken,
       user: {
         id: user.id,
         phone: user.phone,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
         roles: user.roles,
         selectedRole: role,
         ...roleData
       }
+    };
+  }
+
+  createRegistrationRequiredResponse({ phone, role }) {
+    const registrationToken = this.tokenService.signRegistrationToken({
+      phone,
+      role,
+      scope: "public_registration",
+      jti: this.tokenService.generateTokenId()
+    });
+
+    return {
+      requiresRegistration: true,
+      registrationToken,
+      phone,
+      role
     };
   }
 }
