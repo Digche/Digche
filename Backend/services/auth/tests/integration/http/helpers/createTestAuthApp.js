@@ -25,6 +25,7 @@ import { ChangeAdminUserPhone } from "../../../../src/application/use-cases/Chan
 
 import { RequestPublicOtp } from "../../../../src/application/use-cases/RequestPublicOtp.js";
 import { VerifyPublicOtp } from "../../../../src/application/use-cases/VerifyPublicOtp.js";
+import { CompletePublicRegistration } from "../../../../src/application/use-cases/CompletePublicRegistration.js";
 import { RefreshPublicSession } from "../../../../src/application/use-cases/RefreshPublicSession.js";
 import { RequestPublicPhoneChangeOtp } from "../../../../src/application/use-cases/RequestPublicPhoneChangeOtp.js";
 import { VerifyPublicPhoneChangeOtp } from "../../../../src/application/use-cases/VerifyPublicPhoneChangeOtp.js";
@@ -165,6 +166,13 @@ export function createHttpTestApp(context) {
       tokenService: context.tokenService,
       refreshTokenExpiresDays: context.refreshTokenExpiresDays
     }),
+    completePublicRegistration: new CompletePublicRegistration({
+      userRepository: context.userRepository,
+      chefAccountRepository: context.chefAccountRepository,
+      refreshTokenRepository: context.refreshTokenRepository,
+      tokenService: context.tokenService,
+      refreshTokenExpiresDays: context.refreshTokenExpiresDays
+    }),
     refreshPublicSession,
     logoutSession,
     requestPublicPhoneChangeOtp: new RequestPublicPhoneChangeOtp({
@@ -212,6 +220,9 @@ export function registerPublicAccessToken(context, token, overrides = {}) {
   context.tokenService.registerAccessToken(token, {
     sub: overrides.sub || "user-1",
     phone: overrides.phone || "+989121234567",
+    firstName: overrides.firstName || "Ali",
+    lastName: overrides.lastName || "Ahmadi",
+    username: overrides.username || "ali_ahmadi",
     roles: overrides.roles || ["client"],
     selectedRole: overrides.selectedRole || "client",
     chef: overrides.chef || null,
