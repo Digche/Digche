@@ -8,6 +8,8 @@ export function createPublicAuthRoutes(controller, publicAuthMiddleware) {
   router.post("/request-otp", controller.requestOtp);
   router.post("/verify-otp", controller.verifyOtp);
 
+  router.post("/register/complete", controller.completeRegistration);
+
   router.post("/refresh", controller.refresh);
   router.post("/logout", controller.logout);
 

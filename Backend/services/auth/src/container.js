@@ -2,6 +2,7 @@ import { env } from "./config/env.js";
 
 import { RequestPublicOtp } from "./application/use-cases/RequestPublicOtp.js";
 import { VerifyPublicOtp } from "./application/use-cases/VerifyPublicOtp.js";
+import { CompletePublicRegistration } from "./application/use-cases/CompletePublicRegistration.js";
 import { RequestAdminOtp } from "./application/use-cases/RequestAdminOtp.js";
 import { VerifyAdminOtp } from "./application/use-cases/VerifyAdminOtp.js";
 import { RefreshPublicSession } from "./application/use-cases/RefreshPublicSession.js";
@@ -74,6 +75,14 @@ export function createContainer() {
     otpRepository,
     refreshTokenRepository,
     otpHasher,
+    tokenService,
+    refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
+  });
+
+  const completePublicRegistration = new CompletePublicRegistration({
+    userRepository,
+    chefAccountRepository,
+    refreshTokenRepository,
     tokenService,
     refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
   });
@@ -176,6 +185,7 @@ export function createContainer() {
   const publicAuthController = new PublicAuthController({
     requestPublicOtp,
     verifyPublicOtp,
+    completePublicRegistration,
     refreshPublicSession,
     logoutSession,
     requestPublicPhoneChangeOtp,

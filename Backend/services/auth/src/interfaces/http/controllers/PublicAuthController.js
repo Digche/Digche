@@ -2,6 +2,7 @@ export class PublicAuthController {
   constructor({
     requestPublicOtp,
     verifyPublicOtp,
+    completePublicRegistration,
     refreshPublicSession,
     logoutSession,
     requestPublicPhoneChangeOtp,
@@ -9,6 +10,7 @@ export class PublicAuthController {
   }) {
     this.requestPublicOtp = requestPublicOtp;
     this.verifyPublicOtp = verifyPublicOtp;
+    this.completePublicRegistration = completePublicRegistration;
     this.refreshPublicSession = refreshPublicSession;
     this.logoutSession = logoutSession;
     this.requestPublicPhoneChangeOtp = requestPublicPhoneChangeOtp;
@@ -26,12 +28,14 @@ export class PublicAuthController {
   requestOtp = async (req, res, next) => {
     try {
       const result = await this.requestPublicOtp.execute({
-        phone: req.body.phone
+        phone: req.body.phone,
+        role: req.body.role
       });
 
       res.json({
         message: "OTP sent successfully",
         phone: result.phone,
+        role: result.role,
         expiresAt: result.expiresAt
       });
     } catch (error) {
@@ -48,6 +52,21 @@ export class PublicAuthController {
       });
 
       res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  completeRegistration = async (req, res, next) => {
+    try {
+      const result = await this.completePublicRegistration.execute({
+        registrationToken: req.body.registrationToken,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        username: req.body.username
+      });
+
+      res.status(201).json(result);
     } catch (error) {
       next(error);
     }
@@ -86,6 +105,9 @@ export class PublicAuthController {
         user: {
           id: req.auth.userId,
           phone: req.auth.phone,
+          firstName: req.auth.firstName,
+          lastName: req.auth.lastName,
+          username: req.auth.username,
           roles: req.auth.roles,
           selectedRole: req.auth.selectedRole,
           ...(req.auth.chef ? { chef: req.auth.chef } : {})
