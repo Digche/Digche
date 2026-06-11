@@ -33,24 +33,30 @@ paths:
     post:
       tags:
         - Public Auth
-      summary: Request OTP for public login
+      summary: Request OTP for public login or registration
+      description: User selects client or chef role before requesting OTP.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RequestOtpInput"
+              $ref: "#/components/schemas/RequestPublicOtpInput"
             examples:
-              default:
+              client:
                 value:
                   phone: "09121234567"
+                  role: "client"
+              chef:
+                value:
+                  phone: "09121234567"
+                  role: "chef"
       responses:
         "200":
           description: OTP sent successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OtpSentResponse"
+                $ref: "#/components/schemas/PublicOtpSentResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "429":
@@ -60,7 +66,10 @@ paths:
     post:
       tags:
         - Public Auth
-      summary: Verify OTP and login as client or chef
+      summary: Verify OTP for public login or registration
+      description: |
+        If the user already has the selected role and completed profile, a public session is returned.
+        If registration is required, a temporary registrationToken is returned for completing registration.
       requestBody:
         required: true
         content:
@@ -80,7 +89,42 @@ paths:
                   role: "chef"
       responses:
         "200":
-          description: Public session created
+          description: Public OTP verified. Returns either a public session or a registration token.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/PublicAuthResponse"
+                  - $ref: "#/components/schemas/RegistrationRequiredResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/register/complete:
+    post:
+      tags:
+        - Public Auth
+      summary: Complete public user registration
+      description: Completes registration after OTP verification using a temporary registration token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteRegistrationInput"
+            examples:
+              client:
+                value:
+                  registrationToken: "registration_token_here"
+                  firstName: "Ali"
+                  lastName: "Ahmadi"
+                  username: "ali_ahmadi"
+      responses:
+        "201":
+          description: Registration completed and public session created
           content:
             application/json:
               schema:
@@ -89,8 +133,12 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Username is already in use or user profile already completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/refresh:
     post:
@@ -112,6 +160,8 @@ paths:
                 $ref: "#/components/schemas/PublicAuthResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /auth/logout:
     post:
@@ -249,7 +299,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RequestOtpInput"
+              $ref: "#/components/schemas/RequestAdminOtpInput"
             examples:
               default:
                 value:
@@ -580,7 +630,23 @@ components:
       bearerFormat: JWT
 
   schemas:
-    RequestOtpInput:
+    RequestPublicOtpInput:
+      type: object
+      required:
+        - phone
+        - role
+      properties:
+        phone:
+          type: string
+          example: "09121234567"
+        role:
+          type: string
+          enum:
+            - client
+            - chef
+          example: client
+
+    RequestAdminOtpInput:
       type: object
       required:
         - phone
@@ -621,6 +687,27 @@ components:
         code:
           type: string
           example: "123456"
+
+    CompleteRegistrationInput:
+      type: object
+      required:
+        - registrationToken
+        - firstName
+        - lastName
+        - username
+      properties:
+        registrationToken:
+          type: string
+          example: "registration_token_here"
+        firstName:
+          type: string
+          example: "Ali"
+        lastName:
+          type: string
+          example: "Ahmadi"
+        username:
+          type: string
+          example: "ali_ahmadi"
 
     RefreshInput:
       type: object
@@ -671,6 +758,25 @@ components:
           type: string
           example: "09121234567"
 
+    PublicOtpSentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: OTP sent successfully
+        phone:
+          type: string
+          example: "+989121234567"
+        role:
+          type: string
+          enum:
+            - client
+            - chef
+          example: client
+        expiresAt:
+          type: string
+          format: date-time
+
     OtpSentResponse:
       type: object
       properties:
@@ -697,6 +803,25 @@ components:
           type: string
           format: date-time
 
+    RegistrationRequiredResponse:
+      type: object
+      properties:
+        requiresRegistration:
+          type: boolean
+          example: true
+        registrationToken:
+          type: string
+          example: "registration_token_here"
+        phone:
+          type: string
+          example: "+989121234567"
+        role:
+          type: string
+          enum:
+            - client
+            - chef
+          example: client
+
     PublicUser:
       type: object
       properties:
@@ -706,6 +831,15 @@ components:
         phone:
           type: string
           example: "+989121234567"
+        firstName:
+          type: string
+          example: "Ali"
+        lastName:
+          type: string
+          example: "Ahmadi"
+        username:
+          type: string
+          example: "ali_ahmadi"
         roles:
           type: array
           items:
@@ -784,6 +918,9 @@ components:
     PublicAuthResponse:
       type: object
       properties:
+        requiresRegistration:
+          type: boolean
+          example: false
         accessToken:
           type: string
         refreshToken:

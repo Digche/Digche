@@ -19,7 +19,11 @@ export class TokenService {
     throw new Error("TokenService.generateRefreshToken is not implemented");
   }
 
-  hashRefreshToken(token) {
+  hashRefreshToken(refreshToken) {
     throw new Error("TokenService.hashRefreshToken is not implemented");
+  }
+
+  generateTokenId() {
+    throw new Error("TokenService.generateTokenId is not implemented");
   }
 }

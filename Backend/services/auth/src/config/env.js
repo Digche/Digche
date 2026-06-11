@@ -19,7 +19,7 @@ export const env = {
     accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
     refreshTokenExpiresDays: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30),
     registrationTokenExpiresIn: process.env.REGISTRATION_TOKEN_EXPIRES_IN || "10m"
-},
+  },
 
   otp: {
     expiresMinutes: Number(process.env.OTP_EXPIRES_MINUTES || 2),
