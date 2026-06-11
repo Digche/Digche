@@ -47,7 +47,8 @@ export function createContainer() {
 
   const tokenService = new JwtTokenService({
     secret: env.jwt.secret,
-    accessTokenExpiresIn: env.jwt.accessTokenExpiresIn
+    accessTokenExpiresIn: env.jwt.accessTokenExpiresIn,
+    registrationTokenExpiresIn: env.jwt.registrationTokenExpiresIn
   });
 
   const publicAuthMiddleware = createPublicAuthMiddleware({
