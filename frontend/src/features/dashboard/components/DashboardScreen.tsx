@@ -9,15 +9,11 @@ export default function DashboardScreen() {
     return (
       <div>
           <DashboardHeader/>
-{/* 
-          <div className="w-full flex justify-center items-center  py-5">
-            <ProvinceCityDropdown />
-          </div> */}
 
           <div className="flex flex-col gap-8 items-center py-5">
-  <ProvinceCityDropdown />
-  <SearchBox />
-</div>
+            <ProvinceCityDropdown />
+            <SearchBox />
+          </div>
 
 
           <div className="w-[90%] mx-auto h-[1px] mt-2.5 bg-[#D9D9D9]"></div>

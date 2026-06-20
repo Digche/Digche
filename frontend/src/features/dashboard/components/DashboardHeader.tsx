@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShoppingCart, User, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function DashboardHeader()
 {
@@ -38,11 +39,12 @@ export default function DashboardHeader()
           {/* جداکننده عمودی */}
           <div className="h-6 w-[1px] bg-gray-300"></div>
           
-          {/* آیکون سبد خرید */}
-          <button className="text-gray-700 hover:text-orange-600 transition-colors">
-            <ShoppingCart size={26} strokeWidth={1.5} />
-          </button>
           
+          <Link
+          href="/cart"
+          className="text-gray-700 hover:text-orange-600 transition-colors">
+            <ShoppingCart size={26} strokeWidth={1.5} />
+          </Link>
         </div>
 
 
