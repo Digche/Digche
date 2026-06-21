@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { Star, MapPin, ShoppingCart, Plus, Minus } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
+import Link from "next/link";
 
 interface FoodItemProps {
   id: number;
@@ -35,6 +36,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item }) => {
 
   return (
     <div className="min-w-[280px] md:min-w-[320px] bg-[#FDF7F2] rounded-3xl overflow-hidden border border-gray-100 shadow-sm snap-start">
+    <Link href={`/foods/${item.id}`} className="block">
       <div className="relative h-[248px] w-full">
         <Image
           src={item.image}
@@ -47,6 +49,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item }) => {
           {item.category}
         </div>
       </div>
+    </Link>
 
       <div className="p-5 text-right">
         <div className="flex justify-between items-start mb-2">
