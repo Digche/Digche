@@ -38,6 +38,8 @@ type FoodStore = {
 
   updateFood: (foodID: number | string, updatedData: UpdateFoodPayload) => void;
 
+  deleteFood: (foodID: number | string) => void;
+
   resetFoods: () => void;
 };
 
@@ -68,10 +70,17 @@ export const useFoodStore = create<FoodStore>()(
           foods: initialFoods as Food[],
         });
       },
+      
+      deleteFood: (foodID) => {
+        set((state) => ({
+          foods: state.foods.filter((food) => food.id !== Number(foodID)),
+        }));
+      },
     }),
     {
       name: "digche-foods",
       storage: createJSONStorage(() => localStorage),
     }
+    
   )
 );

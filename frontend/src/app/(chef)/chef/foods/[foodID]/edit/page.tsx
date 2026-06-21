@@ -1,7 +1,7 @@
 // src/app/(chef)/chef/foods/[foodID]/edit/page.tsx
 
 
-import EditFoodForm from "@/features/chef-food/components/EditFoodForm";
+import EditFoodForm from "@/features/chef/components/EditFoodForm";
 import PageHeader from "@/shared/components/SharedHeader";
 
 type EditFoodPageProps = {
@@ -18,7 +18,6 @@ export default async function EditFoodPage({ params }: EditFoodPageProps) {
       <div className="mx-auto max-w-4xl">
         <PageHeader
           title="ویرایش اطلاعات غذا"
-          description="اطلاعات غذا را ویرایش و ذخیره کنید"
         />
 
         <EditFoodForm foodID={foodID} />

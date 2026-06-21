@@ -1,7 +1,7 @@
 // src/app/(public)/foods/[foodID]/page.tsx
 
 import SharedHeader from "@/shared/components/SharedHeader";
-import FoodDetailsClient from "@/features/food-details/components/FoodDetailsClient";
+import FoodDetailsClient from "@/features/foods/components/FoodDetailsClient";
 
 type FoodDetailsPageProps = {
   params: Promise<{
