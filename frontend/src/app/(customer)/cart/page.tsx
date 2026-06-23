@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCartStore } from "@/store/cart-store";
 import { Plus, Minus, Trash2, MapPin, ChefHat } from "lucide-react";
 import CartSummary from "@/features/cart/component/CartSummary";
-import PageHeader from "@/features/cart/component/CartHeader";
+import PageHeader from "@/shared/components/SharedHeader";
 
 export default function CartPage() {
   const items = useCartStore((state) => state.items);

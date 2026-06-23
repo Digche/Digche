@@ -5,14 +5,14 @@ import FoodScroll from "./FoodScroll";
 import ProvinceCityDropdown from "./ProvinceCityDropdown";
 import SearchBox from "./SearchBox";
 
-export default function DashboardScreen() {
+export default function HomeScreen() {
     return (
       <div>
           <HomeHeader/>
 
           <div className="flex flex-col gap-8 items-center py-5">
             <ProvinceCityDropdown />
-            <SearchBox />
+            {/* <SearchBox /> */}
           </div>
 
 

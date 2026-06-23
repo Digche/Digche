@@ -5,7 +5,7 @@ import FoodCard from "@/features/foods/components/FoodCard";
 import Link from "next/link";
 import { useFoodStore } from "@/store/food-store";
 
-const FoodScroll = () => {
+export default function FoodScroll() {
   const foods = useFoodStore((state) => state.foods);
 
   return (
@@ -24,11 +24,9 @@ const FoodScroll = () => {
 
       <div className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide snap-x snap-mandatory">
         {foods.map((item) => (
-          <FoodCard key={item.id} item={item} />
-        ))}
+          <FoodCard item={item} variant="customer" display="scroll" />        ))}
       </div>
     </section>
   );
 };
 
-export default FoodScroll;

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Phone, Mail, MapPin, Send } from 'lucide-react';
 import Image from 'next/image';
 
-export default function DashboardFooter() {
+export default function HomeFooter() {
   return (
     <footer className="bg-gray-50 border-t border-gray-200 pt-16 pb-8" dir="rtl">
       <div className="container mx-auto px-4 lg:px-12">

@@ -1,8 +1,18 @@
-// src/features/food-details/components/FoodDetailsHero.tsx
+// src/features/foods/components/FoodDetailsHero.tsx
+
+"use client";
 
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { MapPin, Star, ChefHat, PackageCheck, Wallet } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  MapPin,
+  Star,
+  ChefHat,
+  PackageCheck,
+  Wallet,
+  CookingPot,
+} from "lucide-react";
 import FoodDetailsActions from "./FoodDetailsActions";
 
 interface FoodDetailsHeroProps {
@@ -18,10 +28,12 @@ interface FoodDetailsHeroProps {
     price: string;
     unit?: string;
     image: string;
+    ingredients?: string[];
     description: string;
   };
   canEditFood: boolean;
   canAddToCart: boolean;
+  isClickable?: boolean;
 }
 
 function RatingStars({ rating }: { rating: number }) {
@@ -79,17 +91,58 @@ function InfoPill({
   );
 }
 
+function IngredientsBox({ ingredients }: { ingredients?: string[] }) {
+  if (!ingredients || ingredients.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-5 rounded-[1.4rem] bg-[#FFF9F4] px-4 py-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-sm font-extrabold text-gray-900">مواد اولیه</h2>
+
+        <CookingPot size={20} className="text-[#D48B8B]" />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {ingredients.map((ingredient) => (
+          <span
+            key={ingredient}
+            className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
+          >
+            {ingredient}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function FoodDetailsHero({
   food,
   canEditFood,
   canAddToCart,
+  isClickable = false,
 }: FoodDetailsHeroProps) {
+  const router = useRouter();
+
   const priceText = `${food.price}${food.unit ? ` ${food.unit}` : ""}`;
+
+  const goToFoodDetails = () => {
+    if (!isClickable) return;
+
+    router.push(`/foods/${food.id}`);
+  };
+
+  const clickableClasses = isClickable
+    ? "cursor-pointer transition hover:-translate-y-0.5 hover:shadow-md"
+    : "";
 
   return (
     <section
       dir="rtl"
-      className="overflow-hidden rounded-[2rem] border border-orange-100 bg-white p-4 shadow-sm sm:p-5"
+      onClick={goToFoodDetails}
+      className={`overflow-hidden rounded-[2rem] border border-orange-100 bg-white p-4 shadow-sm sm:p-5 ${clickableClasses}`}
     >
       {/* Desktop / Tablet */}
       <div className="hidden items-stretch gap-6 lg:flex">
@@ -103,12 +156,15 @@ export default function FoodDetailsHero({
               <span className="text-base font-bold text-gray-600">
                 {food.rating}
               </span>
+
               <RatingStars rating={food.rating} />
             </div>
 
             <p className="mt-5 text-base leading-9 text-gray-600">
               {food.description}
             </p>
+
+            <IngredientsBox ingredients={food.ingredients} />
 
             <div className="mt-7 grid grid-cols-2 gap-4">
               <InfoPill
@@ -135,7 +191,10 @@ export default function FoodDetailsHero({
             </div>
           </div>
 
-          <div className="mt-8 border-t border-orange-100 pt-6">
+          <div
+            className="mt-8 border-t border-orange-100 pt-6"
+            onClick={(event) => event.stopPropagation()}
+          >
             <FoodDetailsActions
               food={food}
               canEditFood={canEditFood}
@@ -170,12 +229,15 @@ export default function FoodDetailsHero({
             <span className="text-base font-bold text-gray-600">
               {food.rating}
             </span>
+
             <RatingStars rating={food.rating} />
           </div>
 
           <p className="mt-5 text-sm leading-8 text-gray-600">
             {food.description}
           </p>
+
+          <IngredientsBox ingredients={food.ingredients} />
         </div>
 
         <div className="mt-5 flex items-start gap-3">
@@ -218,7 +280,10 @@ export default function FoodDetailsHero({
           </div>
         </div>
 
-        <div className="mt-6 border-t border-orange-100 pt-5">
+        <div
+          className="mt-6 border-t border-orange-100 pt-5"
+          onClick={(event) => event.stopPropagation()}
+        >
           <FoodDetailsActions
             food={food}
             canEditFood={canEditFood}

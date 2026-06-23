@@ -8,11 +8,12 @@ export const foods = [
     rating: 3.5,
     remaining: "۲ پرس باقیمانده",
     chef: "دستپخت خانم ایکس",
-    chefId: 11,
+    chefId: 1,
     location: "تهران",
     price: "۳۰۰,۰۰۰ ",
     unit: "تومان",
     image: "/images/fesenjan.webp",
+    ingredients: ["گردو", "رب انار", "مرغ", "پیاز", "ادویه مخصوص"],
     description:
       "فسنجان خانگی با گردوی تازه و رب انار، مناسب برای ناهار و شام.",
   },
@@ -23,11 +24,12 @@ export const foods = [
     rating: 4.8,
     remaining: "۲ کیلو باقیمانده",
     chef: "دستپخت خانم ایکس",
-    chefId: 11,
+    chefId: 2,
     location: "تهران",
     price: "۸۰,۰۰۰ ",
     unit: "یک کیلو",
     image: "/images/torshi.webp",
+    ingredients: ["زیتون", "هویج", "فلفل دلمه‌ای", "سرکه", "ادویه ترشی"],
     description:
       "ترشی اسپانیایی تند و خوش‌عطر، مناسب کنار انواع غذاهای خانگی.",
   },
@@ -43,6 +45,7 @@ export const foods = [
     price: "۲۵۰,۰۰۰ ",
     unit: "یک کیلو",
     image: "/images/cheesecake.webp",
+    ingredients: ["پنیر خامه‌ای", "بیسکویت", "کره", "آلبالو", "خامه"],
     description:
       "چیزکیک آلبالو خانگی با طعم متعادل شیرینی و ترشی آلبالو.",
   },
@@ -58,6 +61,7 @@ export const foods = [
     price: "۸۰,۰۰۰ ",
     unit: "یک کیلو",
     image: "/images/torshi.webp",
+    ingredients: ["زیتون", "هویج", "فلفل دلمه‌ای", "سرکه", "ادویه ترشی"],
     description:
       "ترشی اسپانیایی تند و خوش‌عطر، مناسب کنار انواع غذاهای خانگی.",
   },
@@ -73,6 +77,7 @@ export const foods = [
     price: "۲۵۰,۰۰۰ ",
     unit: "یک کیلو",
     image: "/images/cheesecake.webp",
+    ingredients: ["پنیر خامه‌ای", "بیسکویت", "کره", "آلبالو", "خامه"],
     description:
       "چیزکیک آلبالو خانگی با طعم متعادل شیرینی و ترشی آلبالو.",
   },

@@ -2,7 +2,7 @@ import { ShoppingCart, User, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function DashboardHeader()
+export default function HomeHeader()
 {
   return (
     <header className="w-[90%] mx-auto bg-white  py-3 px-6 md:px-12">
