@@ -85,17 +85,4 @@ public class DishesController : ControllerBase
         return Ok(result);
     }
 
-    // // === تغییر وضعیت موجودی (فقط آشپز مالک) ===
-    // [HttpPatch("{id:guid}/availability")]
-    // [Authorize(Roles = "chef")]
-    // public async Task<IActionResult> UpdateAvailability(Guid id, [FromBody] bool isAvailable)
-    // {
-    //     var command = new UpdateDishAvailabilityCommand(id, isAvailable);
-    //     var result = await _mediator.Send(command);
-
-    //     if (!result.IsSuccess)
-    //         return BadRequest(new { message = result.ErrorMessage });
-
-    //     return Ok(result);
-    // }
 }
