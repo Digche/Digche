@@ -56,18 +56,18 @@ public class DishesController : ControllerBase
         return Ok(result);
     }
 
-    // // === دریافت غذاهای موجود (برای مشتریان) ===
-    // [HttpGet("available")]
-    // public async Task<IActionResult> GetAvailableDishes()
-    // {
-    //     var query = new GetAvailableDishesQuery();
-    //     var result = await _mediator.Send(query);
+    // === دریافت غذاهای موجود (برای مشتریان) ===
+    [HttpGet("available")]
+    public async Task<IActionResult> GetAvailableDishes()
+    {
+        var query = new GetAvailableDishesQuery();
+        var result = await _mediator.Send(query);
 
-    //     if (!result.IsSuccess)
-    //         return BadRequest(new { message = result.ErrorMessage });
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage });
 
-    //     return Ok(result);
-    // }
+        return Ok(result);
+    }
 
     // // === ویرایش غذا (فقط آشپز مالک) ===
     // [HttpPut("{id:guid}")]
