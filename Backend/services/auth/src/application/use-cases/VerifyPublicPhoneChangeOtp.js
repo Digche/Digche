@@ -108,6 +108,11 @@ export class VerifyPublicPhoneChangeOtp {
     const accessTokenPayload = {
       sub: updatedUser.id,
       phone: updatedUser.phone,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      username: updatedUser.username,
+      profileImageUrl: updatedUser.profileImageUrl,
+      address: updatedUser.address,
       roles: updatedUser.roles,
       selectedRole: currentSelectedRole,
       scope: AUTH_SCOPES.PUBLIC,
@@ -140,6 +145,11 @@ export class VerifyPublicPhoneChangeOtp {
       user: {
         id: updatedUser.id,
         phone: updatedUser.phone,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        username: updatedUser.username,
+        profileImageUrl: updatedUser.profileImageUrl,
+        address: updatedUser.address,
         roles: updatedUser.roles,
         selectedRole: currentSelectedRole,
         ...roleData

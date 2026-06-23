@@ -35,8 +35,12 @@ export class DisableAdminUser {
       admin: {
         id: disabledAdminUser.id,
         phone: disabledAdminUser.phone,
+        firstName: disabledAdminUser.firstName,
+        lastName: disabledAdminUser.lastName,
+        username: disabledAdminUser.username,
         role: disabledAdminUser.role,
         status: disabledAdminUser.status,
+        profileImageUrl: disabledAdminUser.profileImageUrl,
         createdBy: disabledAdminUser.createdBy,
         updatedAt: disabledAdminUser.updatedAt
       }

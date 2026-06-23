@@ -2,15 +2,19 @@ export class PublicAuthController {
   constructor({
     requestPublicOtp,
     verifyPublicOtp,
+    completePublicRegistration,
     refreshPublicSession,
     logoutSession,
+    updatePublicProfileField,
     requestPublicPhoneChangeOtp,
     verifyPublicPhoneChangeOtp
   }) {
     this.requestPublicOtp = requestPublicOtp;
     this.verifyPublicOtp = verifyPublicOtp;
+    this.completePublicRegistration = completePublicRegistration;
     this.refreshPublicSession = refreshPublicSession;
     this.logoutSession = logoutSession;
+    this.updatePublicProfileField = updatePublicProfileField;
     this.requestPublicPhoneChangeOtp = requestPublicPhoneChangeOtp;
     this.verifyPublicPhoneChangeOtp = verifyPublicPhoneChangeOtp;
   }
@@ -26,12 +30,16 @@ export class PublicAuthController {
   requestOtp = async (req, res, next) => {
     try {
       const result = await this.requestPublicOtp.execute({
-        phone: req.body.phone
+        phone: req.body.phone,
+        role: req.body.role,
+        flow: req.body.flow
       });
 
       res.json({
         message: "OTP sent successfully",
         phone: result.phone,
+        role: result.role,
+        flow: result.flow,
         expiresAt: result.expiresAt
       });
     } catch (error) {
@@ -44,10 +52,26 @@ export class PublicAuthController {
       const result = await this.verifyPublicOtp.execute({
         phone: req.body.phone,
         code: req.body.code,
-        role: req.body.role
+        role: req.body.role,
+        flow: req.body.flow
       });
 
       res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  completeRegistration = async (req, res, next) => {
+    try {
+      const result = await this.completePublicRegistration.execute({
+        registrationToken: req.body.registrationToken,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        username: req.body.username
+      });
+
+      res.status(201).json(result);
     } catch (error) {
       next(error);
     }
@@ -86,11 +110,76 @@ export class PublicAuthController {
         user: {
           id: req.auth.userId,
           phone: req.auth.phone,
+          firstName: req.auth.firstName,
+          lastName: req.auth.lastName,
+          username: req.auth.username,
+          profileImageUrl: req.auth.profileImageUrl,
+          address: req.auth.address,
           roles: req.auth.roles,
           selectedRole: req.auth.selectedRole,
           ...(req.auth.chef ? { chef: req.auth.chef } : {})
         }
       });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateFirstName = async (req, res, next) => {
+    try {
+      const result = await this.updatePublicProfileField.execute({
+        userId: req.auth.userId,
+        selectedRole: req.auth.selectedRole,
+        field: "firstName",
+        value: req.body.firstName
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateLastName = async (req, res, next) => {
+    try {
+      const result = await this.updatePublicProfileField.execute({
+        userId: req.auth.userId,
+        selectedRole: req.auth.selectedRole,
+        field: "lastName",
+        value: req.body.lastName
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateUsername = async (req, res, next) => {
+    try {
+      const result = await this.updatePublicProfileField.execute({
+        userId: req.auth.userId,
+        selectedRole: req.auth.selectedRole,
+        field: "username",
+        value: req.body.username
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateAddress = async (req, res, next) => {
+    try {
+      const result = await this.updatePublicProfileField.execute({
+        userId: req.auth.userId,
+        selectedRole: req.auth.selectedRole,
+        field: "address",
+        value: req.body.address
+      });
+
+      res.json(result);
     } catch (error) {
       next(error);
     }

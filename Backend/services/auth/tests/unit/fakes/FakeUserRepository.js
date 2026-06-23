@@ -5,7 +5,9 @@ export class FakeUserRepository {
     this.users = users.map((user) => this.toUser(user));
     this.createdUsers = [];
     this.addedRoles = [];
+    this.completedProfiles = [];
     this.updatedPhones = [];
+    this.updatedProfileFields = [];
   }
 
   toUser(user) {
@@ -24,10 +26,33 @@ export class FakeUserRepository {
     return this.users.find((user) => user.id === id) || null;
   }
 
+  async findByUsername(username) {
+    return this.users.find((user) => user.username === username) || null;
+  }
+
+  async updateProfileField(userId, field, value) {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      return null;
+    }
+
+    user[field] = value;
+    user.updatedAt = new Date("2026-01-03T00:00:00.000Z");
+    this.updatedProfileFields.push({ userId, field, value });
+
+    return user;
+  }
+
   async create(user) {
     const createdUser = new User({
       id: user.id || `user-${this.users.length + 1}`,
       phone: user.phone,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      profileImageUrl: user.profileImageUrl,
+      address: user.address,
       roles: user.roles || [],
       createdAt: user.createdAt || new Date("2026-01-01T00:00:00.000Z"),
       updatedAt: user.updatedAt || new Date("2026-01-01T00:00:00.000Z")
@@ -41,8 +66,24 @@ export class FakeUserRepository {
 
   async addRole(userId, role) {
     // Real repository persists the role but does not mutate the already loaded domain entity.
-    // The use-case updates its in-memory user.roles after this call.
+    // Use-cases update their in-memory user.roles after this call when needed.
     this.addedRoles.push({ userId, role });
+  }
+
+  async completeProfile(userId, { firstName, lastName, username }) {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      return null;
+    }
+
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.username = username;
+    user.updatedAt = new Date("2026-01-02T00:00:00.000Z");
+    this.completedProfiles.push({ userId, firstName, lastName, username });
+
+    return user;
   }
 
   async updatePhone(userId, newPhone) {

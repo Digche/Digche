@@ -58,6 +58,10 @@ export class RefreshPublicSession {
       throw new ForbiddenError("User does not have selected role");
     }
 
+    if (!user.hasCompletedProfile()) {
+      throw new ForbiddenError("User profile is not completed");
+    }
+
     const roleData = {};
 
     if (selectedRole === USER_ROLES.CHEF) {
@@ -81,6 +85,11 @@ export class RefreshPublicSession {
     const newAccessTokenPayload = {
       sub: user.id,
       phone: user.phone,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      profileImageUrl: user.profileImageUrl,
+      address: user.address,
       roles: user.roles,
       selectedRole,
       scope: AUTH_SCOPES.PUBLIC,
@@ -115,6 +124,11 @@ export class RefreshPublicSession {
       user: {
         id: user.id,
         phone: user.phone,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        profileImageUrl: user.profileImageUrl,
+        address: user.address,
         roles: user.roles,
         selectedRole,
         ...roleData

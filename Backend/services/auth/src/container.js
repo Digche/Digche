@@ -2,14 +2,18 @@ import { env } from "./config/env.js";
 
 import { RequestPublicOtp } from "./application/use-cases/RequestPublicOtp.js";
 import { VerifyPublicOtp } from "./application/use-cases/VerifyPublicOtp.js";
+import { CompletePublicRegistration } from "./application/use-cases/CompletePublicRegistration.js";
 import { RequestAdminOtp } from "./application/use-cases/RequestAdminOtp.js";
 import { VerifyAdminOtp } from "./application/use-cases/VerifyAdminOtp.js";
 import { RefreshPublicSession } from "./application/use-cases/RefreshPublicSession.js";
 import { RefreshAdminSession } from "./application/use-cases/RefreshAdminSession.js";
 import { LogoutSession } from "./application/use-cases/LogoutSession.js";
+import { UpdatePublicProfileField } from "./application/use-cases/UpdatePublicProfileField.js";
+import { UpdateAdminProfileField } from "./application/use-cases/UpdateAdminProfileField.js";
 import { AddAdminUser } from "./application/use-cases/AddAdminUser.js";
 import { ListAdminUsers } from "./application/use-cases/ListAdminUsers.js";
 import { DisableAdminUser } from "./application/use-cases/DisableAdminUser.js";
+import { EnableAdminUser } from "./application/use-cases/EnableAdminUser.js";
 import { RequestPublicPhoneChangeOtp } from "./application/use-cases/RequestPublicPhoneChangeOtp.js";
 import { VerifyPublicPhoneChangeOtp } from "./application/use-cases/VerifyPublicPhoneChangeOtp.js";
 import { ChangeAdminUserPhone } from "./application/use-cases/ChangeAdminUserPhone.js";
@@ -24,7 +28,11 @@ import { SequelizeRefreshTokenRepository } from "./infrastructure/database/repos
 
 import { CryptoOtpCodeGenerator } from "./infrastructure/otp/CryptoOtpCodeGenerator.js";
 import { BcryptOtpHasher } from "./infrastructure/otp/BcryptOtpHasher.js";
-import { DevOtpSender } from "./infrastructure/otp/DevOtpSender.js";
+import { createOtpSender } from "./infrastructure/otp/createOtpSender.js";
+import { CacheOtpRateLimiter } from "./infrastructure/otp/CacheOtpRateLimiter.js";
+
+import { createCacheService } from "./infrastructure/cache/createCacheService.js";
+
 import { JwtTokenService } from "./infrastructure/security/JwtTokenService.js";
 
 import { PublicAuthController } from "./interfaces/http/controllers/PublicAuthController.js";
@@ -41,13 +49,20 @@ export function createContainer() {
   const otpRepository = new SequelizeOtpRepository();
   const refreshTokenRepository = new SequelizeRefreshTokenRepository();
 
+  const cacheService = createCacheService({ env });
+
+  const otpRateLimiter = new CacheOtpRateLimiter({
+    cacheService
+  });
+
   const otpCodeGenerator = new CryptoOtpCodeGenerator();
   const otpHasher = new BcryptOtpHasher();
-  const otpSender = new DevOtpSender();
+  const otpSender = createOtpSender({ env });
 
   const tokenService = new JwtTokenService({
     secret: env.jwt.secret,
-    accessTokenExpiresIn: env.jwt.accessTokenExpiresIn
+    accessTokenExpiresIn: env.jwt.accessTokenExpiresIn,
+    registrationTokenExpiresIn: env.jwt.registrationTokenExpiresIn
   });
 
   const publicAuthMiddleware = createPublicAuthMiddleware({
@@ -59,12 +74,15 @@ export function createContainer() {
   });
 
   const requestPublicOtp = new RequestPublicOtp({
+    userRepository,
     otpRepository,
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter,
     otpExpiresMinutes: env.otp.expiresMinutes,
-    otpRateLimitPerHour: env.otp.rateLimitPerHour
+    otpRateLimitPerHour: env.otp.rateLimitPerHour,
+    otpCooldownSeconds: env.otp.cooldownSeconds
   });
 
   const verifyPublicOtp = new VerifyPublicOtp({
@@ -77,14 +95,24 @@ export function createContainer() {
     refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
   });
 
+  const completePublicRegistration = new CompletePublicRegistration({
+    userRepository,
+    chefAccountRepository,
+    refreshTokenRepository,
+    tokenService,
+    refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
+  });
+
   const requestPublicPhoneChangeOtp = new RequestPublicPhoneChangeOtp({
     userRepository,
     otpRepository,
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter,
     otpExpiresMinutes: env.otp.expiresMinutes,
-    otpRateLimitPerHour: env.otp.rateLimitPerHour
+    otpRateLimitPerHour: env.otp.rateLimitPerHour,
+    otpCooldownSeconds: env.otp.cooldownSeconds
   });
 
   const verifyPublicPhoneChangeOtp = new VerifyPublicPhoneChangeOtp({
@@ -103,8 +131,10 @@ export function createContainer() {
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter,
     otpExpiresMinutes: env.otp.expiresMinutes,
-    otpRateLimitPerHour: env.otp.rateLimitPerHour
+    otpRateLimitPerHour: env.otp.rateLimitPerHour,
+    otpCooldownSeconds: env.otp.cooldownSeconds
   });
 
   const verifyAdminOtp = new VerifyAdminOtp({
@@ -122,8 +152,10 @@ export function createContainer() {
     otpCodeGenerator,
     otpHasher,
     otpSender,
+    otpRateLimiter,
     otpExpiresMinutes: env.otp.expiresMinutes,
-    otpRateLimitPerHour: env.otp.rateLimitPerHour
+    otpRateLimitPerHour: env.otp.rateLimitPerHour,
+    otpCooldownSeconds: env.otp.cooldownSeconds
   });
 
   const verifyAdminPhoneChangeOtp = new VerifyAdminPhoneChangeOtp({
@@ -155,6 +187,17 @@ export function createContainer() {
     tokenService
   });
 
+  const updatePublicProfileField = new UpdatePublicProfileField({
+    userRepository,
+    chefAccountRepository,
+    tokenService
+  });
+
+  const updateAdminProfileField = new UpdateAdminProfileField({
+    adminUserRepository,
+    tokenService
+  });
+
   const addAdminUser = new AddAdminUser({
     adminUserRepository
   });
@@ -167,6 +210,10 @@ export function createContainer() {
     adminUserRepository
   });
 
+  const enableAdminUser = new EnableAdminUser({
+    adminUserRepository
+  });
+
   const changeAdminUserPhone = new ChangeAdminUserPhone({
     adminUserRepository,
     refreshTokenRepository
@@ -175,8 +222,10 @@ export function createContainer() {
   const publicAuthController = new PublicAuthController({
     requestPublicOtp,
     verifyPublicOtp,
+    completePublicRegistration,
     refreshPublicSession,
     logoutSession,
+    updatePublicProfileField,
     requestPublicPhoneChangeOtp,
     verifyPublicPhoneChangeOtp
   });
@@ -186,6 +235,7 @@ export function createContainer() {
     verifyAdminOtp,
     refreshAdminSession,
     logoutSession,
+    updateAdminProfileField,
     requestAdminPhoneChangeOtp,
     verifyAdminPhoneChangeOtp
   });
@@ -194,6 +244,7 @@ export function createContainer() {
     addAdminUser,
     listAdminUsers,
     disableAdminUser,
+    enableAdminUser,
     changeAdminUserPhone
   });
 
@@ -202,6 +253,7 @@ export function createContainer() {
     adminAuthController,
     adminUserController,
     publicAuthMiddleware,
-    adminAuthMiddleware
+    adminAuthMiddleware,
+    cacheService
   };
 }

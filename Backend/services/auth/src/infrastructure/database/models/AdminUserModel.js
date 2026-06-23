@@ -16,6 +16,21 @@ export const AdminUserModel = sequelize.define(
       allowNull: false,
       unique: true
     },
+    firstName: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: "first_name"
+    },
+    lastName: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: "last_name"
+    },
+    username: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      unique: true
+    },
     role: {
       type: DataTypes.STRING(50),
       allowNull: false,
@@ -30,6 +45,11 @@ export const AdminUserModel = sequelize.define(
       type: DataTypes.UUID,
       allowNull: true,
       field: "created_by"
+    },
+    profileImageUrl: {
+      type: DataTypes.STRING(2048),
+      allowNull: true,
+      field: "profile_image_url"
     }
   },
   {
