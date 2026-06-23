@@ -43,19 +43,18 @@ public class DishesController : ControllerBase
         return Ok(result);
     }
 
-    // // === دریافت غذاهای آشپز جاری ===
-    // [HttpGet("chef")]
-    // [Authorize(Roles = "chef")]
-    // public async Task<IActionResult> GetMyDishes()
-    // {
-    //     var query = new GetChefDishesQuery();
-    //     var result = await _mediator.Send(query);
+    // === دریافت غذاهای یک آشپز خاص (برای همه کاربران) ===
+    [HttpGet("chef/{chefId:guid}")]
+    public async Task<IActionResult> GetDishesByChefId(Guid chefId)
+    {
+        var query = new GetDishesByChefIdQuery(chefId);
+        var result = await _mediator.Send(query);
 
-    //     if (!result.IsSuccess)
-    //         return BadRequest(new { message = result.ErrorMessage });
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage });
 
-    //     return Ok(result);
-    // }
+        return Ok(result);
+    }
 
     // // === دریافت غذاهای موجود (برای مشتریان) ===
     // [HttpGet("available")]
