@@ -30,6 +30,11 @@ export const AdminUserModel = sequelize.define(
       type: DataTypes.UUID,
       allowNull: true,
       field: "created_by"
+    },
+    profileImageUrl: {
+      type: DataTypes.STRING(2048),
+      allowNull: true,
+      field: "profile_image_url"
     }
   },
   {

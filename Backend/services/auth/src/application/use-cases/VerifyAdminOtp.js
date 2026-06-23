@@ -58,6 +58,7 @@ export class VerifyAdminOtp {
       sub: adminUser.id,
       phone: adminUser.phone,
       role: adminUser.role,
+      profileImageUrl: adminUser.profileImageUrl,
       scope: AUTH_SCOPES.ADMIN,
       isManager: adminUser.isManager()
     };
@@ -89,6 +90,7 @@ export class VerifyAdminOtp {
         id: adminUser.id,
         phone: adminUser.phone,
         role: adminUser.role,
+        profileImageUrl: adminUser.profileImageUrl,
         isManager: adminUser.isManager()
       }
     };

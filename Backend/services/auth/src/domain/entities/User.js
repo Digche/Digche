@@ -5,6 +5,7 @@ export class User {
     firstName = null,
     lastName = null,
     username = null,
+    profileImageUrl = null,
     roles = [],
     createdAt = null,
     updatedAt = null
@@ -18,6 +19,7 @@ export class User {
     this.firstName = firstName;
     this.lastName = lastName;
     this.username = username;
+    this.profileImageUrl = profileImageUrl;
     this.roles = roles;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;

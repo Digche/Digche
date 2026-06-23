@@ -88,6 +88,7 @@ export class RefreshPublicSession {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
+      profileImageUrl: user.profileImageUrl,
       roles: user.roles,
       selectedRole,
       scope: AUTH_SCOPES.PUBLIC,
@@ -125,6 +126,7 @@ export class RefreshPublicSession {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
+        profileImageUrl: user.profileImageUrl,
         roles: user.roles,
         selectedRole,
         ...roleData

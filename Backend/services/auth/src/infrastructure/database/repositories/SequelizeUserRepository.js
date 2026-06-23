@@ -61,7 +61,8 @@ export class SequelizeUserRepository {
       phone: user.phone,
       firstName: user.firstName,
       lastName: user.lastName,
-      username: user.username
+      username: user.username,
+      profileImageUrl: user.profileImageUrl
     });
 
     return new User({
@@ -70,6 +71,7 @@ export class SequelizeUserRepository {
       firstName: createdUser.firstName,
       lastName: createdUser.lastName,
       username: createdUser.username,
+      profileImageUrl: createdUser.profileImageUrl,
       roles: [],
       createdAt: createdUser.createdAt,
       updatedAt: createdUser.updatedAt
@@ -146,6 +148,7 @@ export class SequelizeUserRepository {
       firstName: userModel.firstName,
       lastName: userModel.lastName,
       username: userModel.username,
+      profileImageUrl: userModel.profileImageUrl,
       roles,
       createdAt: userModel.createdAt,
       updatedAt: userModel.updatedAt

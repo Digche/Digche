@@ -12,6 +12,7 @@ export class ListAdminUsers {
         phone: adminUser.phone,
         role: adminUser.role,
         status: adminUser.status,
+        profileImageUrl: adminUser.profileImageUrl,
         createdBy: adminUser.createdBy,
         createdAt: adminUser.createdAt,
         updatedAt: adminUser.updatedAt

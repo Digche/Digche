@@ -111,6 +111,7 @@ export class PublicAuthController {
           firstName: req.auth.firstName,
           lastName: req.auth.lastName,
           username: req.auth.username,
+          profileImageUrl: req.auth.profileImageUrl,
           roles: req.auth.roles,
           selectedRole: req.auth.selectedRole,
           ...(req.auth.chef ? { chef: req.auth.chef } : {})

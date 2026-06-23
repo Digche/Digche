@@ -24,6 +24,7 @@ export function createPublicAuthMiddleware({ tokenService }) {
         firstName: payload.firstName,
         lastName: payload.lastName,
         username: payload.username,
+        profileImageUrl: payload.profileImageUrl,
         roles: payload.roles || [],
         selectedRole: payload.selectedRole,
         chef: payload.chef || null,

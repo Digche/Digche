@@ -7,6 +7,7 @@ export class AdminUser {
     phone,
     role = ADMIN_ROLES.ADMIN,
     status = ADMIN_STATUS.ACTIVE,
+    profileImageUrl = null,
     createdBy = null,
     createdAt = null,
     updatedAt = null
@@ -19,6 +20,7 @@ export class AdminUser {
     this.phone = phone;
     this.role = role;
     this.status = status;
+    this.profileImageUrl = profileImageUrl;
     this.createdBy = createdBy;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;

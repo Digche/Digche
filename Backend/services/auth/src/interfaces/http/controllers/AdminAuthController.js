@@ -86,6 +86,7 @@ export class AdminAuthController {
           id: req.auth.adminId,
           phone: req.auth.phone,
           role: req.auth.role,
+          profileImageUrl: req.auth.profileImageUrl,
           isManager: req.auth.isManager
         }
       });
