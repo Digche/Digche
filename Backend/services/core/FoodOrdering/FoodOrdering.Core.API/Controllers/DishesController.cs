@@ -1,6 +1,6 @@
 using FoodOrdering.Core.Application.Commands.AddDish;
 using FoodOrdering.Core.Application.DTOs;
-// using FoodOrdering.Core.Application.Queries;
+using FoodOrdering.Core.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +9,6 @@ namespace FoodOrdering.Core.API.Controllers;
 
 [ApiController]
 [Route("api/core/[controller]")]
-[Authorize]
 public class DishesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -32,18 +31,17 @@ public class DishesController : ControllerBase
         return Ok(result); 
     }
 
-    // // === دریافت یک غذا ===
-    // [HttpGet("{id:guid}")]
-    // public async Task<IActionResult> GetDish(Guid id)
-    // {
-    //     var query = new GetDishByIdQuery(id);
-    //     var result = await _mediator.Send(query);
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetDish(Guid id)
+    {
+        var query = new GetDishByIdQuery(id);
+        var result = await _mediator.Send(query);
 
-    //     if (!result.IsSuccess)
-    //         return NotFound(new { message = result.ErrorMessage });
+        if (!result.IsSuccess)
+            return NotFound(new { message = result.ErrorMessage });
 
-    //     return Ok(result);
-    // }
+        return Ok(result);
+    }
 
     // // === دریافت غذاهای آشپز جاری ===
     // [HttpGet("chef")]
