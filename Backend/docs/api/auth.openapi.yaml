@@ -659,6 +659,38 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /admin/admin-users/{id}/enable:
+    patch:
+      tags:
+        - Admin Users
+      summary: Enable an admin user
+      description: Only manager can enable a normal disabled admin user. Managers cannot enable themselves or other managers from this endpoint.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Admin user id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Admin user enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnableAdminUserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -932,6 +964,10 @@ components:
           enum:
             - admin
             - manager
+        profileImageUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/admins/admin-1/profile.jpg"
         isManager:
           type: boolean
 
@@ -956,6 +992,10 @@ components:
             - active
             - disabled
           example: active
+        profileImageUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/admins/admin-1/profile.jpg"
         createdBy:
           type: string
           format: uuid
@@ -1015,6 +1055,12 @@ components:
           $ref: "#/components/schemas/AdminUserWithStatus"
 
     DisableAdminUserResponse:
+      type: object
+      properties:
+        admin:
+          $ref: "#/components/schemas/AdminUserWithStatus"
+
+    EnableAdminUserResponse:
       type: object
       properties:
         admin:

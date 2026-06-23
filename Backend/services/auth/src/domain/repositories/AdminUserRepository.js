@@ -22,4 +22,8 @@ export class AdminUserRepository {
   async disable(id) {
     throw new Error("AdminUserRepository.disable is not implemented");
   }
+
+  async enable(id) {
+    throw new Error("AdminUserRepository.enable is not implemented");
+  }
 }

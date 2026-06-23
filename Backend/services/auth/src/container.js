@@ -11,6 +11,7 @@ import { LogoutSession } from "./application/use-cases/LogoutSession.js";
 import { AddAdminUser } from "./application/use-cases/AddAdminUser.js";
 import { ListAdminUsers } from "./application/use-cases/ListAdminUsers.js";
 import { DisableAdminUser } from "./application/use-cases/DisableAdminUser.js";
+import { EnableAdminUser } from "./application/use-cases/EnableAdminUser.js";
 import { RequestPublicPhoneChangeOtp } from "./application/use-cases/RequestPublicPhoneChangeOtp.js";
 import { VerifyPublicPhoneChangeOtp } from "./application/use-cases/VerifyPublicPhoneChangeOtp.js";
 import { ChangeAdminUserPhone } from "./application/use-cases/ChangeAdminUserPhone.js";
@@ -196,6 +197,10 @@ export function createContainer() {
     adminUserRepository
   });
 
+  const enableAdminUser = new EnableAdminUser({
+    adminUserRepository
+  });
+
   const changeAdminUserPhone = new ChangeAdminUserPhone({
     adminUserRepository,
     refreshTokenRepository
@@ -224,6 +229,7 @@ export function createContainer() {
     addAdminUser,
     listAdminUsers,
     disableAdminUser,
+    enableAdminUser,
     changeAdminUserPhone
   });
 

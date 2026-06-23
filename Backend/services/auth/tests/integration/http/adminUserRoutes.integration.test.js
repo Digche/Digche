@@ -26,6 +26,13 @@ function makeAdminUsersContext() {
         role: ADMIN_ROLES.ADMIN,
         status: ADMIN_STATUS.ACTIVE,
         createdBy: "manager-1"
+      },
+      {
+        id: "admin-2",
+        phone: "+989122222222",
+        role: ADMIN_ROLES.ADMIN,
+        status: ADMIN_STATUS.DISABLED,
+        createdBy: "manager-1"
       }
     ]
   });
@@ -150,5 +157,21 @@ describe("Admin user HTTP routes", () => {
       status: ADMIN_STATUS.DISABLED
     });
     expect(context.adminUserRepository.disabledIds).toEqual(["admin-1"]);
+  });
+
+  it("enables a disabled normal admin user", async () => {
+    const { app, context } = makeAdminUsersContext();
+    registerAdminAccessToken(context, "manager-token");
+
+    const response = await request(app)
+      .patch("/admin/admin-users/admin-2/enable")
+      .set("Authorization", "Bearer manager-token");
+
+    expect(response.status).toBe(200);
+    expect(response.body.admin).toMatchObject({
+      id: "admin-2",
+      status: ADMIN_STATUS.ACTIVE
+    });
+    expect(context.adminUserRepository.enabledIds).toEqual(["admin-2"]);
   });
 });

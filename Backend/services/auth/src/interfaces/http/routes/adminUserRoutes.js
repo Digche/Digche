@@ -32,5 +32,12 @@ export function createAdminUserRoutes(controller, adminAuthMiddleware) {
     controller.disable
   );
 
+  router.patch(
+    "/:id/enable",
+    adminAuthMiddleware,
+    requireAdminRole("manager"),
+    controller.enable
+  );
+
   return router;
 }

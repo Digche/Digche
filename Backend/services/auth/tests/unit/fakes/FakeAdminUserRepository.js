@@ -7,6 +7,7 @@ export class FakeAdminUserRepository {
     this.createdAdminUsers = [];
     this.updatedPhones = [];
     this.disabledIds = [];
+    this.enabledIds = [];
   }
 
   toAdminUser(adminUser) {
@@ -70,6 +71,20 @@ export class FakeAdminUserRepository {
     adminUser.status = ADMIN_STATUS.DISABLED;
     adminUser.updatedAt = new Date("2026-01-03T00:00:00.000Z");
     this.disabledIds.push(id);
+
+    return adminUser;
+  }
+
+  async enable(id) {
+    const adminUser = await this.findById(id);
+
+    if (!adminUser) {
+      return null;
+    }
+
+    adminUser.status = ADMIN_STATUS.ACTIVE;
+    adminUser.updatedAt = new Date("2026-01-04T00:00:00.000Z");
+    this.enabledIds.push(id);
 
     return adminUser;
   }

@@ -21,6 +21,7 @@ import { VerifyAdminPhoneChangeOtp } from "../../../../src/application/use-cases
 import { AddAdminUser } from "../../../../src/application/use-cases/AddAdminUser.js";
 import { ListAdminUsers } from "../../../../src/application/use-cases/ListAdminUsers.js";
 import { DisableAdminUser } from "../../../../src/application/use-cases/DisableAdminUser.js";
+import { EnableAdminUser } from "../../../../src/application/use-cases/EnableAdminUser.js";
 import { ChangeAdminUserPhone } from "../../../../src/application/use-cases/ChangeAdminUserPhone.js";
 
 import { RequestPublicOtp } from "../../../../src/application/use-cases/RequestPublicOtp.js";
@@ -140,6 +141,9 @@ export function createHttpTestApp(context) {
       adminUserRepository: context.adminUserRepository
     }),
     disableAdminUser: new DisableAdminUser({
+      adminUserRepository: context.adminUserRepository
+    }),
+    enableAdminUser: new EnableAdminUser({
       adminUserRepository: context.adminUserRepository
     }),
     changeAdminUserPhone: new ChangeAdminUserPhone({

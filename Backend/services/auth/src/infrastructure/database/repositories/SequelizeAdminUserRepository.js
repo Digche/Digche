@@ -73,6 +73,20 @@ export class SequelizeAdminUserRepository {
     return this.toDomain(adminUser);
   }
 
+  async enable(id) {
+    const adminUser = await AdminUserModel.findByPk(id);
+
+    if (!adminUser) {
+      return null;
+    }
+
+    adminUser.status = ADMIN_STATUS.ACTIVE;
+
+    await adminUser.save();
+
+    return this.toDomain(adminUser);
+  }
+
   toDomain(adminUserModel) {
     return new AdminUser({
       id: adminUserModel.id,
