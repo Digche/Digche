@@ -1,6 +1,7 @@
 using FoodOrdering.Core.Domain.Entities;
 
-namespace FoodOrdering.Core.Domain.Repositories;
+namespace FoodOrdering.Core.Domain.Interfaces;
+
 
 public interface IChefProfileRepository
 {

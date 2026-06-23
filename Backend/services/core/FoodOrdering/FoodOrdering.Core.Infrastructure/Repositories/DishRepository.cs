@@ -1,5 +1,5 @@
 using FoodOrdering.Core.Domain.Entities;
-using FoodOrdering.Core.Domain.Repositories;
+using FoodOrdering.Core.Domain.Interfaces;
 using FoodOrdering.Core.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
