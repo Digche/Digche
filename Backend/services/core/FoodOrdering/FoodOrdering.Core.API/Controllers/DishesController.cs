@@ -1,9 +1,11 @@
-using FoodOrdering.Core.Application.Commands.AddDish;
 using FoodOrdering.Core.Application.DTOs;
 using FoodOrdering.Core.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
+using FoodOrdering.Core.Application.Commands.AddDish;
+using FoodOrdering.Core.Application.Commands.UpdateDish;
 
 namespace FoodOrdering.Core.API.Controllers;
 
@@ -69,19 +71,19 @@ public class DishesController : ControllerBase
         return Ok(result);
     }
 
-    // // === ویرایش غذا (فقط آشپز مالک) ===
-    // [HttpPut("{id:guid}")]
-    // [Authorize(Roles = "chef")]
-    // public async Task<IActionResult> UpdateDish(Guid id, [FromBody] UpdateDishDto dto)
-    // {
-    //     var command = new UpdateDishCommand(id, dto);
-    //     var result = await _mediator.Send(command);
+    // === ویرایش غذا (فقط آشپز مالک) ===
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "chef")]
+    public async Task<IActionResult> UpdateDish(Guid id, [FromBody] UpdateDishDto dto)
+    {
+        var command = new UpdateDishCommand(id, dto);
+        var result = await _mediator.Send(command);
 
-    //     if (!result.IsSuccess)
-    //         return BadRequest(new { message = result.ErrorMessage });
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage });
 
-    //     return Ok(result);
-    // }
+        return Ok(result);
+    }
 
     // // === تغییر وضعیت موجودی (فقط آشپز مالک) ===
     // [HttpPatch("{id:guid}/availability")]

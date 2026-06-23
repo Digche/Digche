@@ -3,7 +3,7 @@ using FoodOrdering.Core.Application.DTOs;
 using FoodOrdering.Core.Domain.Interfaces;
 using MediatR;
 
-namespace FoodOrdering.Core.Application.Queries.Dishes;
+namespace FoodOrdering.Core.Application.Queries;
 
 public class GetDishesByChefIdQueryHandler : IRequestHandler<GetDishesByChefIdQuery, Result<IEnumerable<DishDto>>>
 {
