@@ -1,7 +1,8 @@
 using System.Text;
-using FoodOrdering.Core.Domain.Repositories;
+using FoodOrdering.Core.Domain.Interfaces;
 using FoodOrdering.Core.Infrastructure.Data;
 using FoodOrdering.Core.Infrastructure.Repositories;
+using FoodOrdering.Core.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +16,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Controllers
 builder.Services.AddControllers();
+
+// ============================
+// MediatR
+// ============================
+builder.Services.AddMediatR(cfg =>
+{
+    // اسمبلی‌های حاوی Command/Query handlers (همان لایه‌ی Application)
+    cfg.RegisterServicesFromAssembly(typeof(FoodOrdering.Core.Application.Commands.AddDish.AddDishCommand).Assembly);
+    // یا اگر کلاس خاصی مد نظر نیست، می‌توانید کل اسمبلی Application را ثبت کنید:
+    // cfg.RegisterServicesFromAssemblyContaining<FoodOrdering.Core.Application.Common.Result>();
+});
 
 // OpenAPI (Scalar) for .NET 9
 builder.Services.AddOpenApi();
@@ -63,6 +75,12 @@ builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IChefProfileRepository, ChefProfileRepository>();
 builder.Services.AddScoped<IDishRepository, DishRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+// ============================
+// جدید: ثبت IUserContext
+// ============================
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContext, UserContext>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"]

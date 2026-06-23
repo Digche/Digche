@@ -18,31 +18,39 @@ public class TestAuthController : ControllerBase
     }
 
     [HttpGet("token")]
-    public IActionResult GetTestToken([FromQuery] string role = "customer")
+    public IActionResult GetTestToken([FromQuery] string role = "chef")
     {
-        // 1. کلید مخفی (مشترک با سرویس Auth)
-        var secret = _configuration["Jwt:Secret"] 
-            ?? throw new Exception("JWT Secret not configured");
-        var key = Encoding.UTF8.GetBytes(secret);
+        // 1. دریافت تنظیمات JWT
+        var secret = _configuration["Jwt:Secret"];
+        if (string.IsNullOrEmpty(secret))
+            return BadRequest(new { error = "JWT Secret is not configured." });
 
-        // 2. اطلاعات کاربر (مصنوعی)
+        var issuer = _configuration["Jwt:Issuer"] ?? "FoodOrdering.Auth";
+        var audience = _configuration["Jwt:Audience"] ?? "FoodOrdering.Core";
+
+        // 2. بررسی طول کلید (حداقل 32 بایت)
+        var keyBytes = Encoding.UTF8.GetBytes(secret);
+        if (keyBytes.Length < 32)
+            return BadRequest(new { error = "JWT Secret must be at least 32 bytes (256 bits)." });
+
+        // 3. اطلاعات کاربر (مصنوعی)
         var userId = Guid.NewGuid();
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Role, role),
-            new Claim("phoneNumber", "09121234567") // اختیاری
+            new Claim("phoneNumber", "09121234567")
         };
 
-        // 3. ساخت توکن
+        // 4. ساخت توکن
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Issuer = _configuration["Jwt:Issuer"],
-            Audience = _configuration["Jwt:Audience"],
+            Issuer = issuer,
+            Audience = audience,
             Expires = DateTime.UtcNow.AddHours(1),
             SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key), 
+                new SymmetricSecurityKey(keyBytes),
                 SecurityAlgorithms.HmacSha256Signature
             )
         };
@@ -56,6 +64,9 @@ public class TestAuthController : ControllerBase
             accessToken = jwtToken,
             userId = userId,
             role = role,
+            issuer = issuer,
+            audience = audience,
+            expiresAt = tokenDescriptor.Expires,
             message = "⚠️ This token is for TESTING only. Use in development environment."
         });
     }
