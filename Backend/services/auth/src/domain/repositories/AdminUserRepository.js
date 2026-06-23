@@ -7,6 +7,14 @@ export class AdminUserRepository {
     throw new Error("AdminUserRepository.findById is not implemented");
   }
 
+  async findByUsername(username) {
+    throw new Error("AdminUserRepository.findByUsername is not implemented");
+  }
+
+  async updateProfileField(id, field, value) {
+    throw new Error("AdminUserRepository.updateProfileField is not implemented");
+  }
+
   async create(adminUser) {
     throw new Error("AdminUserRepository.create is not implemented");
   }

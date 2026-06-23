@@ -35,6 +35,9 @@ export class EnableAdminUser {
       admin: {
         id: enabledAdminUser.id,
         phone: enabledAdminUser.phone,
+        firstName: enabledAdminUser.firstName,
+        lastName: enabledAdminUser.lastName,
+        username: enabledAdminUser.username,
         role: enabledAdminUser.role,
         status: enabledAdminUser.status,
         profileImageUrl: enabledAdminUser.profileImageUrl,

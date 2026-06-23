@@ -10,6 +10,9 @@ export class ListAdminUsers {
       admins: adminUsers.map((adminUser) => ({
         id: adminUser.id,
         phone: adminUser.phone,
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        username: adminUser.username,
         role: adminUser.role,
         status: adminUser.status,
         profileImageUrl: adminUser.profileImageUrl,

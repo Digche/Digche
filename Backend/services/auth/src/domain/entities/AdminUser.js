@@ -5,6 +5,9 @@ export class AdminUser {
   constructor({
     id = null,
     phone,
+    firstName = null,
+    lastName = null,
+    username = null,
     role = ADMIN_ROLES.ADMIN,
     status = ADMIN_STATUS.ACTIVE,
     profileImageUrl = null,
@@ -18,6 +21,9 @@ export class AdminUser {
 
     this.id = id;
     this.phone = phone;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.username = username;
     this.role = role;
     this.status = status;
     this.profileImageUrl = profileImageUrl;

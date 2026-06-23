@@ -25,9 +25,38 @@ export class SequelizeAdminUserRepository {
     return this.toDomain(adminUser);
   }
 
+  async findByUsername(username) {
+    const adminUser = await AdminUserModel.findOne({
+      where: { username }
+    });
+
+    if (!adminUser) {
+      return null;
+    }
+
+    return this.toDomain(adminUser);
+  }
+
+  async updateProfileField(id, field, value) {
+    const adminUser = await AdminUserModel.findByPk(id);
+
+    if (!adminUser) {
+      return null;
+    }
+
+    adminUser[field] = value;
+
+    await adminUser.save();
+
+    return this.toDomain(adminUser);
+  }
+
   async create(adminUser) {
     const createdAdminUser = await AdminUserModel.create({
       phone: adminUser.phone,
+      firstName: adminUser.firstName,
+      lastName: adminUser.lastName,
+      username: adminUser.username,
       role: adminUser.role,
       status: adminUser.status,
       profileImageUrl: adminUser.profileImageUrl,
@@ -91,6 +120,9 @@ export class SequelizeAdminUserRepository {
     return new AdminUser({
       id: adminUserModel.id,
       phone: adminUserModel.phone,
+      firstName: adminUserModel.firstName,
+      lastName: adminUserModel.lastName,
+      username: adminUserModel.username,
       role: adminUserModel.role,
       status: adminUserModel.status,
       profileImageUrl: adminUserModel.profileImageUrl,

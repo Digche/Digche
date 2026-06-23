@@ -6,6 +6,7 @@ import { CHEF_STATUS } from "../../../src/domain/constants/statuses.js";
 import { OTP_PURPOSES } from "../../../src/domain/constants/otpPurposes.js";
 import { AUTH_SCOPES } from "../../../src/domain/constants/authScopes.js";
 import { TOKEN_OWNER_TYPES } from "../../../src/domain/constants/tokenOwnerTypes.js";
+import { PUBLIC_AUTH_FLOWS } from "../../../src/domain/constants/authFlows.js";
 
 import { FakeChefAccountRepository } from "../fakes/FakeChefAccountRepository.js";
 import { FakeOtpHasher } from "../fakes/FakeOtpHasher.js";
@@ -59,7 +60,8 @@ describe("VerifyPublicOtp", () => {
     const result = await useCase.execute({
       phone: "09121234567",
       code: "123456",
-      role: USER_ROLES.CLIENT
+      role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.REGISTER
     });
 
     expect(result).toMatchObject({
@@ -73,6 +75,7 @@ describe("VerifyPublicOtp", () => {
     expect(tokenService.signedRegistrationPayloads[0]).toMatchObject({
       phone: "+989121234567",
       role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.REGISTER,
       scope: "public_registration",
       jti: "token-id-1"
     });
@@ -98,7 +101,8 @@ describe("VerifyPublicOtp", () => {
     const result = await useCase.execute({
       phone: "09121234567",
       code: "123456",
-      role: USER_ROLES.CHEF
+      role: USER_ROLES.CHEF,
+      flow: PUBLIC_AUTH_FLOWS.REGISTER
     });
 
     expect(result).toMatchObject({
@@ -125,7 +129,8 @@ describe("VerifyPublicOtp", () => {
     const result = await useCase.execute({
       phone: "09121234567",
       code: "123456",
-      role: USER_ROLES.CLIENT
+      role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.REGISTER
     });
 
     expect(result.requiresRegistration).toBe(true);
@@ -156,7 +161,8 @@ describe("VerifyPublicOtp", () => {
     const result = await useCase.execute({
       phone: "09121234567",
       code: "123456",
-      role: USER_ROLES.CLIENT
+      role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.LOGIN
     });
 
     expect(result).toMatchObject({
@@ -219,7 +225,8 @@ describe("VerifyPublicOtp", () => {
     const result = await useCase.execute({
       phone: "09121234567",
       code: "123456",
-      role: USER_ROLES.CHEF
+      role: USER_ROLES.CHEF,
+      flow: PUBLIC_AUTH_FLOWS.LOGIN
     });
 
     expect(result.user).toMatchObject({
@@ -255,7 +262,12 @@ describe("VerifyPublicOtp", () => {
     });
 
     await expectAppError(
-      useCase.execute({ phone: "09121234567", code: "123456", role: USER_ROLES.CHEF }),
+      useCase.execute({
+        phone: "09121234567",
+        code: "123456",
+        role: USER_ROLES.CHEF,
+        flow: PUBLIC_AUTH_FLOWS.LOGIN
+      }),
       {
         statusCode: 403,
         code: "FORBIDDEN"
@@ -270,14 +282,30 @@ describe("VerifyPublicOtp", () => {
       ]
     });
 
-    await expectAppError(useCase.execute({ phone: "09121234567", code: "123456", role: "admin" }), {
-      statusCode: 400,
-      code: "INVALID_PUBLIC_ROLE"
-    });
+    await expectAppError(
+      useCase.execute({
+        phone: "09121234567",
+        code: "123456",
+        role: "admin",
+        flow: PUBLIC_AUTH_FLOWS.LOGIN
+      }),
+      {
+        statusCode: 400,
+        code: "INVALID_PUBLIC_ROLE"
+      }
+    );
 
-    await expectAppError(useCase.execute({ phone: "09121234567", code: "000000", role: USER_ROLES.CLIENT }), {
-      statusCode: 401,
-      code: "UNAUTHORIZED"
-    });
+    await expectAppError(
+      useCase.execute({
+        phone: "09121234567",
+        code: "000000",
+        role: USER_ROLES.CLIENT,
+        flow: PUBLIC_AUTH_FLOWS.LOGIN
+      }),
+      {
+        statusCode: 401,
+        code: "UNAUTHORIZED"
+      }
+    );
   });
 });

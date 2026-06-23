@@ -8,6 +8,8 @@ import { VerifyAdminOtp } from "./application/use-cases/VerifyAdminOtp.js";
 import { RefreshPublicSession } from "./application/use-cases/RefreshPublicSession.js";
 import { RefreshAdminSession } from "./application/use-cases/RefreshAdminSession.js";
 import { LogoutSession } from "./application/use-cases/LogoutSession.js";
+import { UpdatePublicProfileField } from "./application/use-cases/UpdatePublicProfileField.js";
+import { UpdateAdminProfileField } from "./application/use-cases/UpdateAdminProfileField.js";
 import { AddAdminUser } from "./application/use-cases/AddAdminUser.js";
 import { ListAdminUsers } from "./application/use-cases/ListAdminUsers.js";
 import { DisableAdminUser } from "./application/use-cases/DisableAdminUser.js";
@@ -185,6 +187,17 @@ export function createContainer() {
     tokenService
   });
 
+  const updatePublicProfileField = new UpdatePublicProfileField({
+    userRepository,
+    chefAccountRepository,
+    tokenService
+  });
+
+  const updateAdminProfileField = new UpdateAdminProfileField({
+    adminUserRepository,
+    tokenService
+  });
+
   const addAdminUser = new AddAdminUser({
     adminUserRepository
   });
@@ -212,6 +225,7 @@ export function createContainer() {
     completePublicRegistration,
     refreshPublicSession,
     logoutSession,
+    updatePublicProfileField,
     requestPublicPhoneChangeOtp,
     verifyPublicPhoneChangeOtp
   });
@@ -221,6 +235,7 @@ export function createContainer() {
     verifyAdminOtp,
     refreshAdminSession,
     logoutSession,
+    updateAdminProfileField,
     requestAdminPhoneChangeOtp,
     verifyAdminPhoneChangeOtp
   });

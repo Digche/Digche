@@ -5,6 +5,7 @@ export class PublicAuthController {
     completePublicRegistration,
     refreshPublicSession,
     logoutSession,
+    updatePublicProfileField,
     requestPublicPhoneChangeOtp,
     verifyPublicPhoneChangeOtp
   }) {
@@ -13,6 +14,7 @@ export class PublicAuthController {
     this.completePublicRegistration = completePublicRegistration;
     this.refreshPublicSession = refreshPublicSession;
     this.logoutSession = logoutSession;
+    this.updatePublicProfileField = updatePublicProfileField;
     this.requestPublicPhoneChangeOtp = requestPublicPhoneChangeOtp;
     this.verifyPublicPhoneChangeOtp = verifyPublicPhoneChangeOtp;
   }
@@ -112,11 +114,72 @@ export class PublicAuthController {
           lastName: req.auth.lastName,
           username: req.auth.username,
           profileImageUrl: req.auth.profileImageUrl,
+          address: req.auth.address,
           roles: req.auth.roles,
           selectedRole: req.auth.selectedRole,
           ...(req.auth.chef ? { chef: req.auth.chef } : {})
         }
       });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateFirstName = async (req, res, next) => {
+    try {
+      const result = await this.updatePublicProfileField.execute({
+        userId: req.auth.userId,
+        selectedRole: req.auth.selectedRole,
+        field: "firstName",
+        value: req.body.firstName
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateLastName = async (req, res, next) => {
+    try {
+      const result = await this.updatePublicProfileField.execute({
+        userId: req.auth.userId,
+        selectedRole: req.auth.selectedRole,
+        field: "lastName",
+        value: req.body.lastName
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateUsername = async (req, res, next) => {
+    try {
+      const result = await this.updatePublicProfileField.execute({
+        userId: req.auth.userId,
+        selectedRole: req.auth.selectedRole,
+        field: "username",
+        value: req.body.username
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateAddress = async (req, res, next) => {
+    try {
+      const result = await this.updatePublicProfileField.execute({
+        userId: req.auth.userId,
+        selectedRole: req.auth.selectedRole,
+        field: "address",
+        value: req.body.address
+      });
+
+      res.json(result);
     } catch (error) {
       next(error);
     }

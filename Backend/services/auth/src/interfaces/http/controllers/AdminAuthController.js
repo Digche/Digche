@@ -4,6 +4,7 @@ export class AdminAuthController {
     verifyAdminOtp,
     refreshAdminSession,
     logoutSession,
+    updateAdminProfileField,
     requestAdminPhoneChangeOtp,
     verifyAdminPhoneChangeOtp
   }) {
@@ -11,6 +12,7 @@ export class AdminAuthController {
     this.verifyAdminOtp = verifyAdminOtp;
     this.refreshAdminSession = refreshAdminSession;
     this.logoutSession = logoutSession;
+    this.updateAdminProfileField = updateAdminProfileField;
     this.requestAdminPhoneChangeOtp = requestAdminPhoneChangeOtp;
     this.verifyAdminPhoneChangeOtp = verifyAdminPhoneChangeOtp;
   }
@@ -85,11 +87,56 @@ export class AdminAuthController {
         admin: {
           id: req.auth.adminId,
           phone: req.auth.phone,
+          firstName: req.auth.firstName,
+          lastName: req.auth.lastName,
+          username: req.auth.username,
           role: req.auth.role,
           profileImageUrl: req.auth.profileImageUrl,
           isManager: req.auth.isManager
         }
       });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateFirstName = async (req, res, next) => {
+    try {
+      const result = await this.updateAdminProfileField.execute({
+        adminId: req.auth.adminId,
+        field: "firstName",
+        value: req.body.firstName
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateLastName = async (req, res, next) => {
+    try {
+      const result = await this.updateAdminProfileField.execute({
+        adminId: req.auth.adminId,
+        field: "lastName",
+        value: req.body.lastName
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateUsername = async (req, res, next) => {
+    try {
+      const result = await this.updateAdminProfileField.execute({
+        adminId: req.auth.adminId,
+        field: "username",
+        value: req.body.username
+      });
+
+      res.json(result);
     } catch (error) {
       next(error);
     }

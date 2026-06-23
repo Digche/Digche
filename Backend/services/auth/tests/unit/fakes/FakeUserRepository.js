@@ -7,6 +7,7 @@ export class FakeUserRepository {
     this.addedRoles = [];
     this.completedProfiles = [];
     this.updatedPhones = [];
+    this.updatedProfileFields = [];
   }
 
   toUser(user) {
@@ -29,6 +30,20 @@ export class FakeUserRepository {
     return this.users.find((user) => user.username === username) || null;
   }
 
+  async updateProfileField(userId, field, value) {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      return null;
+    }
+
+    user[field] = value;
+    user.updatedAt = new Date("2026-01-03T00:00:00.000Z");
+    this.updatedProfileFields.push({ userId, field, value });
+
+    return user;
+  }
+
   async create(user) {
     const createdUser = new User({
       id: user.id || `user-${this.users.length + 1}`,
@@ -36,6 +51,8 @@ export class FakeUserRepository {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
+      profileImageUrl: user.profileImageUrl,
+      address: user.address,
       roles: user.roles || [],
       createdAt: user.createdAt || new Date("2026-01-01T00:00:00.000Z"),
       updatedAt: user.updatedAt || new Date("2026-01-01T00:00:00.000Z")

@@ -112,6 +112,7 @@ export class VerifyPublicPhoneChangeOtp {
       lastName: updatedUser.lastName,
       username: updatedUser.username,
       profileImageUrl: updatedUser.profileImageUrl,
+      address: updatedUser.address,
       roles: updatedUser.roles,
       selectedRole: currentSelectedRole,
       scope: AUTH_SCOPES.PUBLIC,
@@ -148,6 +149,7 @@ export class VerifyPublicPhoneChangeOtp {
         lastName: updatedUser.lastName,
         username: updatedUser.username,
         profileImageUrl: updatedUser.profileImageUrl,
+        address: updatedUser.address,
         roles: updatedUser.roles,
         selectedRole: currentSelectedRole,
         ...roleData

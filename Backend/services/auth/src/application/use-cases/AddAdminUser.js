@@ -37,8 +37,12 @@ export class AddAdminUser {
       admin: {
         id: adminUser.id,
         phone: adminUser.phone,
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        username: adminUser.username,
         role: adminUser.role,
         status: adminUser.status,
+        profileImageUrl: adminUser.profileImageUrl,
         createdBy: adminUser.createdBy
       }
     };

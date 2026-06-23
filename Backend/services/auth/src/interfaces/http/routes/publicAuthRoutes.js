@@ -15,6 +15,11 @@ export function createPublicAuthRoutes(controller, publicAuthMiddleware) {
 
   router.get("/me", publicAuthMiddleware, controller.me);
 
+  router.patch("/me/first-name", publicAuthMiddleware, controller.updateFirstName);
+  router.patch("/me/last-name", publicAuthMiddleware, controller.updateLastName);
+  router.patch("/me/username", publicAuthMiddleware, controller.updateUsername);
+  router.patch("/me/address", publicAuthMiddleware, controller.updateAddress);
+
   router.post(
     "/change-phone/request-otp",
     publicAuthMiddleware,

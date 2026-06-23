@@ -100,6 +100,9 @@ export class VerifyAdminPhoneChangeOtp {
     const accessTokenPayload = {
       sub: updatedAdminUser.id,
       phone: updatedAdminUser.phone,
+      firstName: updatedAdminUser.firstName,
+      lastName: updatedAdminUser.lastName,
+      username: updatedAdminUser.username,
       role: updatedAdminUser.role,
       profileImageUrl: updatedAdminUser.profileImageUrl,
       isManager: updatedAdminUser.role === ADMIN_ROLES.MANAGER,
@@ -132,6 +135,9 @@ export class VerifyAdminPhoneChangeOtp {
       admin: {
         id: updatedAdminUser.id,
         phone: updatedAdminUser.phone,
+        firstName: updatedAdminUser.firstName,
+        lastName: updatedAdminUser.lastName,
+        username: updatedAdminUser.username,
         role: updatedAdminUser.role,
         profileImageUrl: updatedAdminUser.profileImageUrl,
         isManager: updatedAdminUser.role === ADMIN_ROLES.MANAGER
