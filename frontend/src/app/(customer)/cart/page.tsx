@@ -36,7 +36,7 @@ if (items.length === 0) {
 
   return (
     
-    <main dir="rtl" className="min-h-screen  px-4 py-8">
+    <main dir="rtl" className="min-h-screen bg-[#FFF9F4] px-4 py-8">
       <div className="mx-auto max-w-6xl">
           <PageHeader
             title="سبد خرید"
@@ -55,7 +55,7 @@ if (items.length === 0) {
             {items.map((item) => (
               <article
                 key={item.id}
-                className="flex items-center gap-3 rounded-3xl border border-orange-100 bg-[#FDF7F2] p-3 shadow-sm transition hover:shadow-md sm:gap-4 sm:p-4"
+                className="flex items-center gap-3 rounded-3xl border border-orange-100 bg-white p-3 shadow-sm transition hover:shadow-md sm:gap-4 sm:p-4"
               >
                 <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl sm:h-28 sm:w-28">
                   <Image

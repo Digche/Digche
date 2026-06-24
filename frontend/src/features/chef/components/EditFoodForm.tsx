@@ -21,7 +21,32 @@ type FoodFormState = {
   location: string;
   image: string;
   description: string;
+  ingredients: string;
 };
+
+const categories = [
+  "صبحانه",
+  "دسر",
+  "غذای کبابی",
+  "خورشت",
+  "چاشنی",
+  "کوکو و کتلت",
+  "غذا های رژیمی",
+  "غذا های ملاقه ای",
+  "کیک و شیرینی",
+  "ماکارونی و پاستا",
+];
+
+function ingredientsArrayToText(ingredients?: string[]) {
+  return ingredients?.join("، ") ?? "";
+}
+
+function ingredientsTextToArray(value: string) {
+  return value
+    .split(/[،,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
 
 export default function EditFoodForm({ foodID }: EditFoodFormProps) {
   const router = useRouter();
@@ -44,6 +69,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
     location: "",
     image: "",
     description: "",
+    ingredients: "",
   });
 
   useEffect(() => {
@@ -57,6 +83,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
       location: food.location,
       image: food.image,
       description: food.description ?? "",
+      ingredients: ingredientsArrayToText(food.ingredients),
     });
   }, [food]);
 
@@ -81,7 +108,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
   }
 
   const canEditFood =
-    currentUser?.role === "chef" && food.chefId === currentUser.id;
+    currentUser?.role === "chef" && Number(food.chefId) === Number(currentUser.id);
 
   if (!canEditFood) {
     return (
@@ -122,13 +149,14 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
     setIsSubmitting(true);
 
     updateFood(food.id, {
-      title: form.title,
+      title: form.title.trim(),
       category: form.category,
-      price: form.price,
-      remaining: form.remaining,
-      location: form.location,
+      price: form.price.trim(),
+      remaining: form.remaining.trim(),
+      location: form.location.trim(),
       image: form.image,
-      description: form.description,
+      description: form.description.trim(),
+      ingredients: ingredientsTextToArray(form.ingredients),
     });
 
     setIsSubmitting(false);
@@ -136,10 +164,13 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
     router.push(`/foods/${food.id}`);
   };
 
+  const isBase64Image = form.image.startsWith("data:");
+
   return (
     <form
       onSubmit={handleSubmit}
       className="rounded-3xl border border-orange-100 bg-white p-4 shadow-sm sm:p-6"
+      dir="rtl"
     >
       <div className="grid gap-6 md:grid-cols-[1fr_280px]">
         <div className="space-y-5">
@@ -160,16 +191,11 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
                 onChange={handleChange}
                 className="w-full rounded-2xl border border-gray-200 bg-[#FFF9F4] px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-[#D48B8B]"
               >
-                <option value="صبحانه">صبحانه </option>
-                <option value="دسر">دسر</option>
-                <option value="غذای کبابی">غذای کبابی</option>
-                <option value="خورشت">خورشت</option>
-                <option value="چاشنی">چاشنی</option>
-                <option value="کوکو و کتلت">کوکو و کتلت </option>
-                <option value="غذا های رژیمی">غذا های رژیمی</option>
-                <option value="غذا های ملاقه ای">غذا های ملاقه ای</option>
-                <option value="کیک و شیرینی">کیک و شیرینی</option>
-                <option value="ماکارونی و پاستا">ماکارونی و پاستا</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
               </select>
             </FormField>
           </div>
@@ -205,6 +231,17 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
               className="w-full rounded-2xl border border-gray-200 bg-[#FFF9F4] px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-[#D48B8B]"
             />
           </FormField>
+
+          <FormField label="مواد اولیه">
+            <textarea
+              name="ingredients"
+              value={form.ingredients}
+              onChange={handleChange}
+              rows={3}
+              placeholder="مثلا: گوشت، رب انار، گردو"
+              className="w-full resize-none rounded-2xl border border-gray-200 bg-[#FFF9F4] px-4 py-3 text-sm leading-7 text-gray-800 outline-none transition focus:border-[#D48B8B]"
+            />
+          </FormField>
         </div>
 
         <div className="space-y-4">
@@ -215,6 +252,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
                 alt={form.title || "تصویر غذا"}
                 fill
                 className="object-cover"
+                unoptimized={isBase64Image}
               />
             ) : (
               <div className="flex h-full items-center justify-center text-gray-400">
@@ -223,7 +261,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
             )}
           </div>
 
-          {/* <FormField label="آدرس تصویر غذا">
+          <FormField label="آدرس تصویر غذا">
             <input
               name="image"
               value={form.image}
@@ -231,7 +269,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
               placeholder="/images/foods/example.jpg"
               className="w-full rounded-2xl border border-gray-200 bg-[#FFF9F4] px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-[#D48B8B]"
             />
-          </FormField> */}
+          </FormField>
         </div>
       </div>
 

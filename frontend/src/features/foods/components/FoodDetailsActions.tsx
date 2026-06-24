@@ -16,6 +16,7 @@ interface FoodDetailsActionsProps {
     rating: number;
     remaining: string;
     chef: string;
+    chefId: number;
     location: string;
     price: string;
     unit?: string;
@@ -57,10 +58,10 @@ export default function FoodDetailsActions({
 
   if (canEditFood) {
     return (
-      <div className="flex w-full items-center justify-center gap-13">
+      <div className="flex w-full items-center justify-center gap-4">
         <Link
           href={`/chef/foods/${food.id}/edit`}
-          className="flex h-14 w-4 flex-1 items-center justify-center gap-3 rounded-full bg-[#111322] px-5 text-sm font-bold text-white transition hover:bg-gray-800 sm:text-base"
+          className="flex h-14 flex-1 items-center justify-center gap-3 rounded-full bg-[#111322] px-5 text-sm font-bold text-white transition hover:bg-gray-800 sm:text-base"
         >
           <Edit3 size={21} />
           ویرایش اطلاعات غذا
@@ -69,12 +70,11 @@ export default function FoodDetailsActions({
         <button
           type="button"
           onClick={handleDeleteFood}
-          className="flex h-14 w-28 shrink-0 items-center justify-center gap-2 rounded-full bg-[#E8D5D5] px-4 text-sm font-bold text-white transition hover:bg-[#dec4c4] sm:w-40"
+          className="flex h-14 w-28 shrink-0 items-center justify-center gap-2 rounded-full bg-red-100 px-4 text-sm font-bold text-red-600 transition hover:bg-red-200 sm:w-40"
         >
           <Trash2 size={18} />
           حذف غذا
         </button>
-
       </div>
     );
   }

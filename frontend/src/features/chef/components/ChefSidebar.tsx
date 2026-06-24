@@ -96,7 +96,7 @@ export default function ChefSidebar() {
       >
         <div className="mb-8 flex items-start justify-between">
           <div className="mx-auto flex flex-col items-center">
-            <div className="relative h-28 w-32">
+            <Link href="/" className="relative h-28 w-32">
               <Image
                 src="/icons/Logo.svg"
                 alt="دیگچه"
@@ -104,7 +104,8 @@ export default function ChefSidebar() {
                 className="object-contain"
                 priority
               />
-            </div>
+          </Link>
+            
 
             <p className="-mt-2 text-sm text-gray-800">بازار غذای خانگی</p>
           </div>

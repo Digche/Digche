@@ -1,4 +1,5 @@
 // src/store/cart-store.ts
+
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
@@ -9,6 +10,7 @@ export interface CartFoodItem {
   rating: number;
   remaining: string;
   chef: string;
+  chefId: number;
   location: string;
   price: string;
   unit?: string;
@@ -64,9 +66,7 @@ export const useCartStore = create<CartStore>()(
       increaseQuantity: (id) => {
         set({
           items: get().items.map((item) =>
-            item.id === id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
+            item.id === id ? { ...item, quantity: item.quantity + 1 } : item
           ),
         });
       },
@@ -75,9 +75,7 @@ export const useCartStore = create<CartStore>()(
         set({
           items: get()
             .items.map((item) =>
-              item.id === id
-                ? { ...item, quantity: item.quantity - 1 }
-                : item
+              item.id === id ? { ...item, quantity: item.quantity - 1 } : item
             )
             .filter((item) => item.quantity > 0),
         });

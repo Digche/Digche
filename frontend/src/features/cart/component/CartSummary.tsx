@@ -1,8 +1,12 @@
+// src/features/cart/components/CartSummary.tsx
+
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ShoppingBag, ReceiptText } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
+import { useOrderStore } from "@/store/order-store";
+import { useAuthStore } from "@/store/auth-store";
 
 const toEnglishDigits = (value: string) => {
   return value
@@ -23,6 +27,10 @@ const formatPrice = (price: number) => {
 
 export default function CartSummary() {
   const items = useCartStore((state) => state.items);
+  const clearCart = useCartStore((state) => state.clearCart);
+
+  const addOrders = useOrderStore((state) => state.addOrders);
+  const currentUser = useAuthStore((state) => state.currentUser);
 
   const summaryRef = useRef<HTMLElement | null>(null);
   const [summaryHeight, setSummaryHeight] = useState(0);
@@ -64,6 +72,47 @@ export default function CartSummary() {
       window.removeEventListener("resize", updateHeight);
     };
   }, []);
+
+  const handleCheckout = () => {
+    if (items.length === 0) return;
+
+    const confirmed = window.confirm(
+      "آیا از ثبت و پرداخت این سفارش مطمئن هستید؟"
+    );
+
+    if (!confirmed) return;
+
+    const hasInvalidItem = items.some(
+      (item) => typeof item.chefId !== "number"
+    );
+
+    if (hasInvalidItem) {
+      alert(
+        "بعضی از آیتم‌های سبد خرید اطلاعات آشپز ندارند. لطفاً سبد را خالی کنید و غذاها را دوباره اضافه کنید."
+      );
+      return;
+    }
+
+    addOrders(
+      items.map((item) => ({
+        chefId: item.chefId,
+        customerId: currentUser?.id,
+        customerName: currentUser?.name ?? "مشتری دیگچه",
+        customerPhone: currentUser?.phone,
+        foodId: item.id,
+        foodTitle: item.title,
+        foodImage: item.image,
+        quantity: item.quantity,
+        price: item.price,
+        unit: item.unit,
+        status: "preparing",
+      }))
+    );
+
+    clearCart();
+
+    alert("سفارش شما با موفقیت ثبت شد.");
+  };
 
   return (
     <>
@@ -122,10 +171,11 @@ export default function CartSummary() {
           <button
             type="button"
             disabled={items.length === 0}
+            onClick={handleCheckout}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#D48B8B] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ShoppingBag size={18} />
-            ادامه ثبت سفارش
+            پرداخت و ثبت سفارش
           </button>
         </div>
       </aside>

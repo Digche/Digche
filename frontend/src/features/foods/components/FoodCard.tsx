@@ -4,9 +4,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {Star,MapPin,ShoppingCart,Plus,Minus,Pencil,Trash2,} from "lucide-react";
-import { useCartStore } from "@/store/cart-store";
-import { useFoodStore } from "@/store/food-store";
+import type { MouseEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Star, MapPin } from "lucide-react";
+import FoodCardActions from "./FoodCardActions";
 
 interface FoodItemProps {
   id: number;
@@ -15,7 +16,7 @@ interface FoodItemProps {
   rating: number;
   remaining: string;
   chef: string;
-  chefId?: number;
+  chefId: number;
   location: string;
   price: string;
   unit?: string;
@@ -27,25 +28,23 @@ interface FoodCardProps {
   item: FoodItemProps;
   variant?: "customer" | "chef";
   display?: "scroll" | "grid" | "compact";
+  canEditFood?: boolean;
+  canAddToCart?: boolean;
+  isClickable?: boolean;
 }
 
 export default function FoodCard({
   item,
   variant = "customer",
   display = "grid",
+  canEditFood,
+  canAddToCart,
+  isClickable = false,
 }: FoodCardProps) {
-  const addToCart = useCartStore((state) => state.addToCart);
-  const increaseQuantity = useCartStore((state) => state.increaseQuantity);
-  const decreaseQuantity = useCartStore((state) => state.decreaseQuantity);
-  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const router = useRouter();
 
-  const deleteFood = useFoodStore((state) => state.deleteFood);
-
-  const cartItem = useCartStore((state) =>
-    state.items.find((cartItem) => cartItem.id === item.id)
-  );
-
-  const quantity = cartItem?.quantity ?? 0;
+  const resolvedCanEditFood = canEditFood ?? variant === "chef";
+  const resolvedCanAddToCart = canAddToCart ?? variant === "customer";
 
   const isScroll = display === "scroll";
   const isCompact = display === "compact";
@@ -60,19 +59,32 @@ export default function FoodCard({
       ? "relative h-[230px] w-full sm:h-[248px]"
       : "relative aspect-[4/3] w-full";
 
-  const handleDeleteFood = () => {
-    const confirmed = window.confirm("آیا از حذف این غذا مطمئن هستید؟");
+  const clickableClasses = isClickable
+    ? "cursor-pointer hover:-translate-y-0.5"
+    : "";
 
-    if (!confirmed) return;
+  const goToFoodDetails = () => {
+    if (!isClickable) return;
 
-    deleteFood(item.id);
-    removeFromCart(item.id);
+    router.push(`/foods/${item.id}`);
+  };
+
+  const stopCardClick = (event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
   };
 
   if (isCompact) {
     return (
-      <article className="flex w-full gap-3 overflow-hidden rounded-3xl border border-gray-100 bg-white p-2 shadow-sm">
-        <Link href={`/foods/${item.id}`} className={imageClass}>
+      <article
+        dir="rtl"
+        onClick={goToFoodDetails}
+        className={`flex w-full gap-3 overflow-hidden rounded-3xl border border-gray-100 bg-white p-2 shadow-sm transition hover:shadow-md ${clickableClasses}`}
+      >
+        <Link
+          href={`/foods/${item.id}`}
+          onClick={isClickable ? stopCardClick : undefined}
+          className={imageClass}
+        >
           <Image
             src={item.image}
             alt={item.title}
@@ -84,7 +96,11 @@ export default function FoodCard({
         <div className="flex min-w-0 flex-1 flex-col justify-between py-1 text-right">
           <div>
             <div className="flex items-start justify-between gap-2">
-              <Link href={`/foods/${item.id}`} className="min-w-0">
+              <Link
+                href={`/foods/${item.id}`}
+                onClick={isClickable ? stopCardClick : undefined}
+                className="min-w-0"
+              >
                 <h3 className="truncate text-base font-bold text-gray-800">
                   {item.title}
                 </h3>
@@ -108,7 +124,10 @@ export default function FoodCard({
             </p>
           </div>
 
-          <div className="mt-2 flex items-center justify-between gap-2 border-t border-gray-200 pt-2">
+          <div
+            onClick={stopCardClick}
+            className="mt-2 flex items-center justify-between gap-2 border-t border-gray-200 pt-2"
+          >
             <span className="truncate text-sm font-bold text-gray-900">
               {item.price}
               {item.unit && (
@@ -118,22 +137,12 @@ export default function FoodCard({
               )}
             </span>
 
-            {variant === "chef" ? (
-              <Link
-                href={`/chef/foods/${item.id}/edit`}
-                className="rounded-full bg-[#D48B8B] px-3 py-1.5 text-xs font-bold text-white"
-              >
-                ویرایش
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={() => addToCart(item)}
-                className="rounded-full bg-[#D48B8B] px-3 py-1.5 text-xs font-bold text-white"
-              >
-                افزودن
-              </button>
-            )}
+            <FoodCardActions
+              food={item}
+              canEditFood={resolvedCanEditFood}
+              canAddToCart={resolvedCanAddToCart}
+              compact
+            />
           </div>
         </div>
       </article>
@@ -142,9 +151,15 @@ export default function FoodCard({
 
   return (
     <article
-      className={`${cardClass} snap-start overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md`}
+      dir="rtl"
+      onClick={goToFoodDetails}
+      className={`${cardClass} bg- snap-start overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md ${clickableClasses}`}
     >
-      <Link href={`/foods/${item.id}`} className="block">
+      <Link
+        href={`/foods/${item.id}`}
+        onClick={isClickable ? stopCardClick : undefined}
+        className="block"
+      >
         <div className={imageClass}>
           <Image
             src={item.image}
@@ -161,7 +176,11 @@ export default function FoodCard({
 
       <div className="p-4 text-right sm:p-5">
         <div className="mb-2 flex items-start justify-between gap-3">
-          <Link href={`/foods/${item.id}`} className="min-w-0">
+          <Link
+            href={`/foods/${item.id}`}
+            onClick={isClickable ? stopCardClick : undefined}
+            className="min-w-0"
+          >
             <h3 className="truncate text-lg font-bold text-gray-800 sm:text-xl">
               {item.title}
             </h3>
@@ -185,60 +204,15 @@ export default function FoodCard({
           </p>
         </div>
 
-        <div className="flex flex-col-reverse gap-3 border-t border-gray-200 pt-4 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
-          {variant === "chef" ? (
-            <div className="grid w-full grid-cols-2 gap-2 min-[420px]:w-auto">
-              <button
-                type="button"
-                onClick={handleDeleteFood}
-                className="flex items-center justify-center gap-2 rounded-full bg-[#FDF7F2] px-4 py-2 text-sm font-bold text-red-500 transition hover:bg-red-50"
-              >
-                <Trash2 size={16} />
-                حذف
-              </button>
-
-              <Link
-                href={`/chef/foods/${item.id}/edit`}
-                className="flex items-center justify-center gap-2 rounded-full bg-[#D48B8B] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#c97b7b]"
-              >
-                <Pencil size={16} />
-                ویرایش
-              </Link>
-            </div>
-          ) : quantity === 0 ? (
-            <button
-              type="button"
-              onClick={() => addToCart(item)}
-              className="flex items-center justify-center gap-2 rounded-full bg-[#D48B8B] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#c97b7b] min-[420px]:justify-start"
-            >
-              <ShoppingCart size={16} />
-              افزودن
-            </button>
-          ) : (
-            <div className="flex w-full items-center justify-center gap-3 rounded-full border border-gray-200 bg-white px-2 py-1 shadow-sm min-[420px]:w-auto">
-              <button
-                type="button"
-                onClick={() => increaseQuantity(item.id)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#D48B8B] text-white transition hover:bg-[#c97b7b]"
-                aria-label="زیاد کردن تعداد"
-              >
-                <Plus size={16} />
-              </button>
-
-              <span className="min-w-6 text-center font-bold text-gray-800">
-                {quantity}
-              </span>
-
-              <button
-                type="button"
-                onClick={() => decreaseQuantity(item.id)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FDF7F2] text-gray-700 transition hover:bg-gray-100"
-                aria-label="کم کردن تعداد"
-              >
-                <Minus size={16} />
-              </button>
-            </div>
-          )}
+        <div
+          onClick={stopCardClick}
+          className="flex mt-10 flex-col-reverse gap-3 border-t border-gray-200 pt-4 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between"
+        >
+          <FoodCardActions
+            food={item}
+            canEditFood={resolvedCanEditFood}
+            canAddToCart={resolvedCanAddToCart}
+          />
 
           <span className="text-left text-lg font-bold text-gray-900 min-[420px]:text-right">
             {item.unit && (

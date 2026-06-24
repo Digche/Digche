@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import FoodCard from "@/features/foods/components/FoodCard";
 import Link from "next/link";
 import { useFoodStore } from "@/store/food-store";
+import FoodCardClient from "@/features/foods/components/FoodCartClient";
 
 export default function FoodScroll() {
   const foods = useFoodStore((state) => state.foods);
@@ -24,7 +25,12 @@ export default function FoodScroll() {
 
       <div className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide snap-x snap-mandatory">
         {foods.map((item) => (
-          <FoodCard item={item} variant="customer" display="scroll" />        ))}
+          <FoodCardClient
+            key={item.id}
+            item={item}
+            display="scroll"
+          />
+        ))}
       </div>
     </section>
   );
