@@ -3,6 +3,10 @@ services:
     ports:
       - "3001:3001"
 
+  media-service:
+    ports:
+      - "3002:3002"
+
   auth-db:
     ports:
       - "5433:5432"
