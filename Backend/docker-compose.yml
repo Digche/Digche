@@ -10,6 +10,7 @@ services:
       - auth-service
       - media-service
       - chat-service
+      - ticket-service
     networks:
       - food_network
 
@@ -60,6 +61,22 @@ services:
     networks:
       - food_network
 
+  ticket-service:
+    build:
+      context: ./services/ticket
+      dockerfile: Dockerfile
+    container_name: ticket_service
+    env_file:
+      - ./services/ticket/.env
+    expose:
+      - "3004"
+    volumes:
+      - ./docs:/docs:ro
+    depends_on:
+      - ticket-db
+    networks:
+      - food_network
+
   auth-db:
     image: postgres:16-alpine
     container_name: auth_db
@@ -99,10 +116,25 @@ services:
     networks:
       - food_network
 
+  ticket-db:
+    image: postgres:16-alpine
+    container_name: ticket_db
+    environment:
+      POSTGRES_DB: ticket_db
+      POSTGRES_USER: ticket_user
+      POSTGRES_PASSWORD: ticket_password
+    expose:
+      - "5432"
+    volumes:
+      - ticket_db_data:/var/lib/postgresql/data
+    networks:
+      - food_network
+
 volumes:
   auth_db_data:
   auth_redis_data:
   chat_db_data:
+  ticket_db_data:
 
 networks:
   food_network:
