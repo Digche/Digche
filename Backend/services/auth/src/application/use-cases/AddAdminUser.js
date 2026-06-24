@@ -29,6 +29,7 @@ export class AddAdminUser {
         phone: normalizedPhone,
         role: ADMIN_ROLES.ADMIN,
         status: ADMIN_STATUS.ACTIVE,
+        photoUrl: null,
         createdBy
       })
     );
@@ -37,8 +38,12 @@ export class AddAdminUser {
       admin: {
         id: adminUser.id,
         phone: adminUser.phone,
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        username: adminUser.username,
         role: adminUser.role,
         status: adminUser.status,
+        photoUrl: adminUser.photoUrl,
         createdBy: adminUser.createdBy
       }
     };

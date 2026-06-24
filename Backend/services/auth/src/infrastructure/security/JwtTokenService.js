@@ -6,6 +6,7 @@ export class JwtTokenService extends TokenService {
   constructor({
     secret,
     accessTokenExpiresIn,
+    registrationTokenExpiresIn = "10m",
     refreshTokenBytes = 64
   }) {
     super();
@@ -16,6 +17,7 @@ export class JwtTokenService extends TokenService {
 
     this.secret = secret;
     this.accessTokenExpiresIn = accessTokenExpiresIn || "15m";
+    this.registrationTokenExpiresIn = registrationTokenExpiresIn;
     this.refreshTokenBytes = refreshTokenBytes;
   }
 
@@ -29,6 +31,29 @@ export class JwtTokenService extends TokenService {
     return jwt.verify(token, this.secret);
   }
 
+  signRegistrationToken(payload) {
+    return jwt.sign(
+      {
+        ...payload,
+        tokenType: "registration"
+      },
+      this.secret,
+      {
+        expiresIn: this.registrationTokenExpiresIn
+      }
+    );
+  }
+
+  verifyRegistrationToken(token) {
+    const payload = jwt.verify(token, this.secret);
+
+    if (payload.tokenType !== "registration") {
+      throw new Error("Invalid registration token");
+    }
+
+    return payload;
+  }
+
   generateRefreshToken() {
     return crypto.randomBytes(this.refreshTokenBytes).toString("hex");
   }
@@ -38,5 +63,9 @@ export class JwtTokenService extends TokenService {
       .createHash("sha256")
       .update(refreshToken)
       .digest("hex");
+  }
+
+  generateTokenId() {
+    return crypto.randomUUID();
   }
 }

@@ -5,8 +5,12 @@ export class AdminUser {
   constructor({
     id = null,
     phone,
+    firstName = null,
+    lastName = null,
+    username = null,
     role = ADMIN_ROLES.ADMIN,
     status = ADMIN_STATUS.ACTIVE,
+    photoUrl = null,
     createdBy = null,
     createdAt = null,
     updatedAt = null
@@ -17,8 +21,12 @@ export class AdminUser {
 
     this.id = id;
     this.phone = phone;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.username = username;
     this.role = role;
     this.status = status;
+    this.photoUrl = photoUrl;
     this.createdBy = createdBy;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;

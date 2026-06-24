@@ -44,6 +44,9 @@ describe("VerifyPublicPhoneChangeOtp", () => {
         {
           id: "user-1",
           phone: "+989121111111",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
           roles: [USER_ROLES.CLIENT]
         }
       ],
@@ -70,6 +73,9 @@ describe("VerifyPublicPhoneChangeOtp", () => {
       user: {
         id: "user-1",
         phone: "+989122222222",
+        firstName: "Ali",
+        lastName: "Ahmadi",
+        username: "ali_ahmadi",
         roles: [USER_ROLES.CLIENT],
         selectedRole: USER_ROLES.CLIENT
       }
@@ -90,6 +96,9 @@ describe("VerifyPublicPhoneChangeOtp", () => {
     expect(tokenService.signedPayloads[0]).toMatchObject({
       sub: "user-1",
       phone: "+989122222222",
+      firstName: "Ali",
+      lastName: "Ahmadi",
+      username: "ali_ahmadi",
       selectedRole: USER_ROLES.CLIENT,
       scope: AUTH_SCOPES.PUBLIC
     });
@@ -101,6 +110,9 @@ describe("VerifyPublicPhoneChangeOtp", () => {
         {
           id: "user-1",
           phone: "+989121111111",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
           roles: [USER_ROLES.CHEF]
         }
       ],
@@ -142,6 +154,9 @@ describe("VerifyPublicPhoneChangeOtp", () => {
         {
           id: "user-1",
           phone: "+989121111111",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
           roles: [USER_ROLES.CLIENT]
         }
       ],
@@ -170,11 +185,17 @@ describe("VerifyPublicPhoneChangeOtp", () => {
         {
           id: "user-1",
           phone: "+989121111111",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
           roles: [USER_ROLES.CLIENT]
         },
         {
           id: "user-2",
           phone: "+989122222222",
+          firstName: "Other",
+          lastName: "User",
+          username: "other_user",
           roles: [USER_ROLES.CLIENT]
         }
       ]

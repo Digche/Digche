@@ -1,0 +1,247 @@
+openapi: 3.0.3
+info:
+  title: Food Platform Ticket Service API
+  version: 1.0.0
+  description: Simple support ticket service for public users, chefs, admins, and managers.
+
+servers:
+  - url: http://localhost:8080
+    description: Local Gateway
+
+tags:
+  - name: Tickets
+    description: Support ticket management
+
+paths:
+  /tickets/health:
+    get:
+      tags:
+        - Tickets
+      summary: Ticket service health check
+      responses:
+        "200":
+          description: Ticket service is healthy
+
+  /tickets:
+    post:
+      tags:
+        - Tickets
+      summary: Create a support ticket
+      description: Only authenticated public users with selectedRole=client or selectedRole=chef can create tickets.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTicketInput"
+            examples:
+              clientTicket:
+                value:
+                  subject: "Order delivery question"
+                  description: "My order has not arrived yet."
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+    get:
+      tags:
+        - Tickets
+      summary: List all tickets
+      description: Admin and manager access tokens can list all tickets.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Ticket list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ticket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /tickets/{ticketId}:
+    get:
+      tags:
+        - Tickets
+      summary: Get one ticket
+      description: Admin and manager access tokens can view a ticket.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Ticket details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /tickets/{ticketId}/review:
+    patch:
+      tags:
+        - Tickets
+      summary: Mark a ticket as reviewed
+      description: Admin and manager access tokens can change a ticket from unreviewed to reviewed. Reviewed tickets cannot be changed back to unreviewed.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Ticket marked as reviewed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TicketStatus:
+      type: string
+      enum:
+        - unreviewed
+        - reviewed
+
+    CreateTicketInput:
+      type: object
+      required:
+        - subject
+        - description
+      properties:
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 150
+        description:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        creatorId:
+          type: string
+          format: uuid
+        creatorRole:
+          type: string
+          enum:
+            - client
+            - chef
+        subject:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/TicketStatus"
+        reviewedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"

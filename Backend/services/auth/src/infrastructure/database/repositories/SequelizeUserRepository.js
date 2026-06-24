@@ -38,14 +38,63 @@ export class SequelizeUserRepository {
     return this.toDomain(user);
   }
 
+  async findByUsername(username) {
+    const user = await UserModel.findOne({
+      where: { username },
+      include: [
+        {
+          model: UserRoleModel,
+          as: "roles"
+        }
+      ]
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return this.toDomain(user);
+  }
+
+  async updateProfileField(userId, field, value) {
+    const user = await UserModel.findByPk(userId, {
+      include: [
+        {
+          model: UserRoleModel,
+          as: "roles"
+        }
+      ]
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    user[field] = value;
+
+    await user.save();
+
+    return this.toDomain(user);
+  }
+
   async create(user) {
     const createdUser = await UserModel.create({
-      phone: user.phone
+      phone: user.phone,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      photoUrl: user.photoUrl,
+      address: user.address
     });
 
     return new User({
       id: createdUser.id,
       phone: createdUser.phone,
+      firstName: createdUser.firstName,
+      lastName: createdUser.lastName,
+      username: createdUser.username,
+      photoUrl: createdUser.photoUrl,
+      address: createdUser.address,
       roles: [],
       createdAt: createdUser.createdAt,
       updatedAt: createdUser.updatedAt
@@ -65,6 +114,29 @@ export class SequelizeUserRepository {
     });
 
     return true;
+  }
+
+  async completeProfile(userId, { firstName, lastName, username }) {
+    const user = await UserModel.findByPk(userId, {
+      include: [
+        {
+          model: UserRoleModel,
+          as: "roles"
+        }
+      ]
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.username = username;
+
+    await user.save();
+
+    return this.toDomain(user);
   }
 
   async updatePhone(userId, newPhone) {
@@ -96,6 +168,11 @@ export class SequelizeUserRepository {
     return new User({
       id: userModel.id,
       phone: userModel.phone,
+      firstName: userModel.firstName,
+      lastName: userModel.lastName,
+      username: userModel.username,
+      photoUrl: userModel.photoUrl,
+      address: userModel.address,
       roles,
       createdAt: userModel.createdAt,
       updatedAt: userModel.updatedAt

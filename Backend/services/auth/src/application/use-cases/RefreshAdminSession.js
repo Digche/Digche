@@ -55,7 +55,11 @@ export class RefreshAdminSession {
     const accessTokenPayload = {
       sub: adminUser.id,
       phone: adminUser.phone,
+      firstName: adminUser.firstName,
+      lastName: adminUser.lastName,
+      username: adminUser.username,
       role: adminUser.role,
+      photoUrl: adminUser.photoUrl,
       scope: AUTH_SCOPES.ADMIN,
       isManager: adminUser.isManager()
     };
@@ -87,7 +91,11 @@ export class RefreshAdminSession {
       admin: {
         id: adminUser.id,
         phone: adminUser.phone,
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        username: adminUser.username,
         role: adminUser.role,
+        photoUrl: adminUser.photoUrl,
         isManager: adminUser.isManager()
       }
     };

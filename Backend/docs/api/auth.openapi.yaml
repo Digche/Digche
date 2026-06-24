@@ -8,8 +8,6 @@ info:
 servers:
   - url: http://localhost:8080
     description: Local Gateway
-  - url: http://localhost:3001
-    description: Direct Auth Service - development only
 
 tags:
   - name: Public Auth
@@ -33,26 +31,49 @@ paths:
     post:
       tags:
         - Public Auth
-      summary: Request OTP for public login
+      summary: Request OTP for public login or registration
+      description: |
+        User selects role and flow from the UI.
+        flow=login means the user is trying to login.
+        flow=register means the user is trying to register.
+        The internal OTP purpose is still handled by the backend.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RequestOtpInput"
+              $ref: "#/components/schemas/RequestPublicOtpInput"
             examples:
-              default:
+              clientLogin:
                 value:
                   phone: "09121234567"
+                  role: "client"
+                  flow: "login"
+              clientRegister:
+                value:
+                  phone: "09121234567"
+                  role: "client"
+                  flow: "register"
+              chefRegister:
+                value:
+                  phone: "09129876543"
+                  role: "chef"
+                  flow: "register"
       responses:
         "200":
           description: OTP sent successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OtpSentResponse"
+                $ref: "#/components/schemas/PublicOtpSentResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Public account already exists for this phone and role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "429":
           $ref: "#/components/responses/TooManyRequests"
 
@@ -60,7 +81,10 @@ paths:
     post:
       tags:
         - Public Auth
-      summary: Verify OTP and login as client or chef
+      summary: Verify OTP for public login or registration
+      description: |
+        If the user already has the selected role and completed profile, a public session is returned.
+        If registration is required, a temporary registrationToken is returned for completing registration.
       requestBody:
         required: true
         content:
@@ -68,19 +92,74 @@ paths:
             schema:
               $ref: "#/components/schemas/VerifyPublicOtpInput"
             examples:
-              client:
+              clientLogin:
                 value:
                   phone: "09121234567"
                   code: "123456"
                   role: "client"
-              chef:
+                  flow: "login"
+              clientRegister:
                 value:
                   phone: "09121234567"
                   code: "123456"
+                  role: "client"
+                  flow: "register"
+              chefRegister:
+                value:
+                  phone: "09129876543"
+                  code: "123456"
                   role: "chef"
+                  flow: "register"
       responses:
         "200":
-          description: Public session created
+          description: Public OTP verified. Returns either a public session or a registration token.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/PublicAuthResponse"
+                  - $ref: "#/components/schemas/RegistrationRequiredResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Public account already exists for this phone and role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/register/complete:
+    post:
+      tags:
+        - Public Auth
+      summary: Complete public user registration
+      description: Completes registration after OTP verification using a temporary registration token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteRegistrationInput"
+            examples:
+              client:
+                value:
+                  registrationToken: "registration_token_here"
+                  firstName: "Ali"
+                  lastName: "Ahmadi"
+                  username: "ali_ahmadi"
+              chef:
+                value:
+                  registrationToken: "registration_token_here"
+                  firstName: "Reza"
+                  lastName: "Chef"
+                  username: "reza_chef"
+      responses:
+        "201":
+          description: Registration completed and public session created
           content:
             application/json:
               schema:
@@ -91,6 +170,12 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Username is already in use, profile already completed, or public account already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/refresh:
     post:
@@ -112,6 +197,8 @@ paths:
                 $ref: "#/components/schemas/PublicAuthResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /auth/logout:
     post:
@@ -149,6 +236,147 @@ paths:
                 properties:
                   user:
                     $ref: "#/components/schemas/PublicUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/me/first-name:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's first name
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFirstNameInput"
+      responses:
+        "200":
+          description: First name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/me/last-name:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's last name
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLastNameInput"
+      responses:
+        "200":
+          description: Last name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/me/username:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's username
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUsernameInput"
+      responses:
+        "200":
+          description: Username updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Username is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me/photo-url:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's photo URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePhotoUrlInput"
+      responses:
+        "200":
+          description: Photo URL updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/me/address:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's address
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAddressInput"
+      responses:
+        "200":
+          description: Address updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -249,11 +477,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RequestOtpInput"
+              $ref: "#/components/schemas/RequestAdminOtpInput"
             examples:
               default:
                 value:
-                  phone: "09121234567"
+                  phone: "09031241172"
       responses:
         "200":
           description: OTP sent successfully
@@ -280,7 +508,7 @@ paths:
             examples:
               default:
                 value:
-                  phone: "09121234567"
+                  phone: "09031241172"
                   code: "123456"
       responses:
         "200":
@@ -351,6 +579,120 @@ paths:
                 properties:
                   admin:
                     $ref: "#/components/schemas/AdminUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/auth/me/first-name:
+    patch:
+      tags:
+        - Admin Auth
+      summary: Update current admin user's first name
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFirstNameInput"
+      responses:
+        "200":
+          description: First name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/auth/me/last-name:
+    patch:
+      tags:
+        - Admin Auth
+      summary: Update current admin user's last name
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLastNameInput"
+      responses:
+        "200":
+          description: Last name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/auth/me/username:
+    patch:
+      tags:
+        - Admin Auth
+      summary: Update current admin user's username
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUsernameInput"
+      responses:
+        "200":
+          description: Username updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Username is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/auth/me/photo-url:
+    patch:
+      tags:
+        - Admin Auth
+      summary: Update current admin user's photo URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePhotoUrlInput"
+      responses:
+        "200":
+          description: Photo URL updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -572,6 +914,110 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /admin/admin-users/{id}/enable:
+    patch:
+      tags:
+        - Admin Users
+      summary: Enable an admin user
+      description: Only manager can enable a normal disabled admin user. Managers cannot enable themselves or other managers from this endpoint.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Admin user id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Admin user enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnableAdminUserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /internal/auth/profiles/resolve:
+    post:
+      tags:
+        - Internal
+      summary: Resolve actor display profiles for internal services
+      description: Internal endpoint used by chat-service to hydrate participants. Requires x-internal-api-key.
+      parameters:
+        - in: header
+          name: x-internal-api-key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - participants
+              properties:
+                participants:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - id
+                      - type
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      type:
+                        type: string
+                        enum:
+                          - user
+                          - admin
+      responses:
+        "200":
+          description: Resolved profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profiles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        type:
+                          type: string
+                          enum:
+                            - user
+                            - admin
+                        displayName:
+                          type: string
+                          nullable: true
+                        photoUrl:
+                          type: string
+                          nullable: true
+                        phone:
+                          type: string
+                          nullable: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -580,7 +1026,33 @@ components:
       bearerFormat: JWT
 
   schemas:
-    RequestOtpInput:
+    PublicAuthFlow:
+      type: string
+      enum:
+        - login
+        - register
+      example: register
+
+    RequestPublicOtpInput:
+      type: object
+      required:
+        - phone
+        - role
+        - flow
+      properties:
+        phone:
+          type: string
+          example: "09121234567"
+        role:
+          type: string
+          enum:
+            - client
+            - chef
+          example: client
+        flow:
+          $ref: "#/components/schemas/PublicAuthFlow"
+
+    RequestAdminOtpInput:
       type: object
       required:
         - phone
@@ -595,6 +1067,7 @@ components:
         - phone
         - code
         - role
+        - flow
       properties:
         phone:
           type: string
@@ -608,6 +1081,8 @@ components:
             - client
             - chef
           example: client
+        flow:
+          $ref: "#/components/schemas/PublicAuthFlow"
 
     VerifyAdminOtpInput:
       type: object
@@ -621,6 +1096,27 @@ components:
         code:
           type: string
           example: "123456"
+
+    CompleteRegistrationInput:
+      type: object
+      required:
+        - registrationToken
+        - firstName
+        - lastName
+        - username
+      properties:
+        registrationToken:
+          type: string
+          example: "registration_token_here"
+        firstName:
+          type: string
+          example: "Ali"
+        lastName:
+          type: string
+          example: "Ahmadi"
+        username:
+          type: string
+          example: "ali_ahmadi"
 
     RefreshInput:
       type: object
@@ -671,7 +1167,61 @@ components:
           type: string
           example: "09121234567"
 
-    OtpSentResponse:
+    UpdateFirstNameInput:
+      type: object
+      required:
+        - firstName
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+          example: "Ali"
+
+    UpdateLastNameInput:
+      type: object
+      required:
+        - lastName
+      properties:
+        lastName:
+          type: string
+          maxLength: 100
+          example: "Ahmadi"
+
+    UpdateUsernameInput:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: "^[a-zA-Z0-9_]+$"
+          example: "ali_ahmadi"
+
+    UpdatePhotoUrlInput:
+      type: object
+      required:
+        - photoUrl
+      properties:
+        photoUrl:
+          type: string
+          nullable: true
+          maxLength: 2048
+          example: "https://cdn.example.com/users/user-1/profile.jpg"
+
+    UpdateAddressInput:
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          type: string
+          nullable: true
+          maxLength: 500
+          example: "Tehran, Vanak Square"
+
+    PublicOtpSentResponse:
       type: object
       properties:
         message:
@@ -680,6 +1230,27 @@ components:
         phone:
           type: string
           example: "+989121234567"
+        role:
+          type: string
+          enum:
+            - client
+            - chef
+          example: client
+        flow:
+          $ref: "#/components/schemas/PublicAuthFlow"
+        expiresAt:
+          type: string
+          format: date-time
+
+    OtpSentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: OTP sent successfully
+        phone:
+          type: string
+          example: "+989031241172"
         expiresAt:
           type: string
           format: date-time
@@ -697,6 +1268,27 @@ components:
           type: string
           format: date-time
 
+    RegistrationRequiredResponse:
+      type: object
+      properties:
+        requiresRegistration:
+          type: boolean
+          example: true
+        registrationToken:
+          type: string
+          example: "registration_token_here"
+        phone:
+          type: string
+          example: "+989121234567"
+        role:
+          type: string
+          enum:
+            - client
+            - chef
+          example: client
+        flow:
+          $ref: "#/components/schemas/PublicAuthFlow"
+
     PublicUser:
       type: object
       properties:
@@ -706,6 +1298,23 @@ components:
         phone:
           type: string
           example: "+989121234567"
+        firstName:
+          type: string
+          example: "Ali"
+        lastName:
+          type: string
+          example: "Ahmadi"
+        username:
+          type: string
+          example: "ali_ahmadi"
+        address:
+          type: string
+          nullable: true
+          example: "Tehran, Vanak Square"
+        photoUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/users/user-1/profile.jpg"
         roles:
           type: array
           items:
@@ -738,12 +1347,28 @@ components:
           format: uuid
         phone:
           type: string
-          example: "+989121234567"
+          example: "+989031241172"
+        firstName:
+          type: string
+          nullable: true
+          example: "Sara"
+        lastName:
+          type: string
+          nullable: true
+          example: "Mohammadi"
+        username:
+          type: string
+          nullable: true
+          example: "sara_admin"
         role:
           type: string
           enum:
             - admin
             - manager
+        photoUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/admins/admin-1/profile.jpg"
         isManager:
           type: boolean
 
@@ -756,6 +1381,18 @@ components:
         phone:
           type: string
           example: "+989121234567"
+        firstName:
+          type: string
+          nullable: true
+          example: "Sara"
+        lastName:
+          type: string
+          nullable: true
+          example: "Mohammadi"
+        username:
+          type: string
+          nullable: true
+          example: "sara_admin"
         role:
           type: string
           enum:
@@ -768,6 +1405,10 @@ components:
             - active
             - disabled
           example: active
+        photoUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/admins/admin-1/profile.jpg"
         createdBy:
           type: string
           format: uuid
@@ -784,9 +1425,22 @@ components:
     PublicAuthResponse:
       type: object
       properties:
+        requiresRegistration:
+          type: boolean
+          example: false
+        flow:
+          $ref: "#/components/schemas/PublicAuthFlow"
         accessToken:
           type: string
         refreshToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/PublicUser"
+
+    PublicProfileUpdateResponse:
+      type: object
+      properties:
+        accessToken:
           type: string
         user:
           $ref: "#/components/schemas/PublicUser"
@@ -797,6 +1451,14 @@ components:
         accessToken:
           type: string
         refreshToken:
+          type: string
+        admin:
+          $ref: "#/components/schemas/AdminUser"
+
+    AdminProfileUpdateResponse:
+      type: object
+      properties:
+        accessToken:
           type: string
         admin:
           $ref: "#/components/schemas/AdminUser"
@@ -827,6 +1489,12 @@ components:
         admin:
           $ref: "#/components/schemas/AdminUserWithStatus"
 
+    EnableAdminUserResponse:
+      type: object
+      properties:
+        admin:
+          $ref: "#/components/schemas/AdminUserWithStatus"
+
     LogoutResponse:
       type: object
       properties:
@@ -845,10 +1513,10 @@ components:
           properties:
             code:
               type: string
-              example: UNAUTHORIZED
+              example: PUBLIC_ACCOUNT_ALREADY_EXISTS
             message:
               type: string
-              example: Invalid or expired OTP code
+              example: Public account already exists for this phone and role
 
   responses:
     BadRequest:

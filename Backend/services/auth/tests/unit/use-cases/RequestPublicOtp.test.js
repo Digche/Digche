@@ -1,21 +1,26 @@
 import { describe, expect, it } from "vitest";
 
 import { RequestPublicOtp } from "../../../src/application/use-cases/RequestPublicOtp.js";
+import { USER_ROLES } from "../../../src/domain/constants/roles.js";
 import { OTP_PURPOSES } from "../../../src/domain/constants/otpPurposes.js";
+import { PUBLIC_AUTH_FLOWS } from "../../../src/domain/constants/authFlows.js";
 
 import { FakeOtpCodeGenerator } from "../fakes/FakeOtpCodeGenerator.js";
 import { FakeOtpHasher } from "../fakes/FakeOtpHasher.js";
 import { FakeOtpRepository } from "../fakes/FakeOtpRepository.js";
 import { FakeOtpSender } from "../fakes/FakeOtpSender.js";
+import { FakeUserRepository } from "../fakes/FakeUserRepository.js";
 import { expectAppError } from "../helpers/expectAppError.js";
 
 function makeUseCase({ recentCounts = {} } = {}) {
+  const userRepository = new FakeUserRepository();
   const otpRepository = new FakeOtpRepository({ recentCounts });
   const otpCodeGenerator = new FakeOtpCodeGenerator("123456");
   const otpHasher = new FakeOtpHasher();
   const otpSender = new FakeOtpSender();
 
   const useCase = new RequestPublicOtp({
+    userRepository,
     otpRepository,
     otpCodeGenerator,
     otpHasher,
@@ -28,12 +33,20 @@ function makeUseCase({ recentCounts = {} } = {}) {
 }
 
 describe("RequestPublicOtp", () => {
-  it("sends public login OTP", async () => {
+  it("sends public login OTP for the selected role", async () => {
     const { useCase, otpRepository, otpSender } = makeUseCase();
 
-    const result = await useCase.execute({ phone: "09121234567" });
+    const result = await useCase.execute({
+      phone: "09121234567",
+      role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.LOGIN
+    });
 
-    expect(result.phone).toBe("+989121234567");
+    expect(result).toMatchObject({
+      phone: "+989121234567",
+      role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.LOGIN
+    });
     expect(result.expiresAt).toBeInstanceOf(Date);
     expect(otpRepository.createdOtps[0]).toMatchObject({
       phone: "+989121234567",
@@ -49,6 +62,30 @@ describe("RequestPublicOtp", () => {
     ]);
   });
 
+  it("rejects missing or invalid public role", async () => {
+    const { useCase } = makeUseCase();
+
+    await expectAppError(
+      useCase.execute({ phone: "09121234567", flow: PUBLIC_AUTH_FLOWS.LOGIN }),
+      {
+      statusCode: 400,
+      code: "INVALID_PUBLIC_ROLE"
+      }
+    );
+
+    await expectAppError(
+      useCase.execute({
+        phone: "09121234567",
+        role: "admin",
+        flow: PUBLIC_AUTH_FLOWS.LOGIN
+      }),
+      {
+        statusCode: 400,
+        code: "INVALID_PUBLIC_ROLE"
+      }
+    );
+  });
+
   it("enforces hourly OTP rate limit", async () => {
     const { useCase } = makeUseCase({
       recentCounts: {
@@ -56,9 +93,16 @@ describe("RequestPublicOtp", () => {
       }
     });
 
-    await expectAppError(useCase.execute({ phone: "09121234567" }), {
-      statusCode: 429,
-      code: "TOO_MANY_REQUESTS"
-    });
+    await expectAppError(
+      useCase.execute({
+        phone: "09121234567",
+        role: USER_ROLES.CHEF,
+        flow: PUBLIC_AUTH_FLOWS.LOGIN
+      }),
+      {
+        statusCode: 429,
+        code: "TOO_MANY_REQUESTS"
+      }
+    );
   });
 });

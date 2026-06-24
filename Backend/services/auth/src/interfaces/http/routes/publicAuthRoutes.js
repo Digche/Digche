@@ -8,10 +8,18 @@ export function createPublicAuthRoutes(controller, publicAuthMiddleware) {
   router.post("/request-otp", controller.requestOtp);
   router.post("/verify-otp", controller.verifyOtp);
 
+  router.post("/register/complete", controller.completeRegistration);
+
   router.post("/refresh", controller.refresh);
   router.post("/logout", controller.logout);
 
   router.get("/me", publicAuthMiddleware, controller.me);
+
+  router.patch("/me/first-name", publicAuthMiddleware, controller.updateFirstName);
+  router.patch("/me/last-name", publicAuthMiddleware, controller.updateLastName);
+  router.patch("/me/username", publicAuthMiddleware, controller.updateUsername);
+  router.patch("/me/photo-url", publicAuthMiddleware, controller.updatePhotoUrl);
+  router.patch("/me/address", publicAuthMiddleware, controller.updateAddress);
 
   router.post(
     "/change-phone/request-otp",

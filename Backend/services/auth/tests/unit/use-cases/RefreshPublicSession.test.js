@@ -37,6 +37,9 @@ describe("RefreshPublicSession", () => {
         {
           id: "user-1",
           phone: "+989121234567",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
           roles: [USER_ROLES.CLIENT]
         }
       ],
@@ -60,6 +63,9 @@ describe("RefreshPublicSession", () => {
       user: {
         id: "user-1",
         phone: "+989121234567",
+        firstName: "Ali",
+        lastName: "Ahmadi",
+        username: "ali_ahmadi",
         roles: [USER_ROLES.CLIENT],
         selectedRole: USER_ROLES.CLIENT
       }
@@ -85,6 +91,9 @@ describe("RefreshPublicSession", () => {
         {
           id: "user-1",
           phone: "+989121234567",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
           roles: [USER_ROLES.CHEF]
         }
       ],
@@ -143,6 +152,9 @@ describe("RefreshPublicSession", () => {
         {
           id: "user-1",
           phone: "+989121234567",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
           roles: [USER_ROLES.CLIENT]
         }
       ],
@@ -170,6 +182,9 @@ describe("RefreshPublicSession", () => {
         {
           id: "user-1",
           phone: "+989121234567",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
           roles: [USER_ROLES.CHEF]
         }
       ],

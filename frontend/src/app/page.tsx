@@ -1,5 +1,9 @@
-import { redirect } from "next/navigation";
+import HomeScreen from "@/features/home/components/HomeScreen";
 
 export default function HomePage() {
-  redirect("/auth");
+  return (
+    <div>
+      <HomeScreen />
+    </div>
+  );
 }

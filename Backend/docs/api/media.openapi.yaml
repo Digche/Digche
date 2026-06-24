@@ -1,0 +1,253 @@
+openapi: 3.0.3
+info:
+  title: Food Platform Media Service API
+  version: 1.0.0
+  description: Central media service for presigned image uploads to Arvan Object Storage.
+  x-usage-note: |
+    In Swagger UI, click Authorize and paste the accessToken from auth-service.
+    If Swagger does not add the Bearer prefix automatically, paste it as: Bearer <accessToken>.
+
+servers:
+  - url: http://localhost:8080
+    description: Local Gateway
+
+tags:
+  - name: Media
+    description: Presigned image upload endpoints
+
+paths:
+  /media/health:
+    get:
+      tags:
+        - Media
+      summary: Media service health check
+      responses:
+        "200":
+          description: Media service is healthy
+
+  /media/profile-photo/presign:
+    post:
+      tags:
+        - Media
+      summary: Create a presigned upload request for the authenticated user's profile photo
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfilePhotoPresignInput"
+            examples:
+              png:
+                value:
+                  contentType: image/png
+              webp:
+                value:
+                  contentType: image/webp
+      responses:
+        "200":
+          description: Presigned upload data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresignedUploadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /media/dish-images/presign:
+    post:
+      tags:
+        - Media
+      summary: Create a presigned upload request for a dish image
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DishImagePresignInput"
+            examples:
+              draft:
+                value:
+                  contentType: image/webp
+                  dishId: draft
+              existingDish:
+                value:
+                  contentType: image/jpeg
+                  dishId: dish-123
+      responses:
+        "200":
+          description: Presigned upload data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresignedUploadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /media/internal/images/presign:
+    post:
+      tags:
+        - Media
+      summary: Create a presigned upload request for internal service-to-service use
+      parameters:
+        - name: x-internal-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InternalImagePresignInput"
+            examples:
+              dish:
+                value:
+                  target: dish_image
+                  contentType: image/jpeg
+                  dishId: dish-123
+      responses:
+        "200":
+          description: Presigned upload data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresignedUploadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ImageContentType:
+      type: string
+      enum:
+        - image/jpeg
+        - image/png
+        - image/webp
+
+    ProfilePhotoPresignInput:
+      type: object
+      required:
+        - contentType
+      properties:
+        contentType:
+          $ref: "#/components/schemas/ImageContentType"
+        maxSizeBytes:
+          type: integer
+          example: 5242880
+
+    DishImagePresignInput:
+      type: object
+      required:
+        - contentType
+      properties:
+        contentType:
+          $ref: "#/components/schemas/ImageContentType"
+        dishId:
+          type: string
+          nullable: true
+          example: "dish-123"
+        maxSizeBytes:
+          type: integer
+          example: 10485760
+
+    InternalImagePresignInput:
+      type: object
+      required:
+        - target
+        - contentType
+      properties:
+        target:
+          type: string
+          enum:
+            - profile_photo
+            - dish_image
+        contentType:
+          $ref: "#/components/schemas/ImageContentType"
+        dishId:
+          type: string
+          nullable: true
+          example: "dish-123"
+        maxSizeBytes:
+          type: integer
+          nullable: true
+
+    PresignedUploadResponse:
+      type: object
+      properties:
+        target:
+          type: string
+          example: profile_photo
+        key:
+          type: string
+          example: profiles/public/client/user-1/uuid.png
+        contentType:
+          type: string
+          example: image/png
+        maxSizeBytes:
+          type: integer
+          example: 5242880
+        uploadUrl:
+          type: string
+          example: https://s3.example.com/bucket
+        uploadFields:
+          type: object
+          additionalProperties:
+            type: string
+        publicUrl:
+          type: string
+          example: https://cdn.example.com/profiles/public/client/user-1/uuid.png
+        expiresIn:
+          type: integer
+          example: 600
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: INVALID_CONTENT_TYPE
+            message:
+              type: string
+              example: Invalid image content type
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"

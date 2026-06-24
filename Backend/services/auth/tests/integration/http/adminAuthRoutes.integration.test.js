@@ -110,9 +110,76 @@ describe("Admin auth HTTP routes", () => {
     expect(response.body.admin).toEqual({
       id: "manager-1",
       phone: "+989120000000",
+      firstName: null,
+      lastName: null,
+      username: null,
       role: ADMIN_ROLES.MANAGER,
+      photoUrl: null,
       isManager: true
     });
+  });
+
+  it("updates admin profile fields one by one", async () => {
+    const { app, context } = makeAdminContext();
+    registerAdminAccessToken(context, "manager-token");
+
+    const firstNameResponse = await request(app)
+      .patch("/admin/auth/me/first-name")
+      .set("Authorization", "Bearer manager-token")
+      .send({ firstName: "Sara" });
+
+    expect(firstNameResponse.status).toBe(200);
+    expect(firstNameResponse.body).toMatchObject({
+      accessToken: "access-token-1",
+      admin: {
+        id: "manager-1",
+        firstName: "Sara"
+      }
+    });
+
+    const lastNameResponse = await request(app)
+      .patch("/admin/auth/me/last-name")
+      .set("Authorization", "Bearer manager-token")
+      .send({ lastName: "Mohammadi" });
+
+    expect(lastNameResponse.status).toBe(200);
+    expect(lastNameResponse.body.admin).toMatchObject({
+      id: "manager-1",
+      lastName: "Mohammadi"
+    });
+
+    const usernameResponse = await request(app)
+      .patch("/admin/auth/me/username")
+      .set("Authorization", "Bearer manager-token")
+      .send({ username: "sara_manager" });
+
+    expect(usernameResponse.status).toBe(200);
+    expect(usernameResponse.body.admin).toMatchObject({
+      id: "manager-1",
+      username: "sara_manager"
+    });
+
+    const photoUrlResponse = await request(app)
+      .patch("/admin/auth/me/photo-url")
+      .set("Authorization", "Bearer manager-token")
+      .send({ photoUrl: "https://cdn.example.com/admins/manager-1/profile.jpg" });
+
+    expect(photoUrlResponse.status).toBe(200);
+    expect(photoUrlResponse.body.admin).toMatchObject({
+      id: "manager-1",
+      photoUrl: "https://cdn.example.com/admins/manager-1/profile.jpg"
+    });
+
+    expect(context.adminUserRepository.updatedProfileFields).toEqual([
+      { id: "manager-1", field: "firstName", value: "Sara" },
+      { id: "manager-1", field: "lastName", value: "Mohammadi" },
+      { id: "manager-1", field: "username", value: "sara_manager" },
+      {
+        id: "manager-1",
+        field: "photoUrl",
+        value: "https://cdn.example.com/admins/manager-1/profile.jpg"
+      }
+    ]);
   });
 
   it("rejects public tokens on admin auth routes", async () => {

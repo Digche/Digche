@@ -17,13 +17,33 @@ export const env = {
   jwt: {
     secret: process.env.JWT_SECRET,
     accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
-    refreshTokenExpiresDays: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30)
+    refreshTokenExpiresDays: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30),
+    registrationTokenExpiresIn: process.env.REGISTRATION_TOKEN_EXPIRES_IN || "10m"
   },
 
   otp: {
+    provider: process.env.OTP_PROVIDER || "dev",
     expiresMinutes: Number(process.env.OTP_EXPIRES_MINUTES || 2),
-    rateLimitPerHour: Number(process.env.OTP_RATE_LIMIT_PER_HOUR || 5)
+    rateLimitPerHour: Number(process.env.OTP_RATE_LIMIT_PER_HOUR || 5),
+    cooldownSeconds: Number(process.env.OTP_COOLDOWN_SECONDS || 60)
   },
 
-  initialManagerPhone: process.env.INITIAL_MANAGER_PHONE
+  kavenegar: {
+    apiKey: process.env.KAVENEGAR_API_KEY,
+    template: process.env.KAVENEGAR_TEMPLATE
+  },
+
+  cache: {
+    provider: process.env.CACHE_PROVIDER || "redis"
+  },
+
+  redis: {
+    host: process.env.REDIS_HOST || "auth-redis",
+    port: Number(process.env.REDIS_PORT || 6379),
+    password: process.env.REDIS_PASSWORD || null,
+    keyPrefix: process.env.REDIS_KEY_PREFIX || "auth:"
+  },
+
+  initialManagerPhone: process.env.INITIAL_MANAGER_PHONE,
+  internalApiKey: process.env.AUTH_INTERNAL_API_KEY || null
 };

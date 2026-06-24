@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-brown: #A65D39;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -19,6 +23,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Tahoma, Arial, Helvetica, sans-serif;
+  direction: rtl;
 }
 
 button,

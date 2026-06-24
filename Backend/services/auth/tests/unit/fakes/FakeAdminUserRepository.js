@@ -6,7 +6,9 @@ export class FakeAdminUserRepository {
     this.adminUsers = adminUsers.map((adminUser) => this.toAdminUser(adminUser));
     this.createdAdminUsers = [];
     this.updatedPhones = [];
+    this.updatedProfileFields = [];
     this.disabledIds = [];
+    this.enabledIds = [];
   }
 
   toAdminUser(adminUser) {
@@ -25,12 +27,20 @@ export class FakeAdminUserRepository {
     return this.adminUsers.find((adminUser) => adminUser.id === id) || null;
   }
 
+  async findByUsername(username) {
+    return this.adminUsers.find((adminUser) => adminUser.username === username) || null;
+  }
+
   async create(adminUser) {
     const createdAdminUser = new AdminUser({
       id: adminUser.id || `admin-${this.adminUsers.length + 1}`,
       phone: adminUser.phone,
+      firstName: adminUser.firstName,
+      lastName: adminUser.lastName,
+      username: adminUser.username,
       role: adminUser.role,
       status: adminUser.status,
+      photoUrl: adminUser.photoUrl,
       createdBy: adminUser.createdBy,
       createdAt: adminUser.createdAt || new Date("2026-01-01T00:00:00.000Z"),
       updatedAt: adminUser.updatedAt || new Date("2026-01-01T00:00:00.000Z")
@@ -44,6 +54,20 @@ export class FakeAdminUserRepository {
 
   async list() {
     return [...this.adminUsers];
+  }
+
+  async updateProfileField(id, field, value) {
+    const adminUser = await this.findById(id);
+
+    if (!adminUser) {
+      return null;
+    }
+
+    adminUser[field] = value;
+    adminUser.updatedAt = new Date("2026-01-05T00:00:00.000Z");
+    this.updatedProfileFields.push({ id, field, value });
+
+    return adminUser;
   }
 
   async updatePhone(id, newPhone) {
@@ -70,6 +94,20 @@ export class FakeAdminUserRepository {
     adminUser.status = ADMIN_STATUS.DISABLED;
     adminUser.updatedAt = new Date("2026-01-03T00:00:00.000Z");
     this.disabledIds.push(id);
+
+    return adminUser;
+  }
+
+  async enable(id) {
+    const adminUser = await this.findById(id);
+
+    if (!adminUser) {
+      return null;
+    }
+
+    adminUser.status = ADMIN_STATUS.ACTIVE;
+    adminUser.updatedAt = new Date("2026-01-04T00:00:00.000Z");
+    this.enabledIds.push(id);
 
     return adminUser;
   }

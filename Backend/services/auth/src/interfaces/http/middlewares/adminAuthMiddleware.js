@@ -21,7 +21,11 @@ export function createAdminAuthMiddleware({ tokenService }) {
         scope: payload.scope,
         adminId: payload.sub,
         phone: payload.phone,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        username: payload.username,
         role: payload.role,
+        photoUrl: payload.photoUrl,
         isManager: Boolean(payload.isManager),
         raw: payload
       };

@@ -13,7 +13,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body>{children}</body>
+      <body>
+        <div className="h-screen w-screen gap-15 overflow-x-hidden">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

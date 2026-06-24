@@ -6,6 +6,7 @@ import { CHEF_STATUS } from "../../../src/domain/constants/statuses.js";
 import { OTP_PURPOSES } from "../../../src/domain/constants/otpPurposes.js";
 import { AUTH_SCOPES } from "../../../src/domain/constants/authScopes.js";
 import { TOKEN_OWNER_TYPES } from "../../../src/domain/constants/tokenOwnerTypes.js";
+import { PUBLIC_AUTH_FLOWS } from "../../../src/domain/constants/authFlows.js";
 
 import { FakeChefAccountRepository } from "../fakes/FakeChefAccountRepository.js";
 import { FakeOtpHasher } from "../fakes/FakeOtpHasher.js";
@@ -31,13 +32,12 @@ function makeUseCase({ users = [], chefAccounts = [], otps = [] } = {}) {
     refreshTokenRepository,
     otpHasher,
     tokenService,
-    refreshTokenExpiresDays: 30
+    refreshTokenExpiresDays: 7
   });
 
   return {
     useCase,
     userRepository,
-    chefAccountRepository,
     otpRepository,
     refreshTokenRepository,
     tokenService
@@ -45,8 +45,8 @@ function makeUseCase({ users = [], chefAccounts = [], otps = [] } = {}) {
 }
 
 describe("VerifyPublicOtp", () => {
-  it("creates a new client user and session", async () => {
-    const { useCase, userRepository, otpRepository, refreshTokenRepository, tokenService } = makeUseCase({
+  it("returns registration token for a new phone and does not create user", async () => {
+    const { useCase, userRepository, otpRepository, tokenService } = makeUseCase({
       otps: [
         makeOtpCode({
           id: "otp-1",
@@ -60,30 +60,131 @@ describe("VerifyPublicOtp", () => {
     const result = await useCase.execute({
       phone: "09121234567",
       code: "123456",
-      role: USER_ROLES.CLIENT
+      role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.REGISTER
     });
 
     expect(result).toMatchObject({
+      requiresRegistration: true,
+      registrationToken: "registration-token-1",
+      phone: "+989121234567",
+      role: USER_ROLES.CLIENT
+    });
+    expect(userRepository.createdUsers).toHaveLength(0);
+    expect(otpRepository.consumedIds).toEqual(["otp-1"]);
+    expect(tokenService.signedRegistrationPayloads[0]).toMatchObject({
+      phone: "+989121234567",
+      role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.REGISTER,
+      scope: "public_registration",
+      jti: "token-id-1"
+    });
+  });
+
+  it("returns registration token when existing user does not have selected role", async () => {
+    const { useCase } = makeUseCase({
+      users: [
+        {
+          id: "user-1",
+          phone: "+989121234567",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
+          roles: [USER_ROLES.CLIENT]
+        }
+      ],
+      otps: [
+        makeOtpCode({ phone: "+989121234567", purpose: OTP_PURPOSES.PUBLIC_LOGIN })
+      ]
+    });
+
+    const result = await useCase.execute({
+      phone: "09121234567",
+      code: "123456",
+      role: USER_ROLES.CHEF,
+      flow: PUBLIC_AUTH_FLOWS.REGISTER
+    });
+
+    expect(result).toMatchObject({
+      requiresRegistration: true,
+      registrationToken: "registration-token-1",
+      role: USER_ROLES.CHEF
+    });
+  });
+
+  it("returns registration token when existing user profile is incomplete", async () => {
+    const { useCase } = makeUseCase({
+      users: [
+        {
+          id: "user-1",
+          phone: "+989121234567",
+          roles: [USER_ROLES.CLIENT]
+        }
+      ],
+      otps: [
+        makeOtpCode({ phone: "+989121234567", purpose: OTP_PURPOSES.PUBLIC_LOGIN })
+      ]
+    });
+
+    const result = await useCase.execute({
+      phone: "09121234567",
+      code: "123456",
+      role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.REGISTER
+    });
+
+    expect(result.requiresRegistration).toBe(true);
+  });
+
+  it("creates a session for existing client with completed profile", async () => {
+    const { useCase, refreshTokenRepository, tokenService } = makeUseCase({
+      users: [
+        {
+          id: "user-1",
+          phone: "+989121234567",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
+          roles: [USER_ROLES.CLIENT]
+        }
+      ],
+      otps: [
+        makeOtpCode({
+          id: "otp-1",
+          phone: "+989121234567",
+          purpose: OTP_PURPOSES.PUBLIC_LOGIN,
+          code: "123456"
+        })
+      ]
+    });
+
+    const result = await useCase.execute({
+      phone: "09121234567",
+      code: "123456",
+      role: USER_ROLES.CLIENT,
+      flow: PUBLIC_AUTH_FLOWS.LOGIN
+    });
+
+    expect(result).toMatchObject({
+      requiresRegistration: false,
       accessToken: "access-token-1",
       refreshToken: "refresh-token-1",
       user: {
         id: "user-1",
         phone: "+989121234567",
+        firstName: "Ali",
+        lastName: "Ahmadi",
+        username: "ali_ahmadi",
         roles: [USER_ROLES.CLIENT],
         selectedRole: USER_ROLES.CLIENT
       }
     });
-    expect(userRepository.createdUsers).toHaveLength(1);
-    expect(userRepository.addedRoles).toEqual([
-      {
-        userId: "user-1",
-        role: USER_ROLES.CLIENT
-      }
-    ]);
-    expect(otpRepository.consumedIds).toEqual(["otp-1"]);
     expect(tokenService.signedPayloads[0]).toMatchObject({
       sub: "user-1",
       phone: "+989121234567",
+      firstName: "Ali",
+      lastName: "Ahmadi",
+      username: "ali_ahmadi",
       roles: [USER_ROLES.CLIENT],
       selectedRole: USER_ROLES.CLIENT,
       scope: AUTH_SCOPES.PUBLIC
@@ -97,35 +198,42 @@ describe("VerifyPublicOtp", () => {
     });
   });
 
-  it("creates a pending chef account for chef login", async () => {
-    const { useCase, chefAccountRepository } = makeUseCase({
-      otps: [
-        makeOtpCode({
-          id: "otp-1",
+  it("includes chef status for existing chef with completed profile", async () => {
+    const { useCase } = makeUseCase({
+      users: [
+        {
+          id: "user-1",
           phone: "+989121234567",
-          purpose: OTP_PURPOSES.PUBLIC_LOGIN,
-          code: "123456"
-        })
+          firstName: "Sara",
+          lastName: "Chef",
+          username: "sara_chef",
+          roles: [USER_ROLES.CHEF]
+        }
+      ],
+      chefAccounts: [
+        {
+          id: "chef-1",
+          userId: "user-1",
+          status: CHEF_STATUS.ACTIVE
+        }
+      ],
+      otps: [
+        makeOtpCode({ phone: "+989121234567", purpose: OTP_PURPOSES.PUBLIC_LOGIN })
       ]
     });
 
     const result = await useCase.execute({
       phone: "09121234567",
       code: "123456",
-      role: USER_ROLES.CHEF
+      role: USER_ROLES.CHEF,
+      flow: PUBLIC_AUTH_FLOWS.LOGIN
     });
 
     expect(result.user).toMatchObject({
-      roles: [USER_ROLES.CHEF],
       selectedRole: USER_ROLES.CHEF,
       chef: {
-        status: CHEF_STATUS.PENDING
+        status: CHEF_STATUS.ACTIVE
       }
-    });
-    expect(chefAccountRepository.createdChefAccounts).toHaveLength(1);
-    expect(chefAccountRepository.createdChefAccounts[0]).toMatchObject({
-      userId: "user-1",
-      status: CHEF_STATUS.PENDING
     });
   });
 
@@ -135,6 +243,9 @@ describe("VerifyPublicOtp", () => {
         {
           id: "user-1",
           phone: "+989121234567",
+          firstName: "Sara",
+          lastName: "Chef",
+          username: "sara_chef",
           roles: [USER_ROLES.CHEF]
         }
       ],
@@ -146,17 +257,17 @@ describe("VerifyPublicOtp", () => {
         }
       ],
       otps: [
-        makeOtpCode({
-          id: "otp-1",
-          phone: "+989121234567",
-          purpose: OTP_PURPOSES.PUBLIC_LOGIN,
-          code: "123456"
-        })
+        makeOtpCode({ phone: "+989121234567", purpose: OTP_PURPOSES.PUBLIC_LOGIN })
       ]
     });
 
     await expectAppError(
-      useCase.execute({ phone: "09121234567", code: "123456", role: USER_ROLES.CHEF }),
+      useCase.execute({
+        phone: "09121234567",
+        code: "123456",
+        role: USER_ROLES.CHEF,
+        flow: PUBLIC_AUTH_FLOWS.LOGIN
+      }),
       {
         statusCode: 403,
         code: "FORBIDDEN"
@@ -164,30 +275,37 @@ describe("VerifyPublicOtp", () => {
     );
   });
 
-  it("rejects invalid public role", async () => {
-    const { useCase } = makeUseCase();
-
-    await expectAppError(useCase.execute({ phone: "09121234567", code: "123456", role: "admin" }), {
-      statusCode: 400,
-      code: "INVALID_PUBLIC_ROLE"
-    });
-  });
-
-  it("rejects wrong OTP code", async () => {
+  it("rejects invalid public role and wrong OTP code", async () => {
     const { useCase } = makeUseCase({
       otps: [
-        makeOtpCode({
-          id: "otp-1",
-          phone: "+989121234567",
-          purpose: OTP_PURPOSES.PUBLIC_LOGIN,
-          code: "123456"
-        })
+        makeOtpCode({ phone: "+989121234567", purpose: OTP_PURPOSES.PUBLIC_LOGIN })
       ]
     });
 
-    await expectAppError(useCase.execute({ phone: "09121234567", code: "000000", role: USER_ROLES.CLIENT }), {
-      statusCode: 401,
-      code: "UNAUTHORIZED"
-    });
+    await expectAppError(
+      useCase.execute({
+        phone: "09121234567",
+        code: "123456",
+        role: "admin",
+        flow: PUBLIC_AUTH_FLOWS.LOGIN
+      }),
+      {
+        statusCode: 400,
+        code: "INVALID_PUBLIC_ROLE"
+      }
+    );
+
+    await expectAppError(
+      useCase.execute({
+        phone: "09121234567",
+        code: "000000",
+        role: USER_ROLES.CLIENT,
+        flow: PUBLIC_AUTH_FLOWS.LOGIN
+      }),
+      {
+        statusCode: 401,
+        code: "UNAUTHORIZED"
+      }
+    );
   });
 });
