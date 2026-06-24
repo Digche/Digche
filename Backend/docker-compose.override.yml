@@ -11,6 +11,10 @@ services:
     ports:
       - "3003:3003"
 
+  ticket-service:
+    ports:
+      - "3004:3004"
+
   auth-db:
     ports:
       - "5433:5432"
@@ -22,3 +26,7 @@ services:
   chat-db:
     ports:
       - "5434:5432"
+
+  ticket-db:
+    ports:
+      - "5435:5432"
