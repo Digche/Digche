@@ -3,6 +3,8 @@ import { env } from "./config/env.js";
 import { SequelizeConversationRepository } from "./infrastructure/database/repositories/SequelizeConversationRepository.js";
 import { SequelizeMessageRepository } from "./infrastructure/database/repositories/SequelizeMessageRepository.js";
 import { ChatRealtimeHub } from "./infrastructure/realtime/ChatRealtimeHub.js";
+import { AuthProfileClient } from "./infrastructure/http/AuthProfileClient.js";
+import { ProfileHydrator } from "./application/services/ProfileHydrator.js";
 
 import { StartConversation } from "./application/use-cases/StartConversation.js";
 import { ListConversations } from "./application/use-cases/ListConversations.js";
@@ -18,13 +20,23 @@ export function createContainer() {
   const conversationRepository = new SequelizeConversationRepository();
   const messageRepository = new SequelizeMessageRepository();
   const realtimeHub = new ChatRealtimeHub();
+  const authProfileClient = new AuthProfileClient({
+    baseUrl: env.auth.internalBaseUrl,
+    internalApiKey: env.auth.internalApiKey,
+    timeoutMs: env.auth.profileResolveTimeoutMs
+  });
+  const profileHydrator = new ProfileHydrator({
+    authProfileClient,
+    presenceProvider: realtimeHub
+  });
 
   const startConversation = new StartConversation({
     conversationRepository
   });
 
   const listConversations = new ListConversations({
-    conversationRepository
+    conversationRepository,
+    profileHydrator
   });
 
   const getConversationMessages = new GetConversationMessages({

@@ -1,5 +1,7 @@
 import Fastify from "fastify";
-import { WebSocketServer } from "ws";
+import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
+import websocket from "@fastify/websocket";
 
 import { createContainer } from "./container.js";
 import { registerChatRoutes } from "./interfaces/http/routes/chatRoutes.js";
@@ -13,17 +15,11 @@ export async function createApp() {
 
   const container = createContainer();
 
-  app.addHook("onRequest", async (request, reply) => {
-    reply.header("Access-Control-Allow-Origin", "*");
-    reply.header("Access-Control-Allow-Headers", "Authorization, Content-Type");
-    reply.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    reply.header("X-Content-Type-Options", "nosniff");
-    reply.header("X-Frame-Options", "DENY");
-
-    if (request.method === "OPTIONS") {
-      return reply.code(204).send();
-    }
+  await app.register(helmet);
+  await app.register(cors, {
+    origin: true
   });
+  await app.register(websocket);
 
   setupSwagger(app);
 
@@ -32,25 +28,6 @@ export async function createApp() {
     controller: container.chatController,
     webSocketController: container.webSocketController,
     authMiddleware: container.authMiddleware
-  });
-
-  const webSocketServer = new WebSocketServer({
-    noServer: true
-  });
-
-  app.server.on("upgrade", (request, socket, head) => {
-    const url = new URL(request.url, "http://localhost");
-
-    if (url.pathname !== "/chat/ws") {
-      socket.destroy();
-      return;
-    }
-
-    webSocketServer.handleUpgrade(request, socket, head, (webSocket) => {
-      container.webSocketController.handle(webSocket, {
-        query: Object.fromEntries(url.searchParams.entries())
-      });
-    });
   });
 
   app.setNotFoundHandler((request, reply) => {

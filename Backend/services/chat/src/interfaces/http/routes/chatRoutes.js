@@ -46,12 +46,11 @@ export async function registerChatRoutes({
     controller.read
   );
 
-  app.get("/chat/ws", async (request, reply) => {
-    return reply.code(426).send({
-      error: {
-        code: "WEBSOCKET_UPGRADE_REQUIRED",
-        message: "Connect with WebSocket using /chat/ws?token=<access-token>"
-      }
-    });
-  });
+  app.get(
+    "/chat/ws",
+    {
+      websocket: true
+    },
+    webSocketController.handle
+  );
 }

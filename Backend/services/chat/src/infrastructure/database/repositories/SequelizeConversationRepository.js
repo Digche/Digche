@@ -126,10 +126,27 @@ export class SequelizeConversationRepository {
       order: [[{ model: ConversationModel, as: "conversation" }, "lastMessageAt", "DESC"]]
     });
 
-    return participantRows
+    const conversations = participantRows
       .map((row) => row.conversation)
       .filter(Boolean)
       .map((conversation) => this.toConversationResponse(conversation));
+
+    for (const conversation of conversations) {
+      const currentParticipant = conversation.participants.find(
+        (participant) =>
+          participant.participantId === participantId &&
+          participant.participantType === participantType
+      );
+
+      conversation.unreadCount = await this.countUnreadMessages({
+        conversationId: conversation.id,
+        participantId,
+        participantType,
+        lastReadAt: currentParticipant?.lastReadAt || null
+      });
+    }
+
+    return conversations;
   }
 
   async isParticipant({ conversationId, participantId, participantType }) {
@@ -184,6 +201,29 @@ export class SequelizeConversationRepository {
     await participant.save();
 
     return this.toParticipant(participant);
+  }
+
+  async countUnreadMessages({
+    conversationId,
+    participantId,
+    participantType,
+    lastReadAt
+  }) {
+    const where = {
+      conversationId,
+      [Op.not]: {
+        senderId: participantId,
+        senderType: participantType
+      }
+    };
+
+    if (lastReadAt) {
+      where.createdAt = {
+        [Op.gt]: lastReadAt
+      };
+    }
+
+    return ChatMessageModel.count({ where });
   }
 
   toConversationResponse(conversationModel) {

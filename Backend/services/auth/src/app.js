@@ -6,6 +6,7 @@ import { createContainer } from "./container.js";
 import { createPublicAuthRoutes } from "./interfaces/http/routes/publicAuthRoutes.js";
 import { createAdminAuthRoutes } from "./interfaces/http/routes/adminAuthRoutes.js";
 import { createAdminUserRoutes } from "./interfaces/http/routes/adminUserRoutes.js";
+import { createInternalAuthRoutes } from "./interfaces/http/routes/internalAuthRoutes.js";
 import { requestLogger } from "./interfaces/http/middlewares/requestLogger.js";
 import { errorHandler } from "./interfaces/http/middlewares/errorHandler.js";
 import { setupSwagger } from "./interfaces/http/swagger.js";
@@ -50,6 +51,14 @@ export function createApp() {
     createAdminUserRoutes(
       container.adminUserController,
       container.adminAuthMiddleware
+    )
+  );
+
+  app.use(
+    "/internal/auth",
+    createInternalAuthRoutes(
+      container.internalAuthController,
+      container.internalAuthMiddleware
     )
   );
 

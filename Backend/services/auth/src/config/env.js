@@ -44,5 +44,6 @@ export const env = {
     keyPrefix: process.env.REDIS_KEY_PREFIX || "auth:"
   },
 
-  initialManagerPhone: process.env.INITIAL_MANAGER_PHONE
+  initialManagerPhone: process.env.INITIAL_MANAGER_PHONE,
+  internalApiKey: process.env.AUTH_INTERNAL_API_KEY || null
 };

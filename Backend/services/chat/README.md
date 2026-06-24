@@ -2,6 +2,10 @@
 
 Realtime chat service for one-to-one conversations between authenticated users and admins.
 
+The chat service stores conversation membership and messages. Profile UI fields
+such as `displayName` and `photoUrl` are resolved from auth-service through the
+internal profile resolver, so auth remains the source of truth.
+
 ## Endpoints
 
 All REST endpoints require an auth-service access token:
@@ -53,4 +57,22 @@ Server events:
 { "type": "message.created", "message": { "id": "uuid", "body": "سلام" } }
 { "type": "message.read", "conversationId": "uuid", "reader": { "id": "uuid", "type": "user" } }
 { "type": "typing", "conversationId": "uuid", "actor": { "id": "uuid", "type": "user" }, "isTyping": true }
+{ "type": "presence.changed", "actor": { "id": "uuid", "type": "user" }, "isOnline": true }
+```
+
+Conversation list responses include hydrated participants:
+
+```json
+{
+  "participants": [
+    {
+      "participantId": "uuid",
+      "participantType": "user",
+      "displayName": "راضیه اسلامی",
+      "photoUrl": "https://cdn.example.com/profile.png",
+      "isOnline": true
+    }
+  ],
+  "unreadCount": 2
+}
 ```

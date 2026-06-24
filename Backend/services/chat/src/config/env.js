@@ -34,6 +34,12 @@ export const env = {
     secret: process.env.JWT_SECRET
   },
 
+  auth: {
+    internalBaseUrl: process.env.AUTH_INTERNAL_BASE_URL || "http://auth-service:3001",
+    internalApiKey: process.env.AUTH_INTERNAL_API_KEY || null,
+    profileResolveTimeoutMs: numberFromEnv("AUTH_PROFILE_RESOLVE_TIMEOUT_MS", 3000)
+  },
+
   chat: {
     messageMaxLength: numberFromEnv("CHAT_MESSAGE_MAX_LENGTH", 2000),
     historyDefaultLimit: numberFromEnv("CHAT_HISTORY_DEFAULT_LIMIT", 30),

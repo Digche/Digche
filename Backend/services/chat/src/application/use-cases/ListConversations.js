@@ -1,6 +1,10 @@
 export class ListConversations {
-  constructor({ conversationRepository }) {
+  constructor({
+    conversationRepository,
+    profileHydrator
+  }) {
     this.conversationRepository = conversationRepository;
+    this.profileHydrator = profileHydrator;
   }
 
   async execute({ actor }) {
@@ -10,7 +14,7 @@ export class ListConversations {
     });
 
     return {
-      conversations
+      conversations: await this.profileHydrator.hydrateConversations(conversations)
     };
   }
 }

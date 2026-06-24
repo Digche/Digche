@@ -19,6 +19,7 @@ import { VerifyPublicPhoneChangeOtp } from "./application/use-cases/VerifyPublic
 import { ChangeAdminUserPhone } from "./application/use-cases/ChangeAdminUserPhone.js";
 import { RequestAdminPhoneChangeOtp } from "./application/use-cases/RequestAdminPhoneChangeOtp.js";
 import { VerifyAdminPhoneChangeOtp } from "./application/use-cases/VerifyAdminPhoneChangeOtp.js";
+import { ResolveActorProfiles } from "./application/use-cases/ResolveActorProfiles.js";
 
 import { SequelizeUserRepository } from "./infrastructure/database/repositories/SequelizeUserRepository.js";
 import { SequelizeChefAccountRepository } from "./infrastructure/database/repositories/SequelizeChefAccountRepository.js";
@@ -38,9 +39,11 @@ import { JwtTokenService } from "./infrastructure/security/JwtTokenService.js";
 import { PublicAuthController } from "./interfaces/http/controllers/PublicAuthController.js";
 import { AdminAuthController } from "./interfaces/http/controllers/AdminAuthController.js";
 import { AdminUserController } from "./interfaces/http/controllers/AdminUserController.js";
+import { InternalAuthController } from "./interfaces/http/controllers/InternalAuthController.js";
 
 import { createPublicAuthMiddleware } from "./interfaces/http/middlewares/publicAuthMiddleware.js";
 import { createAdminAuthMiddleware } from "./interfaces/http/middlewares/adminAuthMiddleware.js";
+import { createInternalAuthMiddleware } from "./interfaces/http/middlewares/internalAuthMiddleware.js";
 
 export function createContainer() {
   const userRepository = new SequelizeUserRepository();
@@ -71,6 +74,10 @@ export function createContainer() {
 
   const adminAuthMiddleware = createAdminAuthMiddleware({
     tokenService
+  });
+
+  const internalAuthMiddleware = createInternalAuthMiddleware({
+    internalApiKey: env.internalApiKey
   });
 
   const requestPublicOtp = new RequestPublicOtp({
@@ -219,6 +226,11 @@ export function createContainer() {
     refreshTokenRepository
   });
 
+  const resolveActorProfiles = new ResolveActorProfiles({
+    userRepository,
+    adminUserRepository
+  });
+
   const publicAuthController = new PublicAuthController({
     requestPublicOtp,
     verifyPublicOtp,
@@ -248,12 +260,18 @@ export function createContainer() {
     changeAdminUserPhone
   });
 
+  const internalAuthController = new InternalAuthController({
+    resolveActorProfiles
+  });
+
   return {
     publicAuthController,
     adminAuthController,
     adminUserController,
+    internalAuthController,
     publicAuthMiddleware,
     adminAuthMiddleware,
+    internalAuthMiddleware,
     cacheService
   };
 }

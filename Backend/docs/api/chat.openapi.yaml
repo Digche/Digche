@@ -38,7 +38,8 @@ paths:
     post:
       tags:
         - Chat
-      summary: Start or return a direct conversation
+      summary: Start or return a conversation
+      description: The chat service stores participant ids and resolves displayName/photoUrl from auth-service through an internal request.
       security:
         - bearerAuth: []
       requestBody:
@@ -59,9 +60,6 @@ paths:
                   enum:
                     - user
                     - admin
-                participantDisplayName:
-                  type: string
-                  nullable: true
                 title:
                   type: string
                   nullable: true
@@ -245,6 +243,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Participant"
+        unreadCount:
+          type: integer
+          minimum: 0
         lastMessage:
           nullable: true
           allOf:
@@ -276,6 +277,22 @@ components:
         displayName:
           type: string
           nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        role:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          nullable: true
+          items:
+            type: string
+        isOnline:
+          type: boolean
         lastReadMessageId:
           type: string
           format: uuid
