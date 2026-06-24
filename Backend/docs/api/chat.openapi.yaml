@@ -1,0 +1,322 @@
+openapi: 3.0.3
+info:
+  title: Digche Chat Service API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Chat
+    description: Realtime chat conversations and message history
+paths:
+  /chat/health:
+    get:
+      tags:
+        - Chat
+      summary: Chat service health check
+      responses:
+        "200":
+          description: Service is healthy
+  /chat/conversations:
+    get:
+      tags:
+        - Chat
+      summary: List conversations for the authenticated actor
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Conversation list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Conversation"
+    post:
+      tags:
+        - Chat
+      summary: Start or return a direct conversation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - participantId
+                - participantType
+              properties:
+                participantId:
+                  type: string
+                  format: uuid
+                participantType:
+                  type: string
+                  enum:
+                    - user
+                    - admin
+                participantDisplayName:
+                  type: string
+                  nullable: true
+                title:
+                  type: string
+                  nullable: true
+                type:
+                  type: string
+                  enum:
+                    - direct
+                    - support
+                    - order
+                  default: direct
+                orderId:
+                  type: string
+                  format: uuid
+                  nullable: true
+      responses:
+        "200":
+          description: Existing conversation returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartConversationResponse"
+        "201":
+          description: Conversation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartConversationResponse"
+  /chat/conversations/{conversationId}/messages:
+    get:
+      tags:
+        - Chat
+      summary: List messages for a conversation
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: before
+          description: ISO datetime cursor. Returns messages older than this value.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Message list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Message"
+    post:
+      tags:
+        - Chat
+      summary: Send a message through HTTP
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - body
+              properties:
+                body:
+                  type: string
+                  maxLength: 2000
+                clientMessageId:
+                  type: string
+                  nullable: true
+                metadata:
+                  type: object
+                  nullable: true
+      responses:
+        "201":
+          description: Message created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: "#/components/schemas/Message"
+  /chat/conversations/{conversationId}/read:
+    post:
+      tags:
+        - Chat
+      summary: Mark a conversation as read for the authenticated actor
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lastReadMessageId:
+                  type: string
+                  format: uuid
+                  nullable: true
+      responses:
+        "200":
+          description: Read state updated
+  /chat/ws:
+    get:
+      tags:
+        - Chat
+      summary: WebSocket endpoint for realtime chat
+      description: Connect with ws://localhost:8080/chat/ws?token=<access-token>. Events include subscribe, message.send, typing, and message.read.
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        "101":
+          description: WebSocket upgrade
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - direct
+            - support
+            - order
+        title:
+          type: string
+          nullable: true
+        orderId:
+          type: string
+          format: uuid
+          nullable: true
+        lastMessageAt:
+          type: string
+          format: date-time
+          nullable: true
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Participant"
+        lastMessage:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Message"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Participant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        participantId:
+          type: string
+          format: uuid
+        participantType:
+          type: string
+          enum:
+            - user
+            - admin
+            - internal
+        displayName:
+          type: string
+          nullable: true
+        lastReadMessageId:
+          type: string
+          format: uuid
+          nullable: true
+        lastReadAt:
+          type: string
+          format: date-time
+          nullable: true
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        senderId:
+          type: string
+          format: uuid
+        senderType:
+          type: string
+          enum:
+            - user
+            - admin
+            - internal
+        body:
+          type: string
+        clientMessageId:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    StartConversationResponse:
+      type: object
+      properties:
+        created:
+          type: boolean
+        conversation:
+          $ref: "#/components/schemas/Conversation"
