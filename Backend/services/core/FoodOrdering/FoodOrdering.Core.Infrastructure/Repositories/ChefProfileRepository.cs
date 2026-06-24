@@ -9,25 +9,29 @@ public class ChefProfileRepository : IChefProfileRepository
 {
     private readonly CoreDbContext _context;
 
-    public ChefProfileRepository(CoreDbContext context) => _context = context;
+    public ChefProfileRepository(CoreDbContext context)
+    {
+        _context = context;
+    }
 
     public async Task<ChefProfile?> GetByIdAsync(Guid id, CancellationToken cancellation = default)
-        => await _context.ChefProfiles.FirstOrDefaultAsync(c => c.Id == id, cancellation);
+        => await _context.ChefProfiles
+            .Include(c => c.Dishes)
+            .FirstOrDefaultAsync(c => c.Id == id, cancellation);
 
     public async Task<ChefProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellation = default)
-        => await _context.ChefProfiles.FirstOrDefaultAsync(c => c.UserId == userId, cancellation);
-
-    public async Task<IEnumerable<ChefProfile>> GetAllApprovedAsync(CancellationToken cancellation = default)
         => await _context.ChefProfiles
-            .Where(c => c.Status == Domain.Enums.ChefProfileStatus.Approved)
-            .ToListAsync(cancellation);
+            .FirstOrDefaultAsync(c => c.UserId == userId, cancellation);
 
-    public async Task AddAsync(ChefProfile chef, CancellationToken cancellation = default)
-        => await _context.ChefProfiles.AddAsync(chef, cancellation);
+    public async Task<IEnumerable<ChefProfile>> GetAllAsync(CancellationToken cancellation = default)
+        => await _context.ChefProfiles.ToListAsync(cancellation);
 
-    public Task UpdateAsync(ChefProfile chef, CancellationToken cancellation = default)
+    public async Task AddAsync(ChefProfile profile, CancellationToken cancellation = default)
+        => await _context.ChefProfiles.AddAsync(profile, cancellation);
+
+    public Task UpdateAsync(ChefProfile profile, CancellationToken cancellation = default)
     {
-        _context.ChefProfiles.Update(chef);
+        _context.ChefProfiles.Update(profile);
         return Task.CompletedTask;
     }
 

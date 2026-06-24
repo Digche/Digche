@@ -3,8 +3,9 @@ using FoodOrdering.Core.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 using FoodOrdering.Core.Application.Commands.CreateOrder;
+using FoodOrdering.Core.Application.Commands.ApproveOrder;   // اضافه
+using FoodOrdering.Core.Application.Commands.PayOrder;        // اضافه
 
 namespace FoodOrdering.Core.API.Controllers;
 
@@ -67,5 +68,32 @@ public class OrdersController : ControllerBase
             return BadRequest(new { message = result.ErrorMessage });
 
         return Ok(result);
+    }
+
+    // ===== اکشن جدید برای تأیید سفارش توسط آشپز =====
+    [HttpPut("{id:guid}/approve")]
+    [Authorize(Roles = "chef")]
+    public async Task<IActionResult> ApproveOrder(Guid id)
+    {
+        var command = new ApproveOrderCommand(id);
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage });
+
+        return Ok(new { message = "Order approved successfully." });
+    }
+
+    // ===== اکشن جدید برای پرداخت توسط مشتری =====
+    [HttpPost("{id:guid}/pay")]
+    public async Task<IActionResult> PayOrder(Guid id)
+    {
+        var command = new PayOrderCommand(id);
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage });
+
+        return Ok(new { message = "Payment successful. Money transferred to chef." });
     }
 }

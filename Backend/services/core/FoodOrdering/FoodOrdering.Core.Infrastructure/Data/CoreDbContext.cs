@@ -14,16 +14,15 @@ public class CoreDbContext : DbContext
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<ChefProfile> ChefProfiles { get; set; }
     public DbSet<Dish> Dishes { get; set; }
-    public DbSet<User> Users { get; set; } // جدید
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // ---- User (فقط برای روابط) ----
+        // ---- User ----
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(u => u.Id);
-            entity.ToTable("Users"); // فرض می‌کنیم جدول Users در دیتابیس وجود دارد (توسط سرویس Auth ایجاد شده)
-            // هیچ فیلد دیگری تعریف نمی‌کنیم
+            entity.ToTable("Users");
         });
 
         // ---- Cart ----
@@ -32,7 +31,6 @@ public class CoreDbContext : DbContext
             entity.HasKey(c => c.Id);
             entity.Property(c => c.UserId).IsRequired();
             entity.HasIndex(c => c.UserId).IsUnique();
-            // رابطه با User (بدون navigation)
         });
 
         // ---- CartItem ----
@@ -62,13 +60,10 @@ public class CoreDbContext : DbContext
             entity.HasIndex(o => o.CustomerId);
             entity.HasIndex(o => o.ChefId);
 
-            // رابطه با ChefProfile
             entity.HasOne(o => o.Chef)
                 .WithMany(c => c.Orders)
                 .HasForeignKey(o => o.ChefId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // رابطه با User (برای Customer) – بدون navigation
         });
 
         // ---- OrderItem ----
@@ -86,7 +81,7 @@ public class CoreDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // ---- ChefProfile ----
+        // ---- ChefProfile (با اضافه شدن Balance) ----
         modelBuilder.Entity<ChefProfile>(entity =>
         {
             entity.HasKey(c => c.Id);
@@ -98,8 +93,9 @@ public class CoreDbContext : DbContext
             entity.Property(c => c.KitchenName).HasMaxLength(100);
             entity.Property(c => c.Specialty).HasMaxLength(100);
             entity.Property(c => c.Bio).HasMaxLength(500);
-
-            // رابطه با User (بدون navigation)
+            entity.Property(c => c.Balance)
+                .HasPrecision(18, 2)
+                .HasDefaultValue(0);   // مقدار پیش‌فرض
         });
 
         // ---- Dish ----

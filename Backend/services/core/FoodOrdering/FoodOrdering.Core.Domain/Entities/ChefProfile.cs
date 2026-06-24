@@ -10,6 +10,7 @@ public class ChefProfile
     public string? Specialty { get; private set; }
     public string? Bio { get; private set; }
     public ChefProfileStatus Status { get; private set; }
+    public decimal Balance { get; private set; }   // فیلد جدید
 
     private readonly List<Dish> _dishes = new();
     public IReadOnlyCollection<Dish> Dishes => _dishes.AsReadOnly();
@@ -27,6 +28,7 @@ public class ChefProfile
         Specialty = specialty;
         Bio = bio;
         Status = ChefProfileStatus.Pending;
+        Balance = 0;   // مقداردهی اولیه
     }
 
     public void Approve() => Status = ChefProfileStatus.Approved;
@@ -36,5 +38,12 @@ public class ChefProfile
         KitchenName = kitchenName ?? KitchenName;
         Specialty = specialty ?? Specialty;
         Bio = bio ?? Bio;
+    }
+
+    // متد جدید برای افزایش موجودی
+    public void AddEarnings(decimal amount)
+    {
+        if (amount < 0) throw new ArgumentException("Amount cannot be negative");
+        Balance += amount;
     }
 }
