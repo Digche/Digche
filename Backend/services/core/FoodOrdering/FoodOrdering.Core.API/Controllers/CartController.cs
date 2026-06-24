@@ -1,9 +1,10 @@
-using FoodOrdering.Core.Application.Commands;
 using FoodOrdering.Core.Application.DTOs;
 using FoodOrdering.Core.Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
+using FoodOrdering.Core.Application.Commands.AddToCart;
 
 namespace FoodOrdering.Core.API.Controllers;
 
@@ -31,16 +32,16 @@ public class CartsController : ControllerBase
         return Ok(result);
     }
 
-    // [HttpPost("items")]
-    // public async Task<IActionResult> AddToCart([FromBody] AddToCartCommand command)
-    // {
-    //     var result = await _mediator.Send(command);
+    [HttpPost("items")]
+    public async Task<IActionResult> AddToCart([FromBody] AddToCartCommand command)
+    {
+        var result = await _mediator.Send(command);
 
-    //     if (!result.IsSuccess)
-    //         return BadRequest(new { message = result.ErrorMessage });
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage });
 
-    //     return Ok(result);
-    // }
+        return Ok(result);
+    }
 
     // [HttpDelete("items/{dishId:guid}")]
     // public async Task<IActionResult> RemoveFromCart(Guid dishId)
