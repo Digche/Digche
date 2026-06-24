@@ -92,6 +92,8 @@ export default function CartSummary() {
       );
       return;
     }
+    
+    const orderedAt = new Date().toISOString();
 
     addOrders(
       items.map((item) => ({
@@ -106,6 +108,7 @@ export default function CartSummary() {
         price: item.price,
         unit: item.unit,
         status: "preparing",
+        orderedAt,
       }))
     );
 

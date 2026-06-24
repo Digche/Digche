@@ -23,11 +23,17 @@ export type ChefOrder = {
   price: string;
   unit?: string;
   status: OrderStatus;
+
+  // زمان واقعی ثبت سفارش
   orderedAt: string;
 };
 
-type CreateChefOrderPayload = Omit<ChefOrder, "id" | "status" | "orderedAt"> & {
+type CreateChefOrderPayload = Omit<
+  ChefOrder,
+  "id" | "status" | "orderedAt"
+> & {
   status?: OrderStatus;
+  orderedAt?: string;
 };
 
 type OrderStore = {
@@ -39,17 +45,9 @@ type OrderStore = {
 
 const initialOrders: ChefOrder[] = [];
 
-function getPersianToday() {
-  return new Intl.DateTimeFormat("fa-IR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(new Date());
-}
-
 export const useOrderStore = create<OrderStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       orders: initialOrders,
 
       addOrders: (newOrders) => {
@@ -59,13 +57,13 @@ export const useOrderStore = create<OrderStore>()(
               ? 0
               : Math.max(...state.orders.map((order) => order.id));
 
-          const today = getPersianToday();
+          const fallbackOrderedAt = new Date().toISOString();
 
           const ordersToAdd: ChefOrder[] = newOrders.map((order, index) => ({
+            ...order,
             id: lastId + index + 1,
             status: order.status ?? "preparing",
-            orderedAt: today,
-            ...order,
+            orderedAt: order.orderedAt ?? fallbackOrderedAt,
           }));
 
           return {

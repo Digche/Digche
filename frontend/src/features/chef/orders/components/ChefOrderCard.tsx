@@ -25,8 +25,29 @@ function getInitials(name: string) {
     .join("");
 }
 
+function formatPersianDate(value: string) {
+  return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
+function formatPersianTime(value: string) {
+  return new Intl.DateTimeFormat("fa-IR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatOrderDateTime(value: string) {
+  return `${formatPersianDate(value)} - ساعت ${formatPersianTime(value)}`;
+}
+
 export default function ChefOrderCard({ order }: ChefOrderCardProps) {
   const updateOrderStatus = useOrderStore((state) => state.updateOrderStatus);
+
+  const orderedDateTime = formatOrderDateTime(order.orderedAt);
 
   return (
     <>
@@ -42,8 +63,8 @@ export default function ChefOrderCard({ order }: ChefOrderCardProps) {
               {order.customerName}
             </p>
 
-            <p className="mt-1 text-lg font-bold text-gray-500">
-              {order.orderTime}
+            <p className="mt-1 text-sm font-bold text-gray-500">
+              {orderedDateTime}
             </p>
           </div>
         </div>
@@ -85,8 +106,8 @@ export default function ChefOrderCard({ order }: ChefOrderCardProps) {
               {order.customerName}
             </p>
 
-            <p className="mt-1 text-sm font-bold text-gray-500">
-              {order.orderTime}
+            <p className="mt-1 text-xs font-bold text-gray-500">
+              {orderedDateTime}
             </p>
           </div>
         </div>

@@ -9,11 +9,50 @@ import { useOrderStore } from "@/store/order-store";
 import SearchInput from "@/shared/components/SearchInput";
 import ChefOrderCard from "./ChefOrderCard";
 
+function isValidDate(value: string | Date) {
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime());
+}
+
+function formatPersianDate(value: string | Date) {
+  if (!isValidDate(value)) return "";
+
+  return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
+function formatPersianTime(value: string | Date) {
+  if (!isValidDate(value)) return "";
+
+  return new Intl.DateTimeFormat("fa-IR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatOrderDateTime(value?: string) {
+  if (!value) return "";
+
+  const date = formatPersianDate(value);
+  const time = formatPersianTime(value);
+
+  if (!date && !time) return "";
+  if (!time) return date;
+  if (!date) return time;
+
+  return `${date} - ساعت ${time}`;
+}
+
 export default function ChefOrdersScreen() {
   const currentUser = useAuthStore((state) => state.currentUser);
   const orders = useOrderStore((state) => state.orders);
 
   const [searchTerm, setSearchTerm] = useState("");
+
+  const today = formatPersianDate(new Date());
 
   const chefOrders = useMemo(() => {
     if (!currentUser || currentUser.role !== "chef") return [];
@@ -25,10 +64,12 @@ export default function ChefOrdersScreen() {
       .filter((order) => {
         if (!normalizedSearch) return true;
 
+        const orderDateTime = formatOrderDateTime(order.orderedAt).toLowerCase();
+
         return (
           order.customerName.toLowerCase().includes(normalizedSearch) ||
-          order.orderTime.toLowerCase().includes(normalizedSearch) ||
-          order.foodTitle.toLowerCase().includes(normalizedSearch)
+          order.foodTitle.toLowerCase().includes(normalizedSearch) ||
+          orderDateTime.includes(normalizedSearch)
         );
       });
   }, [orders, currentUser, searchTerm]);
@@ -50,8 +91,11 @@ export default function ChefOrdersScreen() {
       dir="rtl"
       className="relative overflow-hidden rounded-[1.7rem] border border-orange-100 bg-white shadow-sm"
     >
-      <div  className="relative px-5 py-7 sm:px-8 lg:px-10">
-        <div dir ="ltr" className="mb-16 grid gap-6 lg:grid-cols-[1fr_420px_1fr] lg:items-start">
+      <div className="relative px-5 py-7 sm:px-8 lg:px-10">
+        <div
+          dir="ltr"
+          className="mb-16 grid gap-6 lg:grid-cols-[1fr_420px_1fr] lg:items-start"
+        >
           <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
             <SearchInput
               value={searchTerm}
@@ -63,25 +107,25 @@ export default function ChefOrdersScreen() {
 
           <div className="order-1 text-center lg:order-3 lg:text-right">
             <div className="flex flex-col items-center justify-center gap-3 lg:justify-end">
-                <div className="flex flex-row">
-                    <h1 className="text-3xl font-extrabold text-gray-950">
-                        سفارش ها
-                    </h1>
+              <div className="flex flex-row items-center gap-2">
+                <h1 className="text-3xl font-extrabold text-gray-950">
+                  سفارش ها
+                </h1>
 
-                    <div className="relative h-12 w-12">
-                        <Image
-                        src="/icons/orders.svg"
-                        alt="سفارش ها"
-                        fill
-                        className="object-contain"
-                        />
-                    </div>
+                <div className="relative h-12 w-12">
+                  <Image
+                    src="/icons/orders.svg"
+                    alt="سفارش ها"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
+              </div>
 
-               <p className="mt-2 text-sm text-gray-500">۲۸ اردیبهشت ۱۴۰۵</p>
-
+              <p className="mt-2 text-sm text-gray-500">{today}</p>
             </div>
           </div>
+
           <div className="hidden lg:block" />
         </div>
 
@@ -90,10 +134,13 @@ export default function ChefOrdersScreen() {
             <p className="text-center text-xl font-bold text-gray-950">
               مشتری
             </p>
+
             <p className="text-center text-xl font-bold text-gray-950">غذا</p>
+
             <p className="text-center text-xl font-bold text-gray-950">
               وضعیت
             </p>
+
             <p className="text-center text-xl font-bold text-gray-950">تعداد</p>
           </div>
 
