@@ -84,7 +84,7 @@ export class ChangeAdminUserPhone {
         username: updatedAdminUser.username,
         role: updatedAdminUser.role,
         status: updatedAdminUser.status,
-        profileImageUrl: updatedAdminUser.profileImageUrl,
+        photoUrl: updatedAdminUser.photoUrl,
         createdBy: updatedAdminUser.createdBy,
         updatedAt: updatedAdminUser.updatedAt
       }

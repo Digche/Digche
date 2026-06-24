@@ -17,6 +17,7 @@ export function createAdminAuthRoutes(controller, adminAuthMiddleware) {
   router.patch("/me/first-name", adminAuthMiddleware, controller.updateFirstName);
   router.patch("/me/last-name", adminAuthMiddleware, controller.updateLastName);
   router.patch("/me/username", adminAuthMiddleware, controller.updateUsername);
+  router.patch("/me/photo-url", adminAuthMiddleware, controller.updatePhotoUrl);
 
   router.post(
     "/change-phone/request-otp",

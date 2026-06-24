@@ -15,7 +15,7 @@ export class ListAdminUsers {
         username: adminUser.username,
         role: adminUser.role,
         status: adminUser.status,
-        profileImageUrl: adminUser.profileImageUrl,
+        photoUrl: adminUser.photoUrl,
         createdBy: adminUser.createdBy,
         createdAt: adminUser.createdAt,
         updatedAt: adminUser.updatedAt

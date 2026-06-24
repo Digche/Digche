@@ -40,7 +40,7 @@ export class FakeAdminUserRepository {
       username: adminUser.username,
       role: adminUser.role,
       status: adminUser.status,
-      profileImageUrl: adminUser.profileImageUrl,
+      photoUrl: adminUser.photoUrl,
       createdBy: adminUser.createdBy,
       createdAt: adminUser.createdAt || new Date("2026-01-01T00:00:00.000Z"),
       updatedAt: adminUser.updatedAt || new Date("2026-01-01T00:00:00.000Z")

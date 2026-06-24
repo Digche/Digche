@@ -228,7 +228,7 @@ export function registerAdminAccessToken(context, token, overrides = {}) {
     lastName: overrides.lastName ?? null,
     username: overrides.username ?? null,
     role: overrides.role || "manager",
-    profileImageUrl: overrides.profileImageUrl ?? null,
+    photoUrl: overrides.photoUrl ?? null,
     isManager: overrides.isManager ?? overrides.role !== "admin",
     scope: "admin"
   });
@@ -243,7 +243,7 @@ export function registerPublicAccessToken(context, token, overrides = {}) {
     firstName: overrides.firstName || "Ali",
     lastName: overrides.lastName || "Ahmadi",
     username: overrides.username || "ali_ahmadi",
-    profileImageUrl: overrides.profileImageUrl ?? null,
+    photoUrl: overrides.photoUrl ?? null,
     address: overrides.address ?? null,
     roles: overrides.roles || ["client"],
     selectedRole: overrides.selectedRole || "client",

@@ -7,6 +7,7 @@ const PUBLIC_PROFILE_FIELDS = {
   FIRST_NAME: "firstName",
   LAST_NAME: "lastName",
   USERNAME: "username",
+  PHOTO_URL: "photoUrl",
   ADDRESS: "address"
 };
 
@@ -76,7 +77,7 @@ export class UpdatePublicProfileField {
       firstName: updatedUser.firstName,
       lastName: updatedUser.lastName,
       username: updatedUser.username,
-      profileImageUrl: updatedUser.profileImageUrl,
+      photoUrl: updatedUser.photoUrl,
       address: updatedUser.address,
       roles: updatedUser.roles,
       selectedRole,
@@ -94,7 +95,7 @@ export class UpdatePublicProfileField {
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,
         username: updatedUser.username,
-        profileImageUrl: updatedUser.profileImageUrl,
+        photoUrl: updatedUser.photoUrl,
         address: updatedUser.address,
         roles: updatedUser.roles,
         selectedRole,
@@ -126,6 +127,10 @@ export class UpdatePublicProfileField {
       }
 
       return normalizedUsername;
+    }
+
+    if (field === PUBLIC_PROFILE_FIELDS.PHOTO_URL) {
+      return this.normalizePhotoUrl(value);
     }
 
     return this.normalizeAddress(value);
@@ -195,5 +200,33 @@ export class UpdatePublicProfileField {
     }
 
     return normalizedAddress;
+  }
+
+  normalizePhotoUrl(value) {
+    const normalizedPhotoUrl = String(value || "").trim();
+
+    if (!normalizedPhotoUrl) {
+      return null;
+    }
+
+    if (normalizedPhotoUrl.length > 2048) {
+      throw new AppError(
+        "Photo URL must be at most 2048 characters",
+        400,
+        "PHOTO_URL_TOO_LONG"
+      );
+    }
+
+    try {
+      const parsedUrl = new URL(normalizedPhotoUrl);
+
+      if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+        throw new Error("Invalid protocol");
+      }
+    } catch (error) {
+      throw new AppError("Photo URL is invalid", 400, "INVALID_PHOTO_URL");
+    }
+
+    return normalizedPhotoUrl;
   }
 }

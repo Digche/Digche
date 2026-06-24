@@ -61,7 +61,7 @@ export class VerifyAdminOtp {
       lastName: adminUser.lastName,
       username: adminUser.username,
       role: adminUser.role,
-      profileImageUrl: adminUser.profileImageUrl,
+      photoUrl: adminUser.photoUrl,
       scope: AUTH_SCOPES.ADMIN,
       isManager: adminUser.isManager()
     };
@@ -96,7 +96,7 @@ export class VerifyAdminOtp {
         lastName: adminUser.lastName,
         username: adminUser.username,
         role: adminUser.role,
-        profileImageUrl: adminUser.profileImageUrl,
+        photoUrl: adminUser.photoUrl,
         isManager: adminUser.isManager()
       }
     };

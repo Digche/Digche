@@ -101,6 +101,7 @@ export class CompletePublicRegistration {
           firstName: normalizedFirstName,
           lastName: normalizedLastName,
           username: normalizedUsername,
+          photoUrl: null,
           address: null,
           roles: []
         })
@@ -155,7 +156,7 @@ export class CompletePublicRegistration {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      profileImageUrl: user.profileImageUrl,
+      photoUrl: user.photoUrl,
       address: user.address,
       roles: user.roles,
       selectedRole: role,
@@ -194,7 +195,7 @@ export class CompletePublicRegistration {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        profileImageUrl: user.profileImageUrl,
+        photoUrl: user.photoUrl,
         address: user.address,
         roles: user.roles,
         selectedRole: role,

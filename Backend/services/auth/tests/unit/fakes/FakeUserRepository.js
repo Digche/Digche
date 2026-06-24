@@ -51,7 +51,7 @@ export class FakeUserRepository {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      profileImageUrl: user.profileImageUrl,
+      photoUrl: user.photoUrl,
       address: user.address,
       roles: user.roles || [],
       createdAt: user.createdAt || new Date("2026-01-01T00:00:00.000Z"),

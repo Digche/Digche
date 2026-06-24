@@ -328,6 +328,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /auth/me/photo-url:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's photo URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePhotoUrlInput"
+      responses:
+        "200":
+          description: Photo URL updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   /auth/me/address:
     patch:
       tags:
@@ -643,6 +670,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/auth/me/photo-url:
+    patch:
+      tags:
+        - Admin Auth
+      summary: Update current admin user's photo URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePhotoUrlInput"
+      responses:
+        "200":
+          description: Photo URL updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /admin/auth/change-phone/request-otp:
     post:
@@ -1073,6 +1127,17 @@ components:
           pattern: "^[a-zA-Z0-9_]+$"
           example: "ali_ahmadi"
 
+    UpdatePhotoUrlInput:
+      type: object
+      required:
+        - photoUrl
+      properties:
+        photoUrl:
+          type: string
+          nullable: true
+          maxLength: 2048
+          example: "https://cdn.example.com/users/user-1/profile.jpg"
+
     UpdateAddressInput:
       type: object
       required:
@@ -1174,7 +1239,7 @@ components:
           type: string
           nullable: true
           example: "Tehran, Vanak Square"
-        profileImageUrl:
+        photoUrl:
           type: string
           nullable: true
           example: "https://cdn.example.com/users/user-1/profile.jpg"
@@ -1228,7 +1293,7 @@ components:
           enum:
             - admin
             - manager
-        profileImageUrl:
+        photoUrl:
           type: string
           nullable: true
           example: "https://cdn.example.com/admins/admin-1/profile.jpg"
@@ -1268,7 +1333,7 @@ components:
             - active
             - disabled
           example: active
-        profileImageUrl:
+        photoUrl:
           type: string
           nullable: true
           example: "https://cdn.example.com/admins/admin-1/profile.jpg"

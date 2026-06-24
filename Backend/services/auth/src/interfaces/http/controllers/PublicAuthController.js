@@ -113,7 +113,7 @@ export class PublicAuthController {
           firstName: req.auth.firstName,
           lastName: req.auth.lastName,
           username: req.auth.username,
-          profileImageUrl: req.auth.profileImageUrl,
+          photoUrl: req.auth.photoUrl,
           address: req.auth.address,
           roles: req.auth.roles,
           selectedRole: req.auth.selectedRole,
@@ -162,6 +162,21 @@ export class PublicAuthController {
         selectedRole: req.auth.selectedRole,
         field: "username",
         value: req.body.username
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updatePhotoUrl = async (req, res, next) => {
+    try {
+      const result = await this.updatePublicProfileField.execute({
+        userId: req.auth.userId,
+        selectedRole: req.auth.selectedRole,
+        field: "photoUrl",
+        value: req.body.photoUrl ?? req.body.photo_url
       });
 
       res.json(result);

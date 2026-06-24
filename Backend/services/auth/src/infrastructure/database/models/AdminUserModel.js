@@ -46,10 +46,10 @@ export const AdminUserModel = sequelize.define(
       allowNull: true,
       field: "created_by"
     },
-    profileImageUrl: {
+    photoUrl: {
       type: DataTypes.STRING(2048),
       allowNull: true,
-      field: "profile_image_url"
+      field: "photo_url"
     }
   },
   {

@@ -261,7 +261,7 @@ describe("Public auth HTTP routes", () => {
       firstName: "Ali",
       lastName: "Ahmadi",
       username: "ali_ahmadi",
-      profileImageUrl: null,
+      photoUrl: null,
       address: null,
       roles: [USER_ROLES.CLIENT],
       selectedRole: USER_ROLES.CLIENT
@@ -308,6 +308,17 @@ describe("Public auth HTTP routes", () => {
       username: "reza_karimi"
     });
 
+    const photoUrlResponse = await request(app)
+      .patch("/auth/me/photo-url")
+      .set("Authorization", "Bearer public-token")
+      .send({ photoUrl: "https://cdn.example.com/users/user-1/profile.jpg" });
+
+    expect(photoUrlResponse.status).toBe(200);
+    expect(photoUrlResponse.body.user).toMatchObject({
+      id: "user-1",
+      photoUrl: "https://cdn.example.com/users/user-1/profile.jpg"
+    });
+
     const addressResponse = await request(app)
       .patch("/auth/me/address")
       .set("Authorization", "Bearer public-token")
@@ -323,6 +334,11 @@ describe("Public auth HTTP routes", () => {
       { userId: "user-1", field: "firstName", value: "Reza" },
       { userId: "user-1", field: "lastName", value: "Karimi" },
       { userId: "user-1", field: "username", value: "reza_karimi" },
+      {
+        userId: "user-1",
+        field: "photoUrl",
+        value: "https://cdn.example.com/users/user-1/profile.jpg"
+      },
       { userId: "user-1", field: "address", value: "Tehran, Vanak Square" }
     ]);
   });

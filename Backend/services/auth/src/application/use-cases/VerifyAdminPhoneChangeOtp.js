@@ -104,7 +104,7 @@ export class VerifyAdminPhoneChangeOtp {
       lastName: updatedAdminUser.lastName,
       username: updatedAdminUser.username,
       role: updatedAdminUser.role,
-      profileImageUrl: updatedAdminUser.profileImageUrl,
+      photoUrl: updatedAdminUser.photoUrl,
       isManager: updatedAdminUser.role === ADMIN_ROLES.MANAGER,
       scope: AUTH_SCOPES.ADMIN
     };
@@ -139,7 +139,7 @@ export class VerifyAdminPhoneChangeOtp {
         lastName: updatedAdminUser.lastName,
         username: updatedAdminUser.username,
         role: updatedAdminUser.role,
-        profileImageUrl: updatedAdminUser.profileImageUrl,
+        photoUrl: updatedAdminUser.photoUrl,
         isManager: updatedAdminUser.role === ADMIN_ROLES.MANAGER
       }
     };

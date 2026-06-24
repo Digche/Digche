@@ -114,7 +114,7 @@ describe("Admin auth HTTP routes", () => {
       lastName: null,
       username: null,
       role: ADMIN_ROLES.MANAGER,
-      profileImageUrl: null,
+      photoUrl: null,
       isManager: true
     });
   });
@@ -159,10 +159,26 @@ describe("Admin auth HTTP routes", () => {
       username: "sara_manager"
     });
 
+    const photoUrlResponse = await request(app)
+      .patch("/admin/auth/me/photo-url")
+      .set("Authorization", "Bearer manager-token")
+      .send({ photoUrl: "https://cdn.example.com/admins/manager-1/profile.jpg" });
+
+    expect(photoUrlResponse.status).toBe(200);
+    expect(photoUrlResponse.body.admin).toMatchObject({
+      id: "manager-1",
+      photoUrl: "https://cdn.example.com/admins/manager-1/profile.jpg"
+    });
+
     expect(context.adminUserRepository.updatedProfileFields).toEqual([
       { id: "manager-1", field: "firstName", value: "Sara" },
       { id: "manager-1", field: "lastName", value: "Mohammadi" },
-      { id: "manager-1", field: "username", value: "sara_manager" }
+      { id: "manager-1", field: "username", value: "sara_manager" },
+      {
+        id: "manager-1",
+        field: "photoUrl",
+        value: "https://cdn.example.com/admins/manager-1/profile.jpg"
+      }
     ]);
   });
 

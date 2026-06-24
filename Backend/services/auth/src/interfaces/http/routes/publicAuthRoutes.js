@@ -18,6 +18,7 @@ export function createPublicAuthRoutes(controller, publicAuthMiddleware) {
   router.patch("/me/first-name", publicAuthMiddleware, controller.updateFirstName);
   router.patch("/me/last-name", publicAuthMiddleware, controller.updateLastName);
   router.patch("/me/username", publicAuthMiddleware, controller.updateUsername);
+  router.patch("/me/photo-url", publicAuthMiddleware, controller.updatePhotoUrl);
   router.patch("/me/address", publicAuthMiddleware, controller.updateAddress);
 
   router.post(
