@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using FoodOrdering.Core.Application.Commands.AddToCart;
 using FoodOrdering.Core.Application.Commands.RemoveFromCart;
+using FoodOrdering.Core.Application.Commands.ClearCart;
 
 
 namespace FoodOrdering.Core.API.Controllers;
@@ -57,15 +58,15 @@ public class CartsController : ControllerBase
         return Ok(result);
     }
 
-    // [HttpDelete]
-    // public async Task<IActionResult> ClearCart()
-    // {
-    //     var command = new ClearCartCommand();
-    //     var result = await _mediator.Send(command);
+    [HttpDelete]
+    public async Task<IActionResult> ClearCart()
+    {
+        var command = new ClearCartCommand();
+        var result = await _mediator.Send(command);
 
-    //     if (!result.IsSuccess)
-    //         return BadRequest(new { message = result.ErrorMessage });
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage });
 
-    //     return Ok(result);
-    // }
+        return Ok(result);
+    }
 }
