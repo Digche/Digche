@@ -1,38 +1,21 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 
 import { createContainer } from "./container.js";
 import { createMediaRoutes } from "./interfaces/http/routes/mediaRoutes.js";
 import { errorHandler } from "./interfaces/http/middlewares/errorHandler.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const possibleOpenApiPaths = [
-  path.resolve(__dirname, "../../../docs/api/media.openapi.yaml"),
-  "/docs/api/media.openapi.yaml"
-];
+import { setupSwagger } from "./interfaces/http/swagger.js";
 
 export function createApp() {
   const app = express();
   const container = createContainer();
-  const openApiPath = possibleOpenApiPaths.find((candidatePath) =>
-    fs.existsSync(candidatePath)
-  );
 
   app.use(helmet());
   app.use(cors());
   app.use(express.json());
 
-  if (openApiPath) {
-    app.get("/media/openapi.yaml", (req, res) => {
-      res.sendFile(openApiPath);
-    });
-  }
+  setupSwagger(app);
 
   app.use(
     "/media",

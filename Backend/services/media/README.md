@@ -26,6 +26,18 @@ ARVAN_PUBLIC_BASE_URL=
 
 All public endpoints require an auth-service access token.
 
+Swagger UI is available at:
+
+```txt
+http://localhost:8080/media/docs
+```
+
+OpenAPI YAML is available at:
+
+```txt
+http://localhost:8080/media/openapi.yaml
+```
+
 ### Presign Profile Photo
 
 ```http

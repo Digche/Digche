@@ -3,6 +3,9 @@ info:
   title: Food Platform Media Service API
   version: 1.0.0
   description: Central media service for presigned image uploads to Arvan Object Storage.
+  x-usage-note: |
+    In Swagger UI, click Authorize and paste the accessToken from auth-service.
+    If Swagger does not add the Bearer prefix automatically, paste it as: Bearer <accessToken>.
 
 servers:
   - url: http://localhost:8080
@@ -35,6 +38,13 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/ProfilePhotoPresignInput"
+            examples:
+              png:
+                value:
+                  contentType: image/png
+              webp:
+                value:
+                  contentType: image/webp
       responses:
         "200":
           description: Presigned upload data
@@ -60,6 +70,15 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/DishImagePresignInput"
+            examples:
+              draft:
+                value:
+                  contentType: image/webp
+                  dishId: draft
+              existingDish:
+                value:
+                  contentType: image/jpeg
+                  dishId: dish-123
       responses:
         "200":
           description: Presigned upload data
@@ -89,6 +108,12 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/InternalImagePresignInput"
+            examples:
+              dish:
+                value:
+                  target: dish_image
+                  contentType: image/jpeg
+                  dishId: dish-123
       responses:
         "200":
           description: Presigned upload data
