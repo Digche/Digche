@@ -15,10 +15,14 @@ export async function createApp() {
 
   const container = createContainer();
 
-  await app.register(helmet);
+  await app.register(helmet, {
+    contentSecurityPolicy: false
+  });
+
   await app.register(cors, {
     origin: true
   });
+
   await app.register(websocket);
 
   setupSwagger(app);
