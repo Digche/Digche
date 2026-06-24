@@ -946,6 +946,78 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /internal/auth/profiles/resolve:
+    post:
+      tags:
+        - Internal
+      summary: Resolve actor display profiles for internal services
+      description: Internal endpoint used by chat-service to hydrate participants. Requires x-internal-api-key.
+      parameters:
+        - in: header
+          name: x-internal-api-key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - participants
+              properties:
+                participants:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - id
+                      - type
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      type:
+                        type: string
+                        enum:
+                          - user
+                          - admin
+      responses:
+        "200":
+          description: Resolved profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profiles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        type:
+                          type: string
+                          enum:
+                            - user
+                            - admin
+                        displayName:
+                          type: string
+                          nullable: true
+                        photoUrl:
+                          type: string
+                          nullable: true
+                        phone:
+                          type: string
+                          nullable: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
 components:
   securitySchemes:
     bearerAuth:

@@ -9,6 +9,7 @@ services:
     depends_on:
       - auth-service
       - media-service
+      - chat-service
     networks:
       - food_network
 
@@ -43,6 +44,22 @@ services:
     networks:
       - food_network
 
+  chat-service:
+    build:
+      context: ./services/chat
+      dockerfile: Dockerfile
+    container_name: chat_service
+    env_file:
+      - ./services/chat/.env
+    expose:
+      - "3003"
+    volumes:
+      - ./docs:/docs:ro
+    depends_on:
+      - chat-db
+    networks:
+      - food_network
+
   auth-db:
     image: postgres:16-alpine
     container_name: auth_db
@@ -68,9 +85,24 @@ services:
     networks:
       - food_network
 
+  chat-db:
+    image: postgres:16-alpine
+    container_name: chat_db
+    environment:
+      POSTGRES_DB: chat_db
+      POSTGRES_USER: chat_user
+      POSTGRES_PASSWORD: chat_password
+    expose:
+      - "5432"
+    volumes:
+      - chat_db_data:/var/lib/postgresql/data
+    networks:
+      - food_network
+
 volumes:
   auth_db_data:
   auth_redis_data:
+  chat_db_data:
 
 networks:
   food_network:
