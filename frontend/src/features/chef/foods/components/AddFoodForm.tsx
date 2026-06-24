@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { ImagePlus, Upload } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useFoodStore } from "@/store/food-store";
+import FormField from "./FormField";
+import ChefProfileBadge from "../../components/ChefProfileBadge";
 
 type AddFoodFormState = {
   title: string;
@@ -134,31 +136,25 @@ export default function AddFoodForm() {
     router.push("/chef/foods");
   };
 
+
   return (
     <section dir="rtl" className="relative overflow-hidden rounded-[2rem] border border-orange-100 bg-white shadow-sm">
       
       <div className="absolute inset-0 opacity-60  [background-size:76px_76px]" />
 
       <div className="relative p-5 sm:p-8 lg:p-10">
-        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="order-2 text-center lg:order-1 lg:flex-1">
+
+        <div  dir="ltr" className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">    
+            <ChefProfileBadge/>
+
+          <div  className="order-2 text-center lg:order-1 lg:flex-1 bg-amber-200 my-auto">
             <h1 className="text-2xl font-bold text-gray-950 sm:text-3xl">
               امروز چه غذای خوشمزه‌ای درست میکنی؟
             </h1>
+
           </div>
 
-          <div className="order-1 flex w-fit items-center gap-3 rounded-2xl bg-white/80 px-4 py-3 shadow-[0_0_0_2px_rgba(17,24,39,0.08)] backdrop-blur lg:order-2">
-            <div className="relative h-14 w-14 overflow-hidden rounded-full bg-[#F2CDB5]">
-              <Image
-                src="/images/chef-avatar.webp"
-                alt={currentUser.name}
-                fill
-                className="object-cover"
-              />
-            </div>
 
-            <p className="text-lg font-bold text-gray-900">{currentUser.name}</p>
-          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="mx-auto max-w-5xl">
@@ -289,23 +285,5 @@ export default function AddFoodForm() {
         </form>
       </div>
     </section>
-  );
-}
-
-function FormField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-right text-lg font-bold text-gray-900">
-        {label}
-      </span>
-
-      {children}
-    </label>
   );
 }

@@ -107,7 +107,7 @@ export default function ChefFoodsScreen() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-10 sm:grid-cols-1 md:grid-cols-1 xl:grid-cols-4">
+        <div className="grid gap-10 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
           {chefFoods.map((food) => (
             <FoodCard
               key={food.id}

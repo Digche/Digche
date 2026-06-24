@@ -5,7 +5,7 @@ import Link from 'next/link';
 export default function HomeHeader()
 {
   return (
-    <header className="w-[90%] mx-auto bg-white  py-3 px-6 md:px-12">
+    <header className="w-[90%] mx-auto bg-[#FFF9F4]  py-3 px-6 md:px-12">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* بخش سمت راست: لوگو و شعار */}
@@ -30,10 +30,14 @@ export default function HomeHeader()
 
             {/* پروفایل کاربر */}
           <div className="flex items-center gap-1 cursor-pointer group">
-            <User size={26} strokeWidth={1.5} className="text-gray-700 group-hover:text-orange-600" />
-            <ChevronDown size={16} className="text-gray-500 group-hover:text-orange-600" />
 
           </div>
+
+                    <Link
+          href="/chef"
+          className="text-gray-700 hover:text-orange-600 transition-colors">
+            <User size={26} strokeWidth={1.5} className="text-gray-700 group-hover:text-orange-600" />
+          </Link>
 
           {/* جداکننده عمودی */}
           <div className="h-6 w-[1px] bg-gray-300"></div>

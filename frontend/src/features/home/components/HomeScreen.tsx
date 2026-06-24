@@ -7,7 +7,7 @@ import SearchBox from "./SearchBox";
 
 export default function HomeScreen() {
     return (
-      <div>
+      <div className="bg-[#FFF9F4]">
           <HomeHeader/>
 
           <div className="flex flex-col gap-8 items-center py-5">

@@ -33,7 +33,7 @@ export default function SearchInput({
         placeholder={placeholder}
         className={`h-12 w-full rounded-2xl border border-[#EFC5A8] bg-[#FFF9F4] pr-13 ${
           showClearButton ? "pl-12" : "pl-4"
-        } text-sm font-medium text-gray-800 shadow-[0_8px_24px_rgba(212,139,139,0.12)] outline-none transition placeholder:text-gray-400 hover:border-[#D48B8B]/70 focus:border-[#D48B8B] focus:bg-white focus:shadow-[0_10px_30px_rgba(212,139,139,0.18)] ${inputClassName}`}
+        } text-sm font-medium text-gray-800  outline-none transition placeholder:text-gray-400 hover:border-[#D48B8B]/70 focus:border-[#D48B8B] focus:bg-white focus:shadow-[0_10px_30px_rgba(212,139,139,0.18)] ${inputClassName}`}
       />
 
       {showClearButton && value && (

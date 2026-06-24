@@ -71,7 +71,7 @@ export default function FoodCard({
 
   if (isCompact) {
     return (
-      <article className="flex w-full gap-3 overflow-hidden rounded-3xl border border-gray-100 bg-[#FDF7F2] p-2 shadow-sm">
+      <article className="flex w-full gap-3 overflow-hidden rounded-3xl border border-gray-100 bg-white p-2 shadow-sm">
         <Link href={`/foods/${item.id}`} className={imageClass}>
           <Image
             src={item.image}
@@ -142,7 +142,7 @@ export default function FoodCard({
 
   return (
     <article
-      className={`${cardClass} snap-start overflow-hidden rounded-3xl border border-gray-100 bg-[#FDF7F2] shadow-sm transition hover:shadow-md`}
+      className={`${cardClass} snap-start overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md`}
     >
       <Link href={`/foods/${item.id}`} className="block">
         <div className={imageClass}>

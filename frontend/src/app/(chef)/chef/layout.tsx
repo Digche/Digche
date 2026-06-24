@@ -12,7 +12,9 @@ export default function ChefLayout({ children }: ChefLayoutProps) {
       <ChefSidebar />
 
       <main className="min-h-screen px-4 pb-8 pt-20 md:py-8 md:pr-[370px] md:pl-8">
-        {children}
+        <div className="mx-auto w-full lg:max-w-[1500px] ">
+          {children}
+        </div>
       </main>
     </div>
   );

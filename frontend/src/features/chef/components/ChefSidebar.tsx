@@ -98,7 +98,7 @@ export default function ChefSidebar() {
           <div className="mx-auto flex flex-col items-center">
             <div className="relative h-28 w-32">
               <Image
-                src="/images/logo.png"
+                src="/icons/Logo.svg"
                 alt="دیگچه"
                 fill
                 className="object-contain"
