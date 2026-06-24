@@ -13,7 +13,9 @@ public class DishRepository : IDishRepository
         => _context = context;
 
     public async Task<Dish?> GetByIdAsync(Guid id, CancellationToken cancellation = default)
-        => await _context.Dishes.FindAsync(new object[] { id }, cancellation);
+        => await _context.Dishes
+            .Include(d => d.Comments)  // <-- اضافه شد
+            .FirstOrDefaultAsync(d => d.Id == id, cancellation);
 
     public async Task<IEnumerable<Dish>> GetByChefIdAsync(Guid chefId, CancellationToken cancellation = default)
         => await _context.Dishes

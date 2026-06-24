@@ -75,6 +75,7 @@ builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IChefProfileRepository, ChefProfileRepository>();
 builder.Services.AddScoped<IDishRepository, DishRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 
 // ============================
 // جدید: ثبت IUserContext

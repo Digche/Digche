@@ -6,6 +6,7 @@ namespace FoodOrdering.Core.Domain.Entities
     public class Dish
     {
         private int _stockQuantity;
+        private readonly List<Comment> _comments = new();
 
         public Guid Id { get; private set; }
         public Guid ChefId { get; private set; }
@@ -21,6 +22,8 @@ namespace FoodOrdering.Core.Domain.Entities
         public int StockQuantity => _stockQuantity;
 
         public ChefProfile Chef { get; private set; }
+
+        public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
 
         private Dish() { } 
 

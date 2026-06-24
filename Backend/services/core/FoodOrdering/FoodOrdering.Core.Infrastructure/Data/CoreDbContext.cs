@@ -15,6 +15,7 @@ public class CoreDbContext : DbContext
     public DbSet<ChefProfile> ChefProfiles { get; set; }
     public DbSet<Dish> Dishes { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<Comment> Comments { get; set; }  // <-- اضافه شد
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -81,7 +82,7 @@ public class CoreDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // ---- ChefProfile (با اضافه شدن Balance) ----
+        // ---- ChefProfile ----
         modelBuilder.Entity<ChefProfile>(entity =>
         {
             entity.HasKey(c => c.Id);
@@ -95,7 +96,7 @@ public class CoreDbContext : DbContext
             entity.Property(c => c.Bio).HasMaxLength(500);
             entity.Property(c => c.Balance)
                 .HasPrecision(18, 2)
-                .HasDefaultValue(0);   // مقدار پیش‌فرض
+                .HasDefaultValue(0);
         });
 
         // ---- Dish ----
@@ -113,6 +114,22 @@ public class CoreDbContext : DbContext
             entity.HasOne(d => d.Chef)
                 .WithMany(c => c.Dishes)
                 .HasForeignKey(d => d.ChefId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ---- Comment (با Navigation به Dish) ----
+        modelBuilder.Entity<Comment>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Text).IsRequired().HasMaxLength(1000);
+            entity.Property(c => c.Rating);
+            entity.HasIndex(c => c.DishId);
+            entity.HasIndex(c => c.UserId);
+
+            // رابطه با Dish با استفاده از Navigation Property
+            entity.HasOne(c => c.Dish)
+                .WithMany(d => d.Comments)  // <-- استفاده از Comments
+                .HasForeignKey(c => c.DishId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
