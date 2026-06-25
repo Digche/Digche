@@ -22,10 +22,7 @@ builder.Services.AddControllers();
 // ============================
 builder.Services.AddMediatR(cfg =>
 {
-    // اسمبلی‌های حاوی Command/Query handlers (همان لایه‌ی Application)
     cfg.RegisterServicesFromAssembly(typeof(FoodOrdering.Core.Application.Commands.AddDish.AddDishCommand).Assembly);
-    // یا اگر کلاس خاصی مد نظر نیست، می‌توانید کل اسمبلی Application را ثبت کنید:
-    // cfg.RegisterServicesFromAssemblyContaining<FoodOrdering.Core.Application.Common.Result>();
 });
 
 // OpenAPI (Scalar) for .NET 9
@@ -41,7 +38,6 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Core microservice for managing orders, dishes, carts, and chefs."
     });
 
-    // Add JWT Authentication to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token",
@@ -77,9 +73,7 @@ builder.Services.AddScoped<IDishRepository, DishRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 
-// ============================
-// جدید: ثبت IUserContext
-// ============================
+// IUserContext
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, UserContext>();
 
@@ -149,7 +143,25 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 // ============================
-// 4. Run
+// 4. Apply Migrations Automatically
+// ============================
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
+    try
+    {
+        dbContext.Database.Migrate();
+        Console.WriteLine("Migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while applying migrations: {ex.Message}");
+        throw; // یا می‌توانید ادامه دهید، اما بهتر است برنامه متوقف شود تا خطا مشخص باشد
+    }
+}
+
+// ============================
+// 5. Run
 // ============================
 
 app.Run();
