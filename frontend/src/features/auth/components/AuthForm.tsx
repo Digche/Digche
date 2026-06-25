@@ -1,25 +1,51 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { FormEventHandler } from "react";
+import { useRouter } from "next/navigation";
 import { AuthCodeInput } from "./AuthCodeInput";
 import { AuthInput } from "./AuthInput";
 import { AuthPhoneNumberInput } from "./AuthPhoneNumberInput";
 import { AuthRoleSelect } from "./AuthRoleSelect";
 import { AuthUsernameInput } from "./AuthUsernameInput";
-import { useAuthStore } from "../store/auth.store";
+import { useAuthFormStore } from "../store/auth.store";
+import {
+  completePublicRegistration,
+  getAuthErrorMessage,
+  requestPublicOtp,
+  toBackendAuthRole,
+  toFrontendAuthRole,
+  verifyPublicOtp,
+  type PublicAuthSuccessResponse,
+} from "../services/auth-api";
+import { useAuthStore as useSessionStore } from "@/store/auth-store";
 import { isValidIranMobileNumber } from "../utils/phone-number";
+import { isValidUsername } from "../utils/username";
 import { isValidVerificationCode } from "../utils/verification-code";
 import styles from "./AuthPage.module.css";
 
 export function AuthForm() {
-  const mode = useAuthStore((state) => state.mode);
-  const step = useAuthStore((state) => state.step);
-  const role = useAuthStore((state) => state.role);
-  const form = useAuthStore((state) => state.form);
-  const setMode = useAuthStore((state) => state.setMode);
-  const setStep = useAuthStore((state) => state.setStep);
-  const setRole = useAuthStore((state) => state.setRole);
-  const setField = useAuthStore((state) => state.setField);
+  const router = useRouter();
+
+  const mode = useAuthFormStore((state) => state.mode);
+  const step = useAuthFormStore((state) => state.step);
+  const role = useAuthFormStore((state) => state.role);
+  const form = useAuthFormStore((state) => state.form);
+  const registrationToken = useAuthFormStore((state) => state.registrationToken);
+  const isSubmitting = useAuthFormStore((state) => state.isSubmitting);
+  const errorMessage = useAuthFormStore((state) => state.errorMessage);
+  const setMode = useAuthFormStore((state) => state.setMode);
+  const setStep = useAuthFormStore((state) => state.setStep);
+  const setRole = useAuthFormStore((state) => state.setRole);
+  const setRegistrationToken = useAuthFormStore(
+    (state) => state.setRegistrationToken
+  );
+  const setSubmitting = useAuthFormStore((state) => state.setSubmitting);
+  const setErrorMessage = useAuthFormStore((state) => state.setErrorMessage);
+  const clearErrorMessage = useAuthFormStore((state) => state.clearErrorMessage);
+  const setField = useAuthFormStore((state) => state.setField);
+  const resetForm = useAuthFormStore((state) => state.resetForm);
+
+  const setSession = useSessionStore((state) => state.setSession);
 
   const isLogin = mode === "login";
   const isPhoneStep = step === "phone";
@@ -28,7 +54,7 @@ export function AuthForm() {
 
   const title = getFormTitle();
   const subtitle = getFormSubtitle();
-  const submitText = getSubmitText();
+  const submitText = isSubmitting ? "در حال ارسال..." : getSubmitText();
 
   function getFormTitle() {
     if (isVerificationStep) {
@@ -66,61 +92,132 @@ export function AuthForm() {
     return "ورود";
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
+  event.preventDefault();
 
-    if (isPhoneStep) {
-      if (!isValidIranMobileNumber(form.phoneNumber)) {
-        alert("شماره تماس معتبر نیست.");
-        return;
-      }
+  if (isSubmitting) {
+    return;
+  }
+
+  if (isPhoneStep) {
+    await submitPhoneStep();
+    return;
+  }
+
+  if (isVerificationStep) {
+    await submitVerificationStep();
+    return;
+  }
+
+  if (isProfileStep) {
+    await submitProfileStep();
+  }
+};
+
+  async function submitPhoneStep() {
+    if (!isValidIranMobileNumber(form.phoneNumber)) {
+      setErrorMessage("شماره تماس معتبر نیست.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      clearErrorMessage();
+
+      await requestPublicOtp({
+        phone: form.phoneNumber,
+        role: toBackendAuthRole(role),
+        flow: isLogin ? "login" : "register",
+      });
 
       setStep("verification");
-      return;
-    }
-
-    if (isVerificationStep) {
-      if (!isValidVerificationCode(form.verificationCode)) {
-        alert("کد تایید باید بین ۴ تا ۶ رقم باشد.");
-        return;
-      }
-
-      if (isLogin) {
-        console.log("digcheh login:", {
-          role,
-          phoneNumber: form.phoneNumber,
-          verificationCode: form.verificationCode,
-        });
-
-        return;
-      }
-
-      setStep("profile");
-      return;
-    }
-
-    if (isProfileStep) {
-      if (!form.firstName.trim()) {
-        alert("نام را وارد کنید.");
-        return;
-      }
-
-      if (!form.lastName.trim()) {
-        alert("نام خانوادگی را وارد کنید.");
-        return;
-      }
-
-      if (!form.username.trim()) {
-        alert("نام کاربری را وارد کنید.");
-        return;
-      }
-
-      console.log("digcheh signup:", {
-        role,
-        ...form,
-      });
+    } catch (error) {
+      setErrorMessage(getAuthErrorMessage(error));
+    } finally {
+      setSubmitting(false);
     }
   }
+
+  async function submitVerificationStep() {
+    if (!isValidVerificationCode(form.verificationCode)) {
+      setErrorMessage("کد تایید باید بین ۴ تا ۶ رقم باشد.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      clearErrorMessage();
+
+      const authResult = await verifyPublicOtp({
+        phone: form.phoneNumber,
+        code: form.verificationCode,
+        role: toBackendAuthRole(role),
+        flow: isLogin ? "login" : "register",
+      });
+
+      if (authResult.requiresRegistration) {
+        setRegistrationToken(authResult.registrationToken);
+        setStep("profile");
+        return;
+      }
+
+      completeAuthentication(authResult);
+    } catch (error) {
+      setErrorMessage(getAuthErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function submitProfileStep() {
+    if (!registrationToken) {
+      setErrorMessage("توکن ثبت‌نام پیدا نشد. لطفاً دوباره کد تایید بگیرید.");
+      setStep("phone");
+      return;
+    }
+
+    if (!form.firstName.trim()) {
+      setErrorMessage("نام را وارد کنید.");
+      return;
+    }
+
+    if (!form.lastName.trim()) {
+      setErrorMessage("نام خانوادگی را وارد کنید.");
+      return;
+    }
+
+    if (!isValidUsername(form.username)) {
+      setErrorMessage(
+        "نام کاربری باید ۳ تا ۵۰ کاراکتر و فقط شامل حروف انگلیسی، عدد و آندرلاین باشد."
+      );
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      clearErrorMessage();
+
+      const authResult = await completePublicRegistration({
+        registrationToken,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        username: form.username.trim(),
+      });
+
+      completeAuthentication(authResult);
+    } catch (error) {
+      setErrorMessage(getAuthErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function completeAuthentication(authResult: PublicAuthSuccessResponse) {
+  setSession(authResult);
+  resetForm();
+
+  router.push("/");
+}
 
   function switchToLogin() {
     setMode("login");
@@ -146,6 +243,7 @@ export function AuthForm() {
             name="phoneNumber"
             placeholder="۰۹۱۲۳۴۵۶۷۸۹"
             required
+            disabled={isSubmitting}
             value={form.phoneNumber}
             onValueChange={(value) => setField("phoneNumber", value)}
           />
@@ -157,6 +255,7 @@ export function AuthForm() {
             name="verificationCode"
             placeholder="۱۲۳۴۵۶"
             required
+            disabled={isSubmitting}
             value={form.verificationCode}
             onValueChange={(value) => setField("verificationCode", value)}
           />
@@ -169,6 +268,7 @@ export function AuthForm() {
               name="firstName"
               placeholder="مطهره"
               required
+              disabled={isSubmitting}
               value={form.firstName}
               onChange={(event) => setField("firstName", event.target.value)}
             />
@@ -178,6 +278,7 @@ export function AuthForm() {
               name="lastName"
               placeholder="رحمانی"
               required
+              disabled={isSubmitting}
               value={form.lastName}
               onChange={(event) => setField("lastName", event.target.value)}
             />
@@ -185,8 +286,9 @@ export function AuthForm() {
             <AuthUsernameInput
               label="نام کاربری"
               name="username"
-              placeholder="Motirahmani"
+              placeholder="Moti_Rahmani"
               required
+              disabled={isSubmitting}
               value={form.username}
               onValueChange={(value) => setField("username", value)}
             />
@@ -194,7 +296,31 @@ export function AuthForm() {
         ) : null}
       </div>
 
-      <button className={styles.submitButton} type="submit">
+      {errorMessage ? (
+        <p
+          role="alert"
+          style={{
+            margin: "18px 0 0",
+            color: "#b42318",
+            background: "#fff1f0",
+            border: "1px solid rgba(180, 35, 24, 0.18)",
+            borderRadius: 16,
+            padding: "10px 14px",
+            fontSize: 14,
+            fontWeight: 700,
+            lineHeight: 1.8,
+            textAlign: "center",
+          }}
+        >
+          {errorMessage}
+        </p>
+      ) : null}
+
+      <button
+        className={styles.submitButton}
+        type="submit"
+        disabled={isSubmitting}
+      >
         {submitText}
       </button>
 
@@ -205,6 +331,7 @@ export function AuthForm() {
           <button
             className={styles.footerAction}
             type="button"
+            disabled={isSubmitting}
             onClick={isLogin ? switchToSignup : switchToLogin}
           >
             {isLogin ? "ثبت نام" : "ورود"}
