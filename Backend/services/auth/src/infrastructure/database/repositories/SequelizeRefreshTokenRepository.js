@@ -61,6 +61,24 @@ export class SequelizeRefreshTokenRepository {
     return affectedRows;
   }
 
+  async revokeAllForOwnerAndSelectedRole(ownerId, ownerType, selectedRole) {
+    const [affectedRows] = await RefreshTokenModel.update(
+      {
+        revokedAt: new Date()
+      },
+      {
+        where: {
+          ownerId,
+          ownerType,
+          selectedRole,
+          revokedAt: null
+        }
+      }
+    );
+
+    return affectedRows;
+  }
+
   toDomain(refreshTokenModel) {
     return new RefreshToken({
       id: refreshTokenModel.id,

@@ -14,4 +14,8 @@ export class RefreshTokenRepository {
   async revokeAllForOwner(ownerId, ownerType) {
     throw new Error("RefreshTokenRepository.revokeAllForOwner is not implemented");
   }
+
+  async revokeAllForOwnerAndSelectedRole(ownerId, ownerType, selectedRole) {
+    throw new Error("RefreshTokenRepository.revokeAllForOwnerAndSelectedRole is not implemented");
+  }
 }

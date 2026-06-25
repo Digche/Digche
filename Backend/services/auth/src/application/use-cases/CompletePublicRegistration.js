@@ -141,8 +141,8 @@ export class CompletePublicRegistration {
         );
       }
 
-      if (chefAccount.isDisabled()) {
-        throw new ForbiddenError("Chef account is disabled");
+      if (chefAccount.isSuspended()) {
+        throw new ForbiddenError("Chef account is suspended");
       }
 
       roleData.chef = {

@@ -4,7 +4,7 @@ export class ChefAccount {
   constructor({
     id = null,
     userId,
-    status = CHEF_STATUS.PENDING,
+    status = CHEF_STATUS.ACTIVE,
     createdAt = null,
     updatedAt = null
   }) {
@@ -19,19 +19,19 @@ export class ChefAccount {
     this.updatedAt = updatedAt;
   }
 
-  isPending() {
-    return this.status === CHEF_STATUS.PENDING;
-  }
-
   isActive() {
     return this.status === CHEF_STATUS.ACTIVE;
   }
 
-  isRejected() {
-    return this.status === CHEF_STATUS.REJECTED;
+  isSuspended() {
+    return this.status === CHEF_STATUS.SUSPENDED;
   }
 
-  isDisabled() {
-    return this.status === CHEF_STATUS.DISABLED;
+  suspend() {
+    this.status = CHEF_STATUS.SUSPENDED;
+  }
+
+  activate() {
+    this.status = CHEF_STATUS.ACTIVE;
   }
 }

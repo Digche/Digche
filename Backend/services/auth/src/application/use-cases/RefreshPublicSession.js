@@ -71,8 +71,8 @@ export class RefreshPublicSession {
         throw new ForbiddenError("Chef account not found");
       }
 
-      if (chefAccount.isDisabled()) {
-        throw new ForbiddenError("Chef account is disabled");
+      if (chefAccount.isSuspended()) {
+        throw new ForbiddenError("Chef account is suspended");
       }
 
       roleData.chef = {

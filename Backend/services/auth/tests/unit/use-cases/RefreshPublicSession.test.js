@@ -176,7 +176,7 @@ describe("RefreshPublicSession", () => {
     });
   });
 
-  it("rejects disabled chef accounts", async () => {
+  it("rejects suspended chef accounts", async () => {
     const { useCase } = makeUseCase({
       users: [
         {
@@ -192,7 +192,7 @@ describe("RefreshPublicSession", () => {
         {
           id: "chef-1",
           userId: "user-1",
-          status: CHEF_STATUS.DISABLED
+          status: CHEF_STATUS.SUSPENDED
         }
       ],
       refreshTokens: [

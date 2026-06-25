@@ -2,10 +2,12 @@ import express from "express";
 
 import { AdminAuthController } from "../../../../src/interfaces/http/controllers/AdminAuthController.js";
 import { AdminUserController } from "../../../../src/interfaces/http/controllers/AdminUserController.js";
+import { ChefAdminController } from "../../../../src/interfaces/http/controllers/ChefAdminController.js";
 import { PublicAuthController } from "../../../../src/interfaces/http/controllers/PublicAuthController.js";
 
 import { createAdminAuthRoutes } from "../../../../src/interfaces/http/routes/adminAuthRoutes.js";
 import { createAdminUserRoutes } from "../../../../src/interfaces/http/routes/adminUserRoutes.js";
+import { createChefAdminRoutes } from "../../../../src/interfaces/http/routes/chefAdminRoutes.js";
 import { createPublicAuthRoutes } from "../../../../src/interfaces/http/routes/publicAuthRoutes.js";
 
 import { createAdminAuthMiddleware } from "../../../../src/interfaces/http/middlewares/adminAuthMiddleware.js";
@@ -24,6 +26,9 @@ import { ListAdminUsers } from "../../../../src/application/use-cases/ListAdminU
 import { DisableAdminUser } from "../../../../src/application/use-cases/DisableAdminUser.js";
 import { EnableAdminUser } from "../../../../src/application/use-cases/EnableAdminUser.js";
 import { ChangeAdminUserPhone } from "../../../../src/application/use-cases/ChangeAdminUserPhone.js";
+import { ListChefs } from "../../../../src/application/use-cases/ListChefs.js";
+import { SuspendChef } from "../../../../src/application/use-cases/SuspendChef.js";
+import { ActivateChef } from "../../../../src/application/use-cases/ActivateChef.js";
 
 import { RequestPublicOtp } from "../../../../src/application/use-cases/RequestPublicOtp.js";
 import { VerifyPublicOtp } from "../../../../src/application/use-cases/VerifyPublicOtp.js";
@@ -158,6 +163,19 @@ export function createHttpTestApp(context) {
     })
   });
 
+  const chefAdminController = new ChefAdminController({
+    listChefs: new ListChefs({
+      chefAccountRepository: context.chefAccountRepository
+    }),
+    suspendChef: new SuspendChef({
+      chefAccountRepository: context.chefAccountRepository,
+      refreshTokenRepository: context.refreshTokenRepository
+    }),
+    activateChef: new ActivateChef({
+      chefAccountRepository: context.chefAccountRepository
+    })
+  });
+
   const publicAuthController = new PublicAuthController({
     requestPublicOtp: new RequestPublicOtp({
       userRepository: context.userRepository,
@@ -213,6 +231,7 @@ export function createHttpTestApp(context) {
 
   app.use("/admin/auth", createAdminAuthRoutes(adminAuthController, adminAuthMiddleware));
   app.use("/admin/admin-users", createAdminUserRoutes(adminUserController, adminAuthMiddleware));
+  app.use("/admin/chefs", createChefAdminRoutes(chefAdminController, adminAuthMiddleware));
   app.use("/auth", createPublicAuthRoutes(publicAuthController, publicAuthMiddleware));
 
   app.use(errorHandler);

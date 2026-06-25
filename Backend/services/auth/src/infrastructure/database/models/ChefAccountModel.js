@@ -25,7 +25,7 @@ export const ChefAccountModel = sequelize.define(
     status: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      defaultValue: CHEF_STATUS.PENDING
+      defaultValue: CHEF_STATUS.ACTIVE
     }
   },
   {

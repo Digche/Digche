@@ -16,6 +16,8 @@ tags:
     description: Admin panel authentication
   - name: Admin Users
     description: Admin user management by manager
+  - name: Admin Chefs
+    description: Chef account management by admin and manager
 
 paths:
   /auth/health:
@@ -946,6 +948,90 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /admin/chefs:
+    get:
+      tags:
+        - Admin Chefs
+      summary: List all chefs
+      description: Admin and manager can list all chef accounts with user profile details.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Chef list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChefListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/chefs/{userId}/suspend:
+    patch:
+      tags:
+        - Admin Chefs
+      summary: Suspend a chef
+      description: Admin and manager can change a chef account status from active to suspended. Existing public refresh tokens for the chef selected role are revoked.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Chef user id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Chef suspended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChefStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/chefs/{userId}/activate:
+    patch:
+      tags:
+        - Admin Chefs
+      summary: Activate a chef
+      description: Admin and manager can change a suspended chef account status back to active.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Chef user id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Chef activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChefStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /internal/auth/profiles/resolve:
     post:
       tags:
@@ -1332,12 +1418,101 @@ components:
           nullable: true
           properties:
             status:
-              type: string
-              enum:
-                - pending
-                - active
-                - rejected
-                - disabled
+              $ref: "#/components/schemas/ChefAccountStatus"
+
+    ChefAccountStatus:
+      type: string
+      enum:
+        - active
+        - suspended
+      example: active
+
+    ChefUserDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phone:
+          type: string
+          example: "+989121234567"
+        firstName:
+          type: string
+          nullable: true
+          example: "Sara"
+        lastName:
+          type: string
+          nullable: true
+          example: "Chef"
+        username:
+          type: string
+          nullable: true
+          example: "sara_chef"
+        photoUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/users/user-1/profile.jpg"
+        address:
+          type: string
+          nullable: true
+          example: "Tehran, Vanak Square"
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+              - client
+              - chef
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ChefWithDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ChefAccountStatus"
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        user:
+          $ref: "#/components/schemas/ChefUserDetails"
+
+    ChefStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ChefAccountStatus"
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
 
     AdminUser:
       type: object
@@ -1476,6 +1651,20 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AdminUserWithStatus"
+
+    ChefListResponse:
+      type: object
+      properties:
+        chefs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChefWithDetails"
+
+    ChefStatusResponse:
+      type: object
+      properties:
+        chef:
+          $ref: "#/components/schemas/ChefStatus"
 
     ChangeAdminUserPhoneResponse:
       type: object

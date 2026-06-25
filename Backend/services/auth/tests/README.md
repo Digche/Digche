@@ -32,5 +32,6 @@ npm run test:watch
 - Public phone change keeps profile fields and revokes old refresh tokens.
 - Admin OTP login, `/admin/auth/me`, manager phone change with OTP.
 - Manager-only admin user management: add, list, change normal admin phone, disable.
+- Admin/manager chef management: list chefs, suspend chef accounts, activate chef accounts.
 - Token scope isolation: public token is rejected on admin routes and admin token is rejected on public routes.
 - Logout refresh-token revocation.
