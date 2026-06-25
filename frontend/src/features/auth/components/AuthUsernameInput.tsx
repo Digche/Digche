@@ -52,8 +52,8 @@ export function AuthUsernameInput({
         autoCapitalize="none"
         autoCorrect="off"
         spellCheck={false}
-        pattern="[A-Za-z0-9]*"
-        title="فقط حروف انگلیسی و اعداد انگلیسی مجاز هستند."
+        pattern="[A-Za-z0-9_]{3,50}"
+        title="فقط حروف انگلیسی، اعداد انگلیسی و آندرلاین مجاز هستند."
         aria-label={label}
         value={value}
         onKeyDown={handleKeyDown}

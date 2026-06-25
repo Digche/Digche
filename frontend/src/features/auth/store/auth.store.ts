@@ -10,15 +10,22 @@ import type {
 
 type AuthFormField = keyof AuthFormValues;
 
-type AuthStore = {
+export type AuthFormStore = {
   mode: AuthMode;
   step: AuthStep;
   role: AuthRole;
   form: AuthFormValues;
+  registrationToken: string | null;
+  isSubmitting: boolean;
+  errorMessage: string;
 
   setMode: (mode: AuthMode) => void;
   setStep: (step: AuthStep) => void;
   setRole: (role: AuthRole) => void;
+  setRegistrationToken: (registrationToken: string | null) => void;
+  setSubmitting: (isSubmitting: boolean) => void;
+  setErrorMessage: (message: string) => void;
+  clearErrorMessage: () => void;
   setField: <Field extends AuthFormField>(
     field: Field,
     value: AuthFormValues[Field]
@@ -34,22 +41,42 @@ const initialFormValues: AuthFormValues = {
   username: "",
 };
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthFormStore = create<AuthFormStore>((set) => ({
   mode: "login",
   step: "phone",
   role: "customer",
   form: initialFormValues,
+  registrationToken: null,
+  isSubmitting: false,
+  errorMessage: "",
 
   setMode: (mode) =>
     set({
       mode,
       step: "phone",
       form: initialFormValues,
+      registrationToken: null,
+      errorMessage: "",
     }),
 
-  setStep: (step) => set({ step }),
+  setStep: (step) => set({ step, errorMessage: "" }),
 
-  setRole: (role) => set({ role }),
+  setRole: (role) =>
+    set({
+      role,
+      step: "phone",
+      form: initialFormValues,
+      registrationToken: null,
+      errorMessage: "",
+    }),
+
+  setRegistrationToken: (registrationToken) => set({ registrationToken }),
+
+  setSubmitting: (isSubmitting) => set({ isSubmitting }),
+
+  setErrorMessage: (errorMessage) => set({ errorMessage }),
+
+  clearErrorMessage: () => set({ errorMessage: "" }),
 
   setField: (field, value) =>
     set((state) => ({
@@ -57,6 +84,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
         ...state.form,
         [field]: value,
       },
+      errorMessage: "",
     })),
 
   resetForm: () =>
@@ -65,5 +93,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
       step: "phone",
       role: "customer",
       form: initialFormValues,
+      registrationToken: null,
+      isSubmitting: false,
+      errorMessage: "",
     }),
 }));
+
+export const useAuthStore = useAuthFormStore;
