@@ -3,6 +3,10 @@ export class ChefAccountRepository {
     throw new Error("ChefAccountRepository.findByUserId is not implemented");
   }
 
+  async listDetailed() {
+    throw new Error("ChefAccountRepository.listDetailed is not implemented");
+  }
+
   async create(chefAccount) {
     throw new Error("ChefAccountRepository.create is not implemented");
   }

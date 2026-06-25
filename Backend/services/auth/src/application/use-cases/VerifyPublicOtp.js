@@ -93,8 +93,8 @@ export class VerifyPublicOtp {
         });
       }
 
-      if (chefAccount.isDisabled()) {
-        throw new ForbiddenError("Chef account is disabled");
+      if (chefAccount.isSuspended()) {
+        throw new ForbiddenError("Chef account is suspended");
       }
 
       roleData.chef = {
@@ -108,7 +108,7 @@ export class VerifyPublicOtp {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      profileImageUrl: user.profileImageUrl,
+      photoUrl: user.photoUrl,
       address: user.address,
       roles: user.roles,
       selectedRole: role,
@@ -147,7 +147,7 @@ export class VerifyPublicOtp {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        profileImageUrl: user.profileImageUrl,
+        photoUrl: user.photoUrl,
         address: user.address,
         roles: user.roles,
         selectedRole: role,

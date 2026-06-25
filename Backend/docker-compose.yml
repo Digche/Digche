@@ -8,6 +8,9 @@ services:
       - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - auth-service
+      - media-service
+      - chat-service
+      - ticket-service
     networks:
       - food_network
 
@@ -25,6 +28,52 @@ services:
     depends_on:
       - auth-db
       - auth-redis
+    networks:
+      - food_network
+
+  media-service:
+    build:
+      context: ./services/media
+      dockerfile: Dockerfile
+    container_name: media_service
+    env_file:
+      - ./services/media/.env
+    expose:
+      - "3002"
+    volumes:
+      - ./docs:/docs:ro
+    networks:
+      - food_network
+
+  chat-service:
+    build:
+      context: ./services/chat
+      dockerfile: Dockerfile
+    container_name: chat_service
+    env_file:
+      - ./services/chat/.env
+    expose:
+      - "3003"
+    volumes:
+      - ./docs:/docs:ro
+    depends_on:
+      - chat-db
+    networks:
+      - food_network
+
+  ticket-service:
+    build:
+      context: ./services/ticket
+      dockerfile: Dockerfile
+    container_name: ticket_service
+    env_file:
+      - ./services/ticket/.env
+    expose:
+      - "3004"
+    volumes:
+      - ./docs:/docs:ro
+    depends_on:
+      - ticket-db
     networks:
       - food_network
 
@@ -53,9 +102,39 @@ services:
     networks:
       - food_network
 
+  chat-db:
+    image: postgres:16-alpine
+    container_name: chat_db
+    environment:
+      POSTGRES_DB: chat_db
+      POSTGRES_USER: chat_user
+      POSTGRES_PASSWORD: chat_password
+    expose:
+      - "5432"
+    volumes:
+      - chat_db_data:/var/lib/postgresql/data
+    networks:
+      - food_network
+
+  ticket-db:
+    image: postgres:16-alpine
+    container_name: ticket_db
+    environment:
+      POSTGRES_DB: ticket_db
+      POSTGRES_USER: ticket_user
+      POSTGRES_PASSWORD: ticket_password
+    expose:
+      - "5432"
+    volumes:
+      - ticket_db_data:/var/lib/postgresql/data
+    networks:
+      - food_network
+
 volumes:
   auth_db_data:
   auth_redis_data:
+  chat_db_data:
+  ticket_db_data:
 
 networks:
   food_network:

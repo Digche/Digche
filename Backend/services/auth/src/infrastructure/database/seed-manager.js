@@ -41,6 +41,7 @@ async function seedManager() {
       phone: normalizedPhone,
       role: ADMIN_ROLES.MANAGER,
       status: ADMIN_STATUS.ACTIVE,
+      photoUrl: null,
       createdBy: null
     })
   );

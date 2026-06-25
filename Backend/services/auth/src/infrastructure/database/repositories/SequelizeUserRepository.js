@@ -83,7 +83,7 @@ export class SequelizeUserRepository {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      profileImageUrl: user.profileImageUrl,
+      photoUrl: user.photoUrl,
       address: user.address
     });
 
@@ -93,7 +93,7 @@ export class SequelizeUserRepository {
       firstName: createdUser.firstName,
       lastName: createdUser.lastName,
       username: createdUser.username,
-      profileImageUrl: createdUser.profileImageUrl,
+      photoUrl: createdUser.photoUrl,
       address: createdUser.address,
       roles: [],
       createdAt: createdUser.createdAt,
@@ -171,7 +171,7 @@ export class SequelizeUserRepository {
       firstName: userModel.firstName,
       lastName: userModel.lastName,
       username: userModel.username,
-      profileImageUrl: userModel.profileImageUrl,
+      photoUrl: userModel.photoUrl,
       address: userModel.address,
       roles,
       createdAt: userModel.createdAt,

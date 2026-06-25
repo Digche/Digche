@@ -59,7 +59,7 @@ export class SequelizeAdminUserRepository {
       username: adminUser.username,
       role: adminUser.role,
       status: adminUser.status,
-      profileImageUrl: adminUser.profileImageUrl,
+      photoUrl: adminUser.photoUrl,
       createdBy: adminUser.createdBy
     });
 
@@ -125,7 +125,7 @@ export class SequelizeAdminUserRepository {
       username: adminUserModel.username,
       role: adminUserModel.role,
       status: adminUserModel.status,
-      profileImageUrl: adminUserModel.profileImageUrl,
+      photoUrl: adminUserModel.photoUrl,
       createdBy: adminUserModel.createdBy,
       createdAt: adminUserModel.createdAt,
       updatedAt: adminUserModel.updatedAt

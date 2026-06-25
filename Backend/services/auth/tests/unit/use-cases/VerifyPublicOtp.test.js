@@ -237,7 +237,7 @@ describe("VerifyPublicOtp", () => {
     });
   });
 
-  it("rejects disabled chef account", async () => {
+  it("rejects suspended chef account", async () => {
     const { useCase } = makeUseCase({
       users: [
         {
@@ -253,7 +253,7 @@ describe("VerifyPublicOtp", () => {
         {
           id: "chef-1",
           userId: "user-1",
-          status: CHEF_STATUS.DISABLED
+          status: CHEF_STATUS.SUSPENDED
         }
       ],
       otps: [

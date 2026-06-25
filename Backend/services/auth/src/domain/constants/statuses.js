@@ -1,8 +1,6 @@
 export const CHEF_STATUS = {
-  PENDING: "pending",
   ACTIVE: "active",
-  REJECTED: "rejected",
-  DISABLED: "disabled"
+  SUSPENDED: "suspended"
 };
 
 export const ADMIN_STATUS = {

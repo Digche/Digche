@@ -4,6 +4,7 @@ export class FakeRefreshTokenRepository {
     this.createdRefreshTokens = [];
     this.revokedIds = [];
     this.revokedOwners = [];
+    this.revokedOwnerRoles = [];
   }
 
   async create(refreshToken) {
@@ -36,6 +37,22 @@ export class FakeRefreshTokenRepository {
 
     for (const refreshToken of this.refreshTokens) {
       if (refreshToken.ownerId === ownerId && refreshToken.ownerType === ownerType && !refreshToken.revokedAt) {
+        refreshToken.revokedAt = new Date();
+        this.revokedIds.push(refreshToken.id);
+      }
+    }
+  }
+
+  async revokeAllForOwnerAndSelectedRole(ownerId, ownerType, selectedRole) {
+    this.revokedOwnerRoles.push({ ownerId, ownerType, selectedRole });
+
+    for (const refreshToken of this.refreshTokens) {
+      if (
+        refreshToken.ownerId === ownerId &&
+        refreshToken.ownerType === ownerType &&
+        refreshToken.selectedRole === selectedRole &&
+        !refreshToken.revokedAt
+      ) {
         refreshToken.revokedAt = new Date();
         this.revokedIds.push(refreshToken.id);
       }

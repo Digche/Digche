@@ -91,7 +91,7 @@ export class AdminAuthController {
           lastName: req.auth.lastName,
           username: req.auth.username,
           role: req.auth.role,
-          profileImageUrl: req.auth.profileImageUrl,
+          photoUrl: req.auth.photoUrl,
           isManager: req.auth.isManager
         }
       });
@@ -134,6 +134,20 @@ export class AdminAuthController {
         adminId: req.auth.adminId,
         field: "username",
         value: req.body.username
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updatePhotoUrl = async (req, res, next) => {
+    try {
+      const result = await this.updateAdminProfileField.execute({
+        adminId: req.auth.adminId,
+        field: "photoUrl",
+        value: req.body.photoUrl ?? req.body.photo_url
       });
 
       res.json(result);

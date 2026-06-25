@@ -25,7 +25,7 @@ export function createAdminAuthMiddleware({ tokenService }) {
         lastName: payload.lastName,
         username: payload.username,
         role: payload.role,
-        profileImageUrl: payload.profileImageUrl,
+        photoUrl: payload.photoUrl,
         isManager: Boolean(payload.isManager),
         raw: payload
       };
