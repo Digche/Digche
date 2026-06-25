@@ -101,6 +101,7 @@ export class CompletePublicRegistration {
           firstName: normalizedFirstName,
           lastName: normalizedLastName,
           username: normalizedUsername,
+          address: null,
           roles: []
         })
       );
@@ -154,6 +155,8 @@ export class CompletePublicRegistration {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
+      profileImageUrl: user.profileImageUrl,
+      address: user.address,
       roles: user.roles,
       selectedRole: role,
       scope: AUTH_SCOPES.PUBLIC,
@@ -191,6 +194,8 @@ export class CompletePublicRegistration {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
+        profileImageUrl: user.profileImageUrl,
+        address: user.address,
         roles: user.roles,
         selectedRole: role,
         ...roleData

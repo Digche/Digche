@@ -11,6 +11,10 @@ export class UserRepository {
     throw new Error("UserRepository.findByUsername is not implemented");
   }
 
+  async updateProfileField(userId, field, value) {
+    throw new Error("UserRepository.updateProfileField is not implemented");
+  }
+
   async create(user) {
     throw new Error("UserRepository.create is not implemented");
   }

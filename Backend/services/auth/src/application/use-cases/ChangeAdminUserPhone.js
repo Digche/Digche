@@ -79,8 +79,12 @@ export class ChangeAdminUserPhone {
       admin: {
         id: updatedAdminUser.id,
         phone: updatedAdminUser.phone,
+        firstName: updatedAdminUser.firstName,
+        lastName: updatedAdminUser.lastName,
+        username: updatedAdminUser.username,
         role: updatedAdminUser.role,
         status: updatedAdminUser.status,
+        profileImageUrl: updatedAdminUser.profileImageUrl,
         createdBy: updatedAdminUser.createdBy,
         updatedAt: updatedAdminUser.updatedAt
       }

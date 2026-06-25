@@ -241,6 +241,120 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /auth/me/first-name:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's first name
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFirstNameInput"
+      responses:
+        "200":
+          description: First name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/me/last-name:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's last name
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLastNameInput"
+      responses:
+        "200":
+          description: Last name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /auth/me/username:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's username
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUsernameInput"
+      responses:
+        "200":
+          description: Username updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Username is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me/address:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's address
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAddressInput"
+      responses:
+        "200":
+          description: Address updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   /auth/change-phone/request-otp:
     post:
       tags:
@@ -442,6 +556,93 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+
+  /admin/auth/me/first-name:
+    patch:
+      tags:
+        - Admin Auth
+      summary: Update current admin user's first name
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFirstNameInput"
+      responses:
+        "200":
+          description: First name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/auth/me/last-name:
+    patch:
+      tags:
+        - Admin Auth
+      summary: Update current admin user's last name
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLastNameInput"
+      responses:
+        "200":
+          description: Last name updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/auth/me/username:
+    patch:
+      tags:
+        - Admin Auth
+      summary: Update current admin user's username
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUsernameInput"
+      responses:
+        "200":
+          description: Username updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Username is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /admin/auth/change-phone/request-otp:
     post:
@@ -659,6 +860,38 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /admin/admin-users/{id}/enable:
+    patch:
+      tags:
+        - Admin Users
+      summary: Enable an admin user
+      description: Only manager can enable a normal disabled admin user. Managers cannot enable themselves or other managers from this endpoint.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Admin user id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Admin user enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnableAdminUserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -808,6 +1041,49 @@ components:
           type: string
           example: "09121234567"
 
+    UpdateFirstNameInput:
+      type: object
+      required:
+        - firstName
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+          example: "Ali"
+
+    UpdateLastNameInput:
+      type: object
+      required:
+        - lastName
+      properties:
+        lastName:
+          type: string
+          maxLength: 100
+          example: "Ahmadi"
+
+    UpdateUsernameInput:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: "^[a-zA-Z0-9_]+$"
+          example: "ali_ahmadi"
+
+    UpdateAddressInput:
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          type: string
+          nullable: true
+          maxLength: 500
+          example: "Tehran, Vanak Square"
+
     PublicOtpSentResponse:
       type: object
       properties:
@@ -894,6 +1170,14 @@ components:
         username:
           type: string
           example: "ali_ahmadi"
+        address:
+          type: string
+          nullable: true
+          example: "Tehran, Vanak Square"
+        profileImageUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/users/user-1/profile.jpg"
         roles:
           type: array
           items:
@@ -927,11 +1211,27 @@ components:
         phone:
           type: string
           example: "+989031241172"
+        firstName:
+          type: string
+          nullable: true
+          example: "Sara"
+        lastName:
+          type: string
+          nullable: true
+          example: "Mohammadi"
+        username:
+          type: string
+          nullable: true
+          example: "sara_admin"
         role:
           type: string
           enum:
             - admin
             - manager
+        profileImageUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/admins/admin-1/profile.jpg"
         isManager:
           type: boolean
 
@@ -944,6 +1244,18 @@ components:
         phone:
           type: string
           example: "+989121234567"
+        firstName:
+          type: string
+          nullable: true
+          example: "Sara"
+        lastName:
+          type: string
+          nullable: true
+          example: "Mohammadi"
+        username:
+          type: string
+          nullable: true
+          example: "sara_admin"
         role:
           type: string
           enum:
@@ -956,6 +1268,10 @@ components:
             - active
             - disabled
           example: active
+        profileImageUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/admins/admin-1/profile.jpg"
         createdBy:
           type: string
           format: uuid
@@ -984,12 +1300,28 @@ components:
         user:
           $ref: "#/components/schemas/PublicUser"
 
+    PublicProfileUpdateResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/PublicUser"
+
     AdminAuthResponse:
       type: object
       properties:
         accessToken:
           type: string
         refreshToken:
+          type: string
+        admin:
+          $ref: "#/components/schemas/AdminUser"
+
+    AdminProfileUpdateResponse:
+      type: object
+      properties:
+        accessToken:
           type: string
         admin:
           $ref: "#/components/schemas/AdminUser"
@@ -1015,6 +1347,12 @@ components:
           $ref: "#/components/schemas/AdminUserWithStatus"
 
     DisableAdminUserResponse:
+      type: object
+      properties:
+        admin:
+          $ref: "#/components/schemas/AdminUserWithStatus"
+
+    EnableAdminUserResponse:
       type: object
       properties:
         admin:

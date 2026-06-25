@@ -56,12 +56,35 @@ export class SequelizeUserRepository {
     return this.toDomain(user);
   }
 
+  async updateProfileField(userId, field, value) {
+    const user = await UserModel.findByPk(userId, {
+      include: [
+        {
+          model: UserRoleModel,
+          as: "roles"
+        }
+      ]
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    user[field] = value;
+
+    await user.save();
+
+    return this.toDomain(user);
+  }
+
   async create(user) {
     const createdUser = await UserModel.create({
       phone: user.phone,
       firstName: user.firstName,
       lastName: user.lastName,
-      username: user.username
+      username: user.username,
+      profileImageUrl: user.profileImageUrl,
+      address: user.address
     });
 
     return new User({
@@ -70,6 +93,8 @@ export class SequelizeUserRepository {
       firstName: createdUser.firstName,
       lastName: createdUser.lastName,
       username: createdUser.username,
+      profileImageUrl: createdUser.profileImageUrl,
+      address: createdUser.address,
       roles: [],
       createdAt: createdUser.createdAt,
       updatedAt: createdUser.updatedAt
@@ -146,6 +171,8 @@ export class SequelizeUserRepository {
       firstName: userModel.firstName,
       lastName: userModel.lastName,
       username: userModel.username,
+      profileImageUrl: userModel.profileImageUrl,
+      address: userModel.address,
       roles,
       createdAt: userModel.createdAt,
       updatedAt: userModel.updatedAt

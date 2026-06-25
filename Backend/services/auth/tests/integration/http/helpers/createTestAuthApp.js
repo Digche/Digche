@@ -17,10 +17,12 @@ import { VerifyAdminOtp } from "../../../../src/application/use-cases/VerifyAdmi
 import { RefreshAdminSession } from "../../../../src/application/use-cases/RefreshAdminSession.js";
 import { RequestAdminPhoneChangeOtp } from "../../../../src/application/use-cases/RequestAdminPhoneChangeOtp.js";
 import { VerifyAdminPhoneChangeOtp } from "../../../../src/application/use-cases/VerifyAdminPhoneChangeOtp.js";
+import { UpdateAdminProfileField } from "../../../../src/application/use-cases/UpdateAdminProfileField.js";
 
 import { AddAdminUser } from "../../../../src/application/use-cases/AddAdminUser.js";
 import { ListAdminUsers } from "../../../../src/application/use-cases/ListAdminUsers.js";
 import { DisableAdminUser } from "../../../../src/application/use-cases/DisableAdminUser.js";
+import { EnableAdminUser } from "../../../../src/application/use-cases/EnableAdminUser.js";
 import { ChangeAdminUserPhone } from "../../../../src/application/use-cases/ChangeAdminUserPhone.js";
 
 import { RequestPublicOtp } from "../../../../src/application/use-cases/RequestPublicOtp.js";
@@ -29,6 +31,7 @@ import { CompletePublicRegistration } from "../../../../src/application/use-case
 import { RefreshPublicSession } from "../../../../src/application/use-cases/RefreshPublicSession.js";
 import { RequestPublicPhoneChangeOtp } from "../../../../src/application/use-cases/RequestPublicPhoneChangeOtp.js";
 import { VerifyPublicPhoneChangeOtp } from "../../../../src/application/use-cases/VerifyPublicPhoneChangeOtp.js";
+import { UpdatePublicProfileField } from "../../../../src/application/use-cases/UpdatePublicProfileField.js";
 import { LogoutSession } from "../../../../src/application/use-cases/LogoutSession.js";
 
 import { FakeAdminUserRepository } from "../../../unit/fakes/FakeAdminUserRepository.js";
@@ -113,6 +116,10 @@ export function createHttpTestApp(context) {
     }),
     refreshAdminSession,
     logoutSession,
+    updateAdminProfileField: new UpdateAdminProfileField({
+      adminUserRepository: context.adminUserRepository,
+      tokenService: context.tokenService
+    }),
     requestAdminPhoneChangeOtp: new RequestAdminPhoneChangeOtp({
       adminUserRepository: context.adminUserRepository,
       otpRepository: context.otpRepository,
@@ -142,6 +149,9 @@ export function createHttpTestApp(context) {
     disableAdminUser: new DisableAdminUser({
       adminUserRepository: context.adminUserRepository
     }),
+    enableAdminUser: new EnableAdminUser({
+      adminUserRepository: context.adminUserRepository
+    }),
     changeAdminUserPhone: new ChangeAdminUserPhone({
       adminUserRepository: context.adminUserRepository,
       refreshTokenRepository: context.refreshTokenRepository
@@ -150,6 +160,7 @@ export function createHttpTestApp(context) {
 
   const publicAuthController = new PublicAuthController({
     requestPublicOtp: new RequestPublicOtp({
+      userRepository: context.userRepository,
       otpRepository: context.otpRepository,
       otpCodeGenerator: context.otpCodeGenerator,
       otpHasher: context.otpHasher,
@@ -175,6 +186,11 @@ export function createHttpTestApp(context) {
     }),
     refreshPublicSession,
     logoutSession,
+    updatePublicProfileField: new UpdatePublicProfileField({
+      userRepository: context.userRepository,
+      chefAccountRepository: context.chefAccountRepository,
+      tokenService: context.tokenService
+    }),
     requestPublicPhoneChangeOtp: new RequestPublicPhoneChangeOtp({
       userRepository: context.userRepository,
       otpRepository: context.otpRepository,
@@ -208,7 +224,11 @@ export function registerAdminAccessToken(context, token, overrides = {}) {
   context.tokenService.registerAccessToken(token, {
     sub: overrides.sub || "manager-1",
     phone: overrides.phone || "+989120000000",
+    firstName: overrides.firstName ?? null,
+    lastName: overrides.lastName ?? null,
+    username: overrides.username ?? null,
     role: overrides.role || "manager",
+    profileImageUrl: overrides.profileImageUrl ?? null,
     isManager: overrides.isManager ?? overrides.role !== "admin",
     scope: "admin"
   });
@@ -223,6 +243,8 @@ export function registerPublicAccessToken(context, token, overrides = {}) {
     firstName: overrides.firstName || "Ali",
     lastName: overrides.lastName || "Ahmadi",
     username: overrides.username || "ali_ahmadi",
+    profileImageUrl: overrides.profileImageUrl ?? null,
+    address: overrides.address ?? null,
     roles: overrides.roles || ["client"],
     selectedRole: overrides.selectedRole || "client",
     chef: overrides.chef || null,

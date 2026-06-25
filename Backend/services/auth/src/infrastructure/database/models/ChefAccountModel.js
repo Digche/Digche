@@ -14,6 +14,12 @@ export const ChefAccountModel = sequelize.define(
       type: DataTypes.UUID,
       allowNull: false,
       unique: true,
+      references: {
+        model: "users",
+        key: "id"
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
       field: "user_id"
     },
     status: {

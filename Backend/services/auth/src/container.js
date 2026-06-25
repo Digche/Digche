@@ -8,9 +8,12 @@ import { VerifyAdminOtp } from "./application/use-cases/VerifyAdminOtp.js";
 import { RefreshPublicSession } from "./application/use-cases/RefreshPublicSession.js";
 import { RefreshAdminSession } from "./application/use-cases/RefreshAdminSession.js";
 import { LogoutSession } from "./application/use-cases/LogoutSession.js";
+import { UpdatePublicProfileField } from "./application/use-cases/UpdatePublicProfileField.js";
+import { UpdateAdminProfileField } from "./application/use-cases/UpdateAdminProfileField.js";
 import { AddAdminUser } from "./application/use-cases/AddAdminUser.js";
 import { ListAdminUsers } from "./application/use-cases/ListAdminUsers.js";
 import { DisableAdminUser } from "./application/use-cases/DisableAdminUser.js";
+import { EnableAdminUser } from "./application/use-cases/EnableAdminUser.js";
 import { RequestPublicPhoneChangeOtp } from "./application/use-cases/RequestPublicPhoneChangeOtp.js";
 import { VerifyPublicPhoneChangeOtp } from "./application/use-cases/VerifyPublicPhoneChangeOtp.js";
 import { ChangeAdminUserPhone } from "./application/use-cases/ChangeAdminUserPhone.js";
@@ -184,6 +187,17 @@ export function createContainer() {
     tokenService
   });
 
+  const updatePublicProfileField = new UpdatePublicProfileField({
+    userRepository,
+    chefAccountRepository,
+    tokenService
+  });
+
+  const updateAdminProfileField = new UpdateAdminProfileField({
+    adminUserRepository,
+    tokenService
+  });
+
   const addAdminUser = new AddAdminUser({
     adminUserRepository
   });
@@ -193,6 +207,10 @@ export function createContainer() {
   });
 
   const disableAdminUser = new DisableAdminUser({
+    adminUserRepository
+  });
+
+  const enableAdminUser = new EnableAdminUser({
     adminUserRepository
   });
 
@@ -207,6 +225,7 @@ export function createContainer() {
     completePublicRegistration,
     refreshPublicSession,
     logoutSession,
+    updatePublicProfileField,
     requestPublicPhoneChangeOtp,
     verifyPublicPhoneChangeOtp
   });
@@ -216,6 +235,7 @@ export function createContainer() {
     verifyAdminOtp,
     refreshAdminSession,
     logoutSession,
+    updateAdminProfileField,
     requestAdminPhoneChangeOtp,
     verifyAdminPhoneChangeOtp
   });
@@ -224,6 +244,7 @@ export function createContainer() {
     addAdminUser,
     listAdminUsers,
     disableAdminUser,
+    enableAdminUser,
     changeAdminUserPhone
   });
 

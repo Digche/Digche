@@ -3,11 +3,13 @@ export class AdminUserController {
     addAdminUser,
     listAdminUsers,
     disableAdminUser,
+    enableAdminUser,
     changeAdminUserPhone
   }) {
     this.addAdminUser = addAdminUser;
     this.listAdminUsers = listAdminUsers;
     this.disableAdminUser = disableAdminUser;
+    this.enableAdminUser = enableAdminUser;
     this.changeAdminUserPhone = changeAdminUserPhone;
   }
 
@@ -51,6 +53,19 @@ export class AdminUserController {
   disable = async (req, res, next) => {
     try {
       const result = await this.disableAdminUser.execute({
+        adminId: req.params.id,
+        requestedBy: req.auth.adminId
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  enable = async (req, res, next) => {
+    try {
+      const result = await this.enableAdminUser.execute({
         adminId: req.params.id,
         requestedBy: req.auth.adminId
       });
