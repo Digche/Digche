@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useOrderStore } from "@/store/order-store";
 import SearchInput from "@/shared/components/SearchInput";
 import ChefOrderCard from "./ChefOrderCard";
+import ChefProfileBadge from "../../components/ChefProfileBadge";
 
 function isValidDate(value: string | Date) {
   const date = new Date(value);
@@ -95,8 +96,11 @@ export default function ChefOrdersScreen() {
         <div
           dir="ltr"
           className="mb-16 grid gap-6 lg:grid-cols-[1fr_420px_1fr] lg:items-start"
-        >
+        >        
+          {/* <ChefProfileBadge/> */}
+
           <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
+
             <SearchInput
               value={searchTerm}
               onChange={setSearchTerm}

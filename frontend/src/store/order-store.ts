@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { createFakeOrders } from "@/data/orders";
 
 export type OrderStatus =
   | "pending"
@@ -23,8 +24,6 @@ export type ChefOrder = {
   price: string;
   unit?: string;
   status: OrderStatus;
-
-  // زمان واقعی ثبت سفارش
   orderedAt: string;
 };
 
@@ -41,9 +40,14 @@ type OrderStore = {
   addOrders: (newOrders: CreateChefOrderPayload[]) => void;
   updateOrderStatus: (orderID: number | string, status: OrderStatus) => void;
   clearOrders: () => void;
+  seedFakeOrders: (chefId: number) => void;
 };
 
 const initialOrders: ChefOrder[] = [];
+
+function createOrderId(index: number) {
+  return Date.now() + index;
+}
 
 export const useOrderStore = create<OrderStore>()(
   persist(
@@ -51,19 +55,25 @@ export const useOrderStore = create<OrderStore>()(
       orders: initialOrders,
 
       addOrders: (newOrders) => {
-        set((state) => {
-          const lastId =
-            state.orders.length === 0
-              ? 0
-              : Math.max(...state.orders.map((order) => order.id));
+        if (newOrders.length === 0) return;
 
-          const fallbackOrderedAt = new Date().toISOString();
+        set((state) => {
+          const orderedAt = new Date().toISOString();
 
           const ordersToAdd: ChefOrder[] = newOrders.map((order, index) => ({
-            ...order,
-            id: lastId + index + 1,
+            id: createOrderId(index),
+            chefId: Number(order.chefId),
+            customerId: order.customerId,
+            customerName: order.customerName,
+            customerPhone: order.customerPhone,
+            foodId: order.foodId,
+            foodTitle: order.foodTitle,
+            foodImage: order.foodImage,
+            quantity: order.quantity,
+            price: order.price,
+            unit: order.unit,
             status: order.status ?? "preparing",
-            orderedAt: order.orderedAt ?? fallbackOrderedAt,
+            orderedAt: order.orderedAt ?? orderedAt,
           }));
 
           return {
@@ -83,10 +93,20 @@ export const useOrderStore = create<OrderStore>()(
       clearOrders: () => {
         set({ orders: [] });
       },
+
+      seedFakeOrders: (chefId) => {
+        set({
+          orders: createFakeOrders(chefId),
+        });
+      },
     }),
     {
       name: "digche-orders",
+      version: 3,
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        orders: state.orders,
+      }),
     }
   )
 );

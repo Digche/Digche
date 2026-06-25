@@ -147,7 +147,7 @@ export default function AddFoodForm() {
         <div  dir="ltr" className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">    
             <ChefProfileBadge/>
 
-          <div  className="order-2 text-center lg:order-1 lg:flex-1 bg-amber-200 my-auto">
+          <div  className="order-2 text-center lg:order-1 lg:flex-1 my-auto">
             <h1 className="text-2xl font-bold text-gray-950 sm:text-3xl">
               امروز چه غذای خوشمزه‌ای درست میکنی؟
             </h1>
@@ -180,15 +180,6 @@ export default function AddFoodForm() {
                 />
               </FormField>
 
-              <FormField label="مواد اولیه">
-                <input
-                  name="ingredients"
-                  value={form.ingredients}
-                  onChange={handleChange}
-                  placeholder="مثلا: گوشت، رب انار، گردو..."
-                  className="h-14 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 text-right text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
-                />
-              </FormField>
             </div>
 
             <div className="space-y-6">
@@ -219,8 +210,20 @@ export default function AddFoodForm() {
                 />
               </FormField>
             </div>
+            
+
 
             <div className="lg:col-span-2">
+
+                            <FormField label="مواد اولیه">
+                <input
+                  name="ingredients"
+                  value={form.ingredients}
+                  onChange={handleChange}
+                  placeholder="مثلا: گوشت، رب انار، گردو..."
+                  className="h-14 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 text-right text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
+                />
+              </FormField>
               <FormField label="توضیحات اضافه">
                 <textarea
                   name="description"

@@ -1,0 +1,107 @@
+// src/data/orders.ts
+
+import type { ChefOrder } from "@/store/order-store";
+
+function daysAgo(days: number, hour: number, minute: number) {
+  const date = new Date();
+
+  date.setDate(date.getDate() - days);
+  date.setHours(hour, minute, 0, 0);
+
+  return date.toISOString();
+}
+
+export function createFakeOrders(chefId: number): ChefOrder[] {
+  return [
+    {
+      id: 1001,
+      chefId,
+      customerId: 11,
+      customerName: "خانم اکبری ",
+      customerPhone: "09120000001",
+      foodId: 1,
+      foodTitle: "فیک سوپ جو",
+      foodImage: "/icons/orders.svg",
+      quantity: 2,
+      price: "۱۸۰۰۰۰",
+      unit: "تومان",
+      status: "preparing",
+      orderedAt: "6/24/2026",
+    },
+    {
+      id: 1002,
+      chefId,
+      customerId: 12,
+      customerName: "آقای رضایی",
+      customerPhone: "09120000002",
+      foodId: 2,
+      foodTitle: "فیک جوجه کباب",
+      foodImage: "/icons/orders.svg",
+      quantity: 1,
+      price: "۲۵۰۰۰۰",
+      unit: "تومان",
+      status: "ready",
+      orderedAt: daysAgo(0, 14, 45),
+    },
+    {
+      id: 1003,
+      chefId,
+      customerId: 13,
+      customerName: "خانم محمدی",
+      customerPhone: "09120000003",
+      foodId: 3,
+      foodTitle: "فیک قیمه بادمجان",
+      foodImage: "/icons/orders.svg",
+      quantity: 3,
+      price: "۲۲۰۰۰۰",
+      unit: "تومان",
+      status: "delivered",
+      orderedAt: daysAgo(1, 13, 10),
+    },
+    {
+      id: 1004,
+      chefId,
+      customerId: 14,
+      customerName: "آقای احمدی",
+      customerPhone: "09120000004",
+      foodId: 4,
+      foodTitle: "زرشک پلو با مرغ فیک",
+      foodImage: "/icons/orders.svg",
+      quantity: 1,
+      price: "۲۹۰۰۰۰",
+      unit: "تومان",
+      status: "cancelled",
+      orderedAt: daysAgo(1, 19, 5),
+    },
+    {
+      id: 1005,
+      chefId,
+      customerId: 15,
+      customerName: "خانم نوری",
+      customerPhone: "09120000005",
+      foodId: 5,
+      foodTitle: "فیک کیک شکلاتی",
+      foodImage: "/icons/orders.svg",
+      quantity: 1,
+      price: "۳۰۰۰۰۰",
+      unit: "تومان",
+      status: "delivered",
+      orderedAt: daysAgo(4, 17, 30),
+    },
+    {
+      id: 1006,
+      chefId,
+      customerId: 16,
+      customerName: "آقای کریمی",
+      customerPhone: "09120000006",
+      foodId: 6,
+      foodTitle: "تارت توت فرنگی فیک ",
+      foodImage: "/icons/orders.svg",
+      quantity: 2,
+      price: "۲۸۰۰۰۰",
+      unit: "تومان",
+      status: "delivered",
+      orderedAt: "6/22/2026",
+    },
+  ];
+}

@@ -23,6 +23,7 @@ const menuItems = [
     title: "داشبورد",
     href: "/chef",
     icon: Home,
+    exact: true
   },
   {
     title: "غذاهای من",
@@ -33,11 +34,14 @@ const menuItems = [
     title: "سفارش ها",
     href: "/chef/orders",
     icon: ClipboardList,
+    exact: true
   },
   {
     title: "تاریخچه سفارشات",
     href: "/chef/orders/history",
     icon: History,
+        exact: true
+
   },
   {
     title: "پیام ها",
@@ -124,10 +128,10 @@ export default function ChefSidebar() {
           {menuItems.map((item) => {
             const Icon = item.icon;
 
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/chef" && pathname.startsWith(item.href));
-
+          const isActive = item.exact
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            
             return (
               <Link
                 key={item.href}

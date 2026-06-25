@@ -26,7 +26,7 @@ export default function ProfileTextarea({
           name={name}
           value={value}
           onChange={onChange}
-          rows={5}
+          rows={2}
           placeholder={placeholder}
           className="w-full resize-none rounded-xl border border-transparent bg-[#F2CDB5]/55 pr-4 pl-12 py-4 text-right text-sm leading-8 text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
         />
