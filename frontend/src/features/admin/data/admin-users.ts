@@ -24,7 +24,7 @@ export const adminUsers: AdminUser[] = [
   },
   {
     id: "admin-4",
-    fullName: "دیا یانفوق",
+    fullName: "دیبا یانوق",
     phone: "09123456784",
     avatar: "/images/avatars/user-1.webp",
     isActive: true,
