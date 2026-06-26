@@ -1,17 +1,42 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
+import Image from "next/image";
+import { PencilLine, Phone } from "lucide-react";
 import SearchInput from "@/shared/components/SearchInput";
+import PhoneVerificationGlassBox, {
+  type PhoneVerificationResultStatus,
+  type PhoneVerificationStep,
+} from "@/shared/ui/PhoneVerificationGlassBox";
+import { isValidIranMobileNumber } from "@/shared/validation/phone-number";
 import AdminPanel from "../../components/AdminPanel";
 import AdminProfileBadge from "../../components/AdminProfileBadge";
 import AdminToggle from "../../components/AdminToggle";
 import { adminUsers } from "../../data/admin-users";
 import type { AdminUser } from "../../types/admin.types";
 
+type EditableAdminPhone = {
+  id: string;
+  name: string;
+};
+
 export default function AdminDashboardScreen() {
   const [searchValue, setSearchValue] = useState("");
   const [users, setUsers] = useState<AdminUser[]>(adminUsers);
+
+  const [editingAdminPhone, setEditingAdminPhone] =
+    useState<EditableAdminPhone | null>(null);
+  const [phoneVerificationStep, setPhoneVerificationStep] =
+    useState<PhoneVerificationStep>("phone");
+  const [newAdminPhone, setNewAdminPhone] = useState("");
+  const [adminPhoneCode, setAdminPhoneCode] = useState("");
+  const [isPhoneVerificationSubmitting, setIsPhoneVerificationSubmitting] =
+    useState(false);
+  const [phoneVerificationError, setPhoneVerificationError] = useState("");
+  const [phoneVerificationResultStatus, setPhoneVerificationResultStatus] =
+    useState<PhoneVerificationResultStatus>("idle");
+  const [phoneVerificationResultMessage, setPhoneVerificationResultMessage] =
+    useState("");
 
   const filteredUsers = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
@@ -28,13 +53,97 @@ export default function AdminDashboardScreen() {
     });
   }, [searchValue, users]);
 
-  const handleToggleUser = (userId: string, checked: boolean) => {
+  function handleToggleUser(userId: string, checked: boolean) {
     setUsers((prevUsers) =>
       prevUsers.map((user) =>
         user.id === userId ? { ...user, isActive: checked } : user
       )
     );
-  };
+  }
+
+  function openAdminPhoneEditor(user: AdminUser) {
+    setEditingAdminPhone({
+      id: user.id,
+      name: user.fullName,
+    });
+    setPhoneVerificationStep("phone");
+    setNewAdminPhone("");
+    setAdminPhoneCode("");
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+  }
+
+  function resetAdminPhoneEditor() {
+    setEditingAdminPhone(null);
+    setPhoneVerificationStep("phone");
+    setNewAdminPhone("");
+    setAdminPhoneCode("");
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+  }
+
+  function closeAdminPhoneEditor() {
+    if (isPhoneVerificationSubmitting) {
+      return;
+    }
+
+    resetAdminPhoneEditor();
+  }
+
+  async function handleRequestAdminPhoneCode() {
+    if (!isValidIranMobileNumber(newAdminPhone.trim())) {
+      setPhoneVerificationError("شماره موبایل معتبر نیست.");
+      return;
+    }
+
+    try {
+      setIsPhoneVerificationSubmitting(true);
+      setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+
+      setAdminPhoneCode("");
+      setPhoneVerificationStep("verification");
+    } finally {
+      setIsPhoneVerificationSubmitting(false);
+    }
+  }
+
+  async function handleVerifyAdminPhoneCode() {
+    if (!/^\d{4,6}$/.test(adminPhoneCode.trim())) {
+      setPhoneVerificationError("کد تایید باید بین ۴ تا ۶ رقم باشد.");
+      return;
+    }
+
+    if (!editingAdminPhone) {
+      return;
+    }
+
+    try {
+      setIsPhoneVerificationSubmitting(true);
+      setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === editingAdminPhone.id
+            ? { ...user, phone: newAdminPhone.trim() }
+            : user
+        )
+      );
+
+      setPhoneVerificationResultStatus("success");
+      setPhoneVerificationResultMessage("شماره تماس جدید با موفقیت برای این ادمین ثبت شد.");
+    } catch {
+      setPhoneVerificationResultStatus("error");
+      setPhoneVerificationResultMessage("ویرایش شماره تماس انجام نشد. دوباره تلاش کنید.");
+    } finally {
+      setIsPhoneVerificationSubmitting(false);
+    }
+  }
 
   return (
     <AdminPanel
@@ -58,6 +167,7 @@ export default function AdminDashboardScreen() {
             key={user.id}
             user={user}
             onToggle={(checked) => handleToggleUser(user.id, checked)}
+            onEditPhone={() => openAdminPhoneEditor(user)}
           />
         ))}
 
@@ -67,6 +177,38 @@ export default function AdminDashboardScreen() {
           </div>
         )}
       </div>
+
+      <PhoneVerificationGlassBox
+        isOpen={Boolean(editingAdminPhone)}
+        step={phoneVerificationStep}
+        title="ویرایش شماره تماس"
+        description={
+          editingAdminPhone
+            ? `شماره تماس جدید ${editingAdminPhone.name} را وارد کنید و سپس کد تایید را بزنید.`
+            : "شماره تماس جدید را وارد کنید و سپس کد تایید را بزنید."
+        }
+        phone={newAdminPhone}
+        code={adminPhoneCode}
+        isSubmitting={isPhoneVerificationSubmitting}
+        errorMessage={phoneVerificationError}
+        resultStatus={phoneVerificationResultStatus}
+        resultMessage={phoneVerificationResultMessage}
+        resultAutoCloseMs={3500}
+        requestCodeText="دریافت کد تایید"
+        verifyCodeText="ثبت شماره جدید"
+        onPhoneChange={setNewAdminPhone}
+        onCodeChange={setAdminPhoneCode}
+        onRequestCode={handleRequestAdminPhoneCode}
+        onVerifyCode={handleVerifyAdminPhoneCode}
+        onBackToPhone={() => {
+          setPhoneVerificationStep("phone");
+          setAdminPhoneCode("");
+          setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+        }}
+        onClose={closeAdminPhoneEditor}
+      />
     </AdminPanel>
   );
 }
@@ -74,9 +216,10 @@ export default function AdminDashboardScreen() {
 type AdminUserRowProps = {
   user: AdminUser;
   onToggle: (checked: boolean) => void;
+  onEditPhone: () => void;
 };
 
-function AdminUserRow({ user, onToggle }: AdminUserRowProps) {
+function AdminUserRow({ user, onToggle, onEditPhone }: AdminUserRowProps) {
   return (
     <div
       dir="ltr"
@@ -97,6 +240,7 @@ function AdminUserRow({ user, onToggle }: AdminUserRowProps) {
               alt={user.fullName}
               fill
               className="object-cover"
+              sizes="48px"
             />
           </div>
 
@@ -107,9 +251,19 @@ function AdminUserRow({ user, onToggle }: AdminUserRowProps) {
 
         <button
           type="button"
-          className="mr-3 shrink-0 text-[12px] font-medium text-[#E8793E] transition hover:text-[#d96f37]"
+          title="ویرایش شماره تماس"
+          aria-label={`ویرایش شماره تماس ${user.fullName}`}
+          className="flex h-11 w-11 items-center justify-center rounded-2xl text-[#F26A2E] transition hover:bg-orange-50"
+          onClick={onEditPhone}
         >
-          تغییر شماره تلفن
+          <span className="relative flex h-6 w-6 items-center justify-center">
+            <Phone size={22} strokeWidth={2.4} />
+            <PencilLine
+              size={13}
+              strokeWidth={2.7}
+              className="absolute -bottom-1 -right-1 rounded-full bg-white text-[#F26A2E]"
+            />
+          </span>
         </button>
       </article>
     </div>
