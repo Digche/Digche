@@ -11,10 +11,15 @@ import { useAuthFormStore } from "../store/auth.store";
 import {
   completePublicRegistration,
   getAuthErrorMessage,
+  getFrontendRoleLabel,
+  isPublicAuthSuccessResponse,
+  isRegistrationRequiredResponse,
   requestPublicOtp,
   toBackendAuthRole,
   toFrontendAuthRole,
   verifyPublicOtp,
+  type PublicAuthFlow,
+  type PublicAuthRole,
   type PublicAuthSuccessResponse,
 } from "../services/auth-api";
 import { useAuthStore as useSessionStore } from "@/store/auth-store";
@@ -33,6 +38,7 @@ export function AuthForm() {
   const registrationToken = useAuthFormStore((state) => state.registrationToken);
   const isSubmitting = useAuthFormStore((state) => state.isSubmitting);
   const errorMessage = useAuthFormStore((state) => state.errorMessage);
+
   const setMode = useAuthFormStore((state) => state.setMode);
   const setStep = useAuthFormStore((state) => state.setStep);
   const setRole = useAuthFormStore((state) => state.setRole);
@@ -52,6 +58,9 @@ export function AuthForm() {
   const isVerificationStep = step === "verification";
   const isProfileStep = step === "profile";
 
+  const backendRole = toBackendAuthRole(role);
+  const authFlow: PublicAuthFlow = isLogin ? "login" : "register";
+
   const title = getFormTitle();
   const subtitle = getFormSubtitle();
   const submitText = isSubmitting ? "در حال ارسال..." : getSubmitText();
@@ -62,15 +71,15 @@ export function AuthForm() {
     }
 
     if (isProfileStep) {
-      return "ثبت نام";
+      return "تکمیل ثبت‌نام";
     }
 
-    return isLogin ? "ورود" : "ثبت نام";
+    return isLogin ? "ورود" : "ثبت‌نام";
   }
 
   function getFormSubtitle() {
     if (isVerificationStep) {
-      return "لطفاً کد پیامک شده را وارد کنید.";
+      return "لطفاً کد پیامک‌شده را وارد کنید.";
     }
 
     if (isProfileStep) {
@@ -82,7 +91,7 @@ export function AuthForm() {
 
   function getSubmitText() {
     if (isProfileStep) {
-      return "ثبت نام";
+      return "تکمیل ثبت‌نام";
     }
 
     if (isVerificationStep || !isLogin) {
@@ -93,26 +102,26 @@ export function AuthForm() {
   }
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (isSubmitting) {
-    return;
-  }
+    if (isSubmitting) {
+      return;
+    }
 
-  if (isPhoneStep) {
-    await submitPhoneStep();
-    return;
-  }
+    if (isPhoneStep) {
+      await submitPhoneStep();
+      return;
+    }
 
-  if (isVerificationStep) {
-    await submitVerificationStep();
-    return;
-  }
+    if (isVerificationStep) {
+      await submitVerificationStep();
+      return;
+    }
 
-  if (isProfileStep) {
-    await submitProfileStep();
-  }
-};
+    if (isProfileStep) {
+      await submitProfileStep();
+    }
+  };
 
   async function submitPhoneStep() {
     if (!isValidIranMobileNumber(form.phoneNumber)) {
@@ -123,16 +132,23 @@ export function AuthForm() {
     try {
       setSubmitting(true);
       clearErrorMessage();
+      setRegistrationToken(null);
 
       await requestPublicOtp({
         phone: form.phoneNumber,
-        role: toBackendAuthRole(role),
-        flow: isLogin ? "login" : "register",
+        role: backendRole,
+        flow: authFlow,
       });
 
       setStep("verification");
     } catch (error) {
-      setErrorMessage(getAuthErrorMessage(error));
+      setErrorMessage(
+        getAuthErrorMessage(error, {
+          action: "requestOtp",
+          flow: authFlow,
+          role,
+        })
+      );
     } finally {
       setSubmitting(false);
     }
@@ -151,19 +167,53 @@ export function AuthForm() {
       const authResult = await verifyPublicOtp({
         phone: form.phoneNumber,
         code: form.verificationCode,
-        role: toBackendAuthRole(role),
-        flow: isLogin ? "login" : "register",
+        role: backendRole,
+        flow: authFlow,
       });
 
-      if (authResult.requiresRegistration) {
+      if (isRegistrationRequiredResponse(authResult)) {
+        if (isLogin) {
+          setRegistrationToken(null);
+
+          setErrorMessage(
+            `حساب ${getFrontendRoleLabel(
+              backendRole
+            )} برای این شماره وجود ندارد یا ثبت‌نام آن کامل نشده است. لطفاً از بخش ثبت‌نام استفاده کنید.`
+          );
+
+          return;
+        }
+
         setRegistrationToken(authResult.registrationToken);
         setStep("profile");
         return;
       }
 
+      if (!isPublicAuthSuccessResponse(authResult)) {
+        setErrorMessage(
+          "پاسخ سرویس احراز هویت کامل نیست. accessToken یا refreshToken دریافت نشد."
+        );
+        return;
+      }
+
+      if (!isLogin) {
+        setErrorMessage(
+          `برای این شماره با نقش ${getFrontendRoleLabel(
+            role
+          )} قبلاً حساب وجود دارد. لطفاً از بخش ورود استفاده کنید.`
+        );
+        return;
+      }
+
       completeAuthentication(authResult);
     } catch (error) {
-      setErrorMessage(getAuthErrorMessage(error));
+      setErrorMessage(
+        getAuthErrorMessage(error, {
+          action: "verifyOtp",
+          flow: authFlow,
+          role,
+        })
+      );
     } finally {
       setSubmitting(false);
     }
@@ -204,20 +254,52 @@ export function AuthForm() {
         username: form.username.trim(),
       });
 
+      if (!authResult.refreshToken) {
+        setErrorMessage("ثبت‌نام انجام شد، اما refreshToken از بک‌اند دریافت نشد.");
+        return;
+      }
+
       completeAuthentication(authResult);
     } catch (error) {
-      setErrorMessage(getAuthErrorMessage(error));
+      setErrorMessage(
+        getAuthErrorMessage(error, {
+          action: "completeRegistration",
+          flow: "register",
+          role,
+        })
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
   function completeAuthentication(authResult: PublicAuthSuccessResponse) {
-  setSession(authResult);
-  resetForm();
+    const frontendRole = toFrontendAuthRole(authResult.user.selectedRole);
 
-  router.push("/");
-}
+    if (!authResult.accessToken || !authResult.refreshToken) {
+      setErrorMessage("نشست کاربری کامل نیست. لطفاً دوباره وارد شوید.");
+      return;
+    }
+
+    if (!authResult.user.roles.includes(authResult.user.selectedRole)) {
+      setErrorMessage("نقش انتخاب‌شده در حساب کاربری شما فعال نیست.");
+      return;
+    }
+
+    if (
+      authResult.user.selectedRole === "chef" &&
+      authResult.user.chef?.status &&
+      authResult.user.chef.status !== "active"
+    ) {
+      setErrorMessage("حساب آشپز شما فعال نیست و اجازه ورود ندارید.");
+      return;
+    }
+
+    setSession(authResult);
+    resetForm();
+
+    router.replace(frontendRole === "chef" ? "/chef" : "/");
+  }
 
   function switchToLogin() {
     setMode("login");
@@ -334,7 +416,7 @@ export function AuthForm() {
             disabled={isSubmitting}
             onClick={isLogin ? switchToSignup : switchToLogin}
           >
-            {isLogin ? "ثبت نام" : "ورود"}
+            {isLogin ? "ثبت‌نام" : "ورود"}
           </button>
         </p>
       ) : null}

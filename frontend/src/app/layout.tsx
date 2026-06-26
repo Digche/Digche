@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AuthSessionProvider } from "@/features/auth/components/AuthSessionProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,9 +15,11 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <body>
-        <div className="h-screen w-screen gap-15 overflow-x-hidden">
-          {children}
-        </div>
+        <AuthSessionProvider>
+          <div className="h-screen w-screen gap-15 overflow-x-hidden">
+            {children}
+          </div>
+        </AuthSessionProvider>
       </body>
     </html>
   );
