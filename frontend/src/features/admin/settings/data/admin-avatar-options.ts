@@ -31,7 +31,7 @@ export const adminAvatarOptions: AdminAvatarOption[] = [
     src: "/images/avatars/avatar-5.webp",
   },
   {
-    id: "avatar-5",
+    id: "avatar-6",
     label: "آواتار ۶",
     src: "/images/avatars/avatar-6.webp",
   },
