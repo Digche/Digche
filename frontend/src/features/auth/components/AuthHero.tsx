@@ -9,7 +9,7 @@ export function AuthHero() {
         alt="میز غذای ایرانی دیگچه"
         fill
         priority
-        sizes="(max-width: 1024px) 100vw, 49vw"
+        sizes="(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) calc(100vw - 56px), 49vw"
         className={styles.heroImage}
       />
     </section>
