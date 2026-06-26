@@ -24,12 +24,16 @@ export class FakeRefreshTokenRepository {
   }
 
   async revoke(id) {
-    this.revokedIds.push(id);
-
     const refreshToken = this.refreshTokens.find((candidate) => candidate.id === id);
-    if (refreshToken) {
-      refreshToken.revokedAt = new Date();
+
+    if (!refreshToken || refreshToken.revokedAt) {
+      return false;
     }
+
+    this.revokedIds.push(id);
+    refreshToken.revokedAt = new Date();
+
+    return true;
   }
 
   async revokeAllForOwner(ownerId, ownerType) {

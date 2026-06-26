@@ -9,4 +9,4 @@ COPY src ./src
 
 EXPOSE 3003
 
-CMD ["node", "src/server.js"]
+CMD ["sh", "-c", "npm run db:migrate && npm start"]

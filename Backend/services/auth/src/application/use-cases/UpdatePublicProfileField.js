@@ -15,11 +15,13 @@ export class UpdatePublicProfileField {
   constructor({
     userRepository,
     chefAccountRepository,
-    tokenService
+    tokenService,
+    allowedPhotoUrlOrigins = []
   }) {
     this.userRepository = userRepository;
     this.chefAccountRepository = chefAccountRepository;
     this.tokenService = tokenService;
+    this.allowedPhotoUrlOrigins = allowedPhotoUrlOrigins;
   }
 
   async execute({ userId, selectedRole, field, value }) {
@@ -82,6 +84,7 @@ export class UpdatePublicProfileField {
       roles: updatedUser.roles,
       selectedRole,
       scope: AUTH_SCOPES.PUBLIC,
+      tokenVersion: updatedUser.tokenVersion || 0,
       ...roleData
     };
 
@@ -99,6 +102,7 @@ export class UpdatePublicProfileField {
         address: updatedUser.address,
         roles: updatedUser.roles,
         selectedRole,
+        tokenVersion: updatedUser.tokenVersion || 0,
         ...roleData
       }
     };
@@ -222,6 +226,13 @@ export class UpdatePublicProfileField {
 
       if (!["http:", "https:"].includes(parsedUrl.protocol)) {
         throw new Error("Invalid protocol");
+      }
+
+      if (
+        this.allowedPhotoUrlOrigins.length > 0 &&
+        !this.allowedPhotoUrlOrigins.includes(parsedUrl.origin)
+      ) {
+        throw new Error("Photo URL origin is not allowed");
       }
     } catch (error) {
       throw new AppError("Photo URL is invalid", 400, "INVALID_PHOTO_URL");

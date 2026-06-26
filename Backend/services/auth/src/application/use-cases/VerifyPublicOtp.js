@@ -1,6 +1,7 @@
 import { AppError, ForbiddenError, UnauthorizedError } from "../errors/AppError.js";
 
 import { RefreshToken } from "../../domain/entities/RefreshToken.js";
+import { RegistrationToken } from "../../domain/entities/RegistrationToken.js";
 
 import { USER_ROLES } from "../../domain/constants/roles.js";
 import { OTP_PURPOSES } from "../../domain/constants/otpPurposes.js";
@@ -15,17 +16,21 @@ export class VerifyPublicOtp {
     chefAccountRepository,
     otpRepository,
     refreshTokenRepository,
+    registrationTokenRepository,
     otpHasher,
     tokenService,
-    refreshTokenExpiresDays
+    refreshTokenExpiresDays,
+    registrationTokenExpiresMinutes = 10
   }) {
     this.userRepository = userRepository;
     this.chefAccountRepository = chefAccountRepository;
     this.otpRepository = otpRepository;
     this.refreshTokenRepository = refreshTokenRepository;
+    this.registrationTokenRepository = registrationTokenRepository;
     this.otpHasher = otpHasher;
     this.tokenService = tokenService;
     this.refreshTokenExpiresDays = refreshTokenExpiresDays;
+    this.registrationTokenExpiresMinutes = registrationTokenExpiresMinutes;
   }
 
   async execute({ phone, code, role, flow }) {
@@ -55,7 +60,11 @@ export class VerifyPublicOtp {
       throw new UnauthorizedError("Invalid or expired OTP code");
     }
 
-    await this.otpRepository.consume(otpCode.id);
+    const consumed = await this.otpRepository.consume(otpCode.id);
+
+    if (!consumed) {
+      throw new UnauthorizedError("Invalid or expired OTP code");
+    }
 
     const user = await this.userRepository.findByPhone(normalizedPhone);
 
@@ -73,7 +82,7 @@ export class VerifyPublicOtp {
     }
 
     if (!user || !user.hasRole(role) || !user.hasCompletedProfile()) {
-      return this.createRegistrationRequiredResponse({
+      return await this.createRegistrationRequiredResponse({
         phone: normalizedPhone,
         role,
         flow: normalizedFlow
@@ -86,7 +95,7 @@ export class VerifyPublicOtp {
       const chefAccount = await this.chefAccountRepository.findByUserId(user.id);
 
       if (!chefAccount) {
-        return this.createRegistrationRequiredResponse({
+        return await this.createRegistrationRequiredResponse({
           phone: normalizedPhone,
           role,
           flow: normalizedFlow
@@ -113,6 +122,7 @@ export class VerifyPublicOtp {
       roles: user.roles,
       selectedRole: role,
       scope: AUTH_SCOPES.PUBLIC,
+      tokenVersion: user.tokenVersion || 0,
       ...roleData
     };
 
@@ -151,19 +161,34 @@ export class VerifyPublicOtp {
         address: user.address,
         roles: user.roles,
         selectedRole: role,
+        tokenVersion: user.tokenVersion || 0,
         ...roleData
       }
     };
   }
 
-  createRegistrationRequiredResponse({ phone, role, flow }) {
+  async createRegistrationRequiredResponse({ phone, role, flow }) {
+    const tokenId = this.tokenService.generateTokenId();
+
     const registrationToken = this.tokenService.signRegistrationToken({
       phone,
       role,
       flow,
       scope: "public_registration",
-      jti: this.tokenService.generateTokenId()
+      jti: tokenId
     });
+
+    await this.registrationTokenRepository.create(
+      new RegistrationToken({
+        tokenId,
+        phone,
+        role,
+        flow,
+        expiresAt: new Date(
+          Date.now() + this.registrationTokenExpiresMinutes * 60 * 1000
+        )
+      })
+    );
 
     return {
       requiresRegistration: true,

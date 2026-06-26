@@ -1,9 +1,14 @@
 import { ForbiddenError, UnauthorizedError } from "../../../application/errors/AppError.js";
 import { AUTH_SCOPES } from "../../../domain/constants/authScopes.js";
+import { USER_ROLES } from "../../../domain/constants/roles.js";
 import { extractBearerToken } from "./extractBearerToken.js";
 
-export function createPublicAuthMiddleware({ tokenService }) {
-  return function publicAuthMiddleware(req, res, next) {
+export function createPublicAuthMiddleware({
+  tokenService,
+  userRepository,
+  chefAccountRepository
+}) {
+  return async function publicAuthMiddleware(req, res, next) {
     try {
       const token = extractBearerToken(req);
 
@@ -17,18 +22,51 @@ export function createPublicAuthMiddleware({ tokenService }) {
         throw new ForbiddenError("Public access token required");
       }
 
+      const user = await userRepository.findById(payload.sub);
+
+      if (!user) {
+        throw new UnauthorizedError("User not found");
+      }
+
+      if (Number(payload.tokenVersion || 0) !== Number(user.tokenVersion || 0)) {
+        throw new UnauthorizedError("Access token has been revoked");
+      }
+
+      if (!user.hasRole(payload.selectedRole)) {
+        throw new ForbiddenError("User does not have selected role");
+      }
+
+      if (!user.hasCompletedProfile()) {
+        throw new ForbiddenError("User profile is not completed");
+      }
+
+      let chef = null;
+
+      if (payload.selectedRole === USER_ROLES.CHEF) {
+        chef = await chefAccountRepository.findByUserId(user.id);
+
+        if (!chef) {
+          throw new ForbiddenError("Chef account not found");
+        }
+
+        if (chef.isSuspended()) {
+          throw new ForbiddenError("Chef account is suspended");
+        }
+      }
+
       req.auth = {
         scope: payload.scope,
-        userId: payload.sub,
-        phone: payload.phone,
-        firstName: payload.firstName,
-        lastName: payload.lastName,
-        username: payload.username,
-        photoUrl: payload.photoUrl,
-        address: payload.address,
-        roles: payload.roles || [],
+        userId: user.id,
+        phone: user.phone,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        photoUrl: user.photoUrl,
+        address: user.address,
+        roles: user.roles || [],
         selectedRole: payload.selectedRole,
-        chef: payload.chef || null,
+        tokenVersion: user.tokenVersion || 0,
+        chef: chef ? { status: chef.status } : null,
         raw: payload
       };
 

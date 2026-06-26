@@ -12,6 +12,7 @@ export class AdminUser {
     status = ADMIN_STATUS.ACTIVE,
     photoUrl = null,
     createdBy = null,
+    tokenVersion = 0,
     createdAt = null,
     updatedAt = null
   }) {
@@ -28,6 +29,7 @@ export class AdminUser {
     this.status = status;
     this.photoUrl = photoUrl;
     this.createdBy = createdBy;
+    this.tokenVersion = tokenVersion;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }

@@ -34,4 +34,8 @@ export class AdminUserRepository {
   async enable(id) {
     throw new Error("AdminUserRepository.enable is not implemented");
   }
+
+  async incrementTokenVersion(id) {
+    throw new Error("AdminUserRepository.incrementTokenVersion is not implemented");
+  }
 }

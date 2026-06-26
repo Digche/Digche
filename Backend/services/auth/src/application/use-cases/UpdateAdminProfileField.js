@@ -12,10 +12,12 @@ const ADMIN_PROFILE_FIELDS = {
 export class UpdateAdminProfileField {
   constructor({
     adminUserRepository,
-    tokenService
+    tokenService,
+    allowedPhotoUrlOrigins = []
   }) {
     this.adminUserRepository = adminUserRepository;
     this.tokenService = tokenService;
+    this.allowedPhotoUrlOrigins = allowedPhotoUrlOrigins;
   }
 
   async execute({ adminId, field, value }) {
@@ -54,6 +56,7 @@ export class UpdateAdminProfileField {
       role: updatedAdminUser.role,
       photoUrl: updatedAdminUser.photoUrl,
       scope: AUTH_SCOPES.ADMIN,
+      tokenVersion: updatedAdminUser.tokenVersion || 0,
       isManager: updatedAdminUser.isManager()
     };
 
@@ -69,6 +72,7 @@ export class UpdateAdminProfileField {
         username: updatedAdminUser.username,
         role: updatedAdminUser.role,
         photoUrl: updatedAdminUser.photoUrl,
+        tokenVersion: updatedAdminUser.tokenVersion || 0,
         isManager: updatedAdminUser.isManager()
       }
     };
@@ -122,6 +126,13 @@ export class UpdateAdminProfileField {
 
       if (!["http:", "https:"].includes(parsedUrl.protocol)) {
         throw new Error("Invalid protocol");
+      }
+
+      if (
+        this.allowedPhotoUrlOrigins.length > 0 &&
+        !this.allowedPhotoUrlOrigins.includes(parsedUrl.origin)
+      ) {
+        throw new Error("Photo URL origin is not allowed");
       }
     } catch (error) {
       throw new AppError("Photo URL is invalid", 400, "INVALID_PHOTO_URL");

@@ -29,6 +29,7 @@ import { SequelizeChefAccountRepository } from "./infrastructure/database/reposi
 import { SequelizeAdminUserRepository } from "./infrastructure/database/repositories/SequelizeAdminUserRepository.js";
 import { SequelizeOtpRepository } from "./infrastructure/database/repositories/SequelizeOtpRepository.js";
 import { SequelizeRefreshTokenRepository } from "./infrastructure/database/repositories/SequelizeRefreshTokenRepository.js";
+import { SequelizeRegistrationTokenRepository } from "./infrastructure/database/repositories/SequelizeRegistrationTokenRepository.js";
 
 import { CryptoOtpCodeGenerator } from "./infrastructure/otp/CryptoOtpCodeGenerator.js";
 import { BcryptOtpHasher } from "./infrastructure/otp/BcryptOtpHasher.js";
@@ -55,6 +56,7 @@ export function createContainer() {
   const adminUserRepository = new SequelizeAdminUserRepository();
   const otpRepository = new SequelizeOtpRepository();
   const refreshTokenRepository = new SequelizeRefreshTokenRepository();
+  const registrationTokenRepository = new SequelizeRegistrationTokenRepository();
 
   const cacheService = createCacheService({ env });
 
@@ -73,11 +75,14 @@ export function createContainer() {
   });
 
   const publicAuthMiddleware = createPublicAuthMiddleware({
-    tokenService
+    tokenService,
+    userRepository,
+    chefAccountRepository
   });
 
   const adminAuthMiddleware = createAdminAuthMiddleware({
-    tokenService
+    tokenService,
+    adminUserRepository
   });
 
   const internalAuthMiddleware = createInternalAuthMiddleware({
@@ -101,15 +106,18 @@ export function createContainer() {
     chefAccountRepository,
     otpRepository,
     refreshTokenRepository,
+    registrationTokenRepository,
     otpHasher,
     tokenService,
-    refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
+    refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays,
+    registrationTokenExpiresMinutes: env.jwt.registrationTokenExpiresMinutes
   });
 
   const completePublicRegistration = new CompletePublicRegistration({
     userRepository,
     chefAccountRepository,
     refreshTokenRepository,
+    registrationTokenRepository,
     tokenService,
     refreshTokenExpiresDays: env.jwt.refreshTokenExpiresDays
   });
@@ -201,12 +209,14 @@ export function createContainer() {
   const updatePublicProfileField = new UpdatePublicProfileField({
     userRepository,
     chefAccountRepository,
-    tokenService
+    tokenService,
+    allowedPhotoUrlOrigins: env.profile.allowedPhotoUrlOrigins
   });
 
   const updateAdminProfileField = new UpdateAdminProfileField({
     adminUserRepository,
-    tokenService
+    tokenService,
+    allowedPhotoUrlOrigins: env.profile.allowedPhotoUrlOrigins
   });
 
   const addAdminUser = new AddAdminUser({
@@ -218,7 +228,8 @@ export function createContainer() {
   });
 
   const disableAdminUser = new DisableAdminUser({
-    adminUserRepository
+    adminUserRepository,
+    refreshTokenRepository
   });
 
   const enableAdminUser = new EnableAdminUser({
@@ -241,7 +252,8 @@ export function createContainer() {
 
   const suspendChef = new SuspendChef({
     chefAccountRepository,
-    refreshTokenRepository
+    refreshTokenRepository,
+    userRepository
   });
 
   const activateChef = new ActivateChef({

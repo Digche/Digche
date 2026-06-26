@@ -4,6 +4,7 @@ import { ChefAccountModel } from "./ChefAccountModel.js";
 import { AdminUserModel } from "./AdminUserModel.js";
 import { OtpCodeModel } from "./OtpCodeModel.js";
 import { RefreshTokenModel } from "./RefreshTokenModel.js";
+import { RegistrationTokenModel } from "./RegistrationTokenModel.js";
 
 export function initModels() {
   UserModel.hasMany(UserRoleModel, {
@@ -37,7 +38,8 @@ export function initModels() {
     ChefAccountModel,
     AdminUserModel,
     OtpCodeModel,
-    RefreshTokenModel
+    RefreshTokenModel,
+    RegistrationTokenModel
   };
 }
 
@@ -47,5 +49,6 @@ export {
   ChefAccountModel,
   AdminUserModel,
   OtpCodeModel,
-  RefreshTokenModel
+  RefreshTokenModel,
+  RegistrationTokenModel
 };

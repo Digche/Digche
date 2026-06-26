@@ -37,6 +37,12 @@ export const UserModel = sequelize.define(
     address: {
       type: DataTypes.STRING(500),
       allowNull: true
+    },
+    tokenVersion: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: "token_version"
     }
   },
   {

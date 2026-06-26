@@ -8,6 +8,7 @@ export class User {
     photoUrl = null,
     address = null,
     roles = [],
+    tokenVersion = 0,
     createdAt = null,
     updatedAt = null
   }) {
@@ -23,6 +24,7 @@ export class User {
     this.photoUrl = photoUrl;
     this.address = address;
     this.roles = roles;
+    this.tokenVersion = tokenVersion;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }

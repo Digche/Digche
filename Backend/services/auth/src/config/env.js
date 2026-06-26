@@ -18,7 +18,8 @@ export const env = {
     secret: process.env.JWT_SECRET,
     accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
     refreshTokenExpiresDays: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30),
-    registrationTokenExpiresIn: process.env.REGISTRATION_TOKEN_EXPIRES_IN || "10m"
+    registrationTokenExpiresIn: process.env.REGISTRATION_TOKEN_EXPIRES_IN || "10m",
+    registrationTokenExpiresMinutes: Number(process.env.REGISTRATION_TOKEN_EXPIRES_MINUTES || 10)
   },
 
   otp: {
@@ -44,6 +45,17 @@ export const env = {
     keyPrefix: process.env.REDIS_KEY_PREFIX || "auth:"
   },
 
+  profile: {
+    allowedPhotoUrlOrigins: parseCsv(process.env.AUTH_ALLOWED_PHOTO_URL_ORIGINS)
+  },
+
   initialManagerPhone: process.env.INITIAL_MANAGER_PHONE,
   internalApiKey: process.env.AUTH_INTERNAL_API_KEY || null
 };
+
+function parseCsv(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}

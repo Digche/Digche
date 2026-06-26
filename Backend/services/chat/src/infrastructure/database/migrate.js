@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { DataTypes } from "sequelize";
 
-import { sequelize } from "./sequelize.js";
+import { authenticateWithRetry, sequelize } from "./sequelize.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,7 +38,7 @@ async function markMigrationAsExecuted(name, transaction) {
 }
 
 async function runMigrations() {
-  await sequelize.authenticate();
+  await authenticateWithRetry();
   await ensureMigrationsTable();
 
   const executedMigrations = await getExecutedMigrations();

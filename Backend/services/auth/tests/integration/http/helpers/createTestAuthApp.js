@@ -46,6 +46,7 @@ import { FakeOtpHasher } from "../../../unit/fakes/FakeOtpHasher.js";
 import { FakeOtpRepository } from "../../../unit/fakes/FakeOtpRepository.js";
 import { FakeOtpSender } from "../../../unit/fakes/FakeOtpSender.js";
 import { FakeRefreshTokenRepository } from "../../../unit/fakes/FakeRefreshTokenRepository.js";
+import { FakeRegistrationTokenRepository } from "../../../unit/fakes/FakeRegistrationTokenRepository.js";
 import { FakeTokenService } from "../../../unit/fakes/FakeTokenService.js";
 import { FakeUserRepository } from "../../../unit/fakes/FakeUserRepository.js";
 
@@ -56,6 +57,7 @@ export function createBaseTestContext(overrides = {}) {
     adminUserRepository: overrides.adminUserRepository || new FakeAdminUserRepository({ adminUsers: overrides.adminUsers || [] }),
     otpRepository: overrides.otpRepository || new FakeOtpRepository({ otps: overrides.otps || [], recentCounts: overrides.recentCounts || {} }),
     refreshTokenRepository: overrides.refreshTokenRepository || new FakeRefreshTokenRepository({ refreshTokens: overrides.refreshTokens || [] }),
+    registrationTokenRepository: overrides.registrationTokenRepository || new FakeRegistrationTokenRepository({ registrationTokens: overrides.registrationTokens || [] }),
     otpCodeGenerator: overrides.otpCodeGenerator || new FakeOtpCodeGenerator(overrides.otpCode || "123456"),
     otpHasher: overrides.otpHasher || new FakeOtpHasher(),
     otpSender: overrides.otpSender || new FakeOtpSender(),
@@ -74,11 +76,14 @@ export function createHttpTestApp(context) {
   app.use(express.json());
 
   const adminAuthMiddleware = createAdminAuthMiddleware({
-    tokenService: context.tokenService
+    tokenService: context.tokenService,
+    adminUserRepository: context.adminUserRepository
   });
 
   const publicAuthMiddleware = createPublicAuthMiddleware({
-    tokenService: context.tokenService
+    tokenService: context.tokenService,
+    userRepository: context.userRepository,
+    chefAccountRepository: context.chefAccountRepository
   });
 
   const logoutSession = new LogoutSession({
@@ -152,7 +157,8 @@ export function createHttpTestApp(context) {
       adminUserRepository: context.adminUserRepository
     }),
     disableAdminUser: new DisableAdminUser({
-      adminUserRepository: context.adminUserRepository
+      adminUserRepository: context.adminUserRepository,
+      refreshTokenRepository: context.refreshTokenRepository
     }),
     enableAdminUser: new EnableAdminUser({
       adminUserRepository: context.adminUserRepository
@@ -169,7 +175,8 @@ export function createHttpTestApp(context) {
     }),
     suspendChef: new SuspendChef({
       chefAccountRepository: context.chefAccountRepository,
-      refreshTokenRepository: context.refreshTokenRepository
+      refreshTokenRepository: context.refreshTokenRepository,
+      userRepository: context.userRepository
     }),
     activateChef: new ActivateChef({
       chefAccountRepository: context.chefAccountRepository
@@ -191,14 +198,17 @@ export function createHttpTestApp(context) {
       chefAccountRepository: context.chefAccountRepository,
       otpRepository: context.otpRepository,
       refreshTokenRepository: context.refreshTokenRepository,
+      registrationTokenRepository: context.registrationTokenRepository,
       otpHasher: context.otpHasher,
       tokenService: context.tokenService,
-      refreshTokenExpiresDays: context.refreshTokenExpiresDays
+      refreshTokenExpiresDays: context.refreshTokenExpiresDays,
+      registrationTokenExpiresMinutes: 10
     }),
     completePublicRegistration: new CompletePublicRegistration({
       userRepository: context.userRepository,
       chefAccountRepository: context.chefAccountRepository,
       refreshTokenRepository: context.refreshTokenRepository,
+      registrationTokenRepository: context.registrationTokenRepository,
       tokenService: context.tokenService,
       refreshTokenExpiresDays: context.refreshTokenExpiresDays
     }),
@@ -248,6 +258,7 @@ export function registerAdminAccessToken(context, token, overrides = {}) {
     username: overrides.username ?? null,
     role: overrides.role || "manager",
     photoUrl: overrides.photoUrl ?? null,
+    tokenVersion: overrides.tokenVersion ?? 0,
     isManager: overrides.isManager ?? overrides.role !== "admin",
     scope: "admin"
   });
@@ -267,6 +278,7 @@ export function registerPublicAccessToken(context, token, overrides = {}) {
     roles: overrides.roles || ["client"],
     selectedRole: overrides.selectedRole || "client",
     chef: overrides.chef || null,
+    tokenVersion: overrides.tokenVersion ?? 0,
     scope: "public"
   });
 

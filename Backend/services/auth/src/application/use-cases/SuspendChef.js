@@ -4,9 +4,10 @@ import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
 import { USER_ROLES } from "../../domain/constants/roles.js";
 
 export class SuspendChef {
-  constructor({ chefAccountRepository, refreshTokenRepository }) {
+  constructor({ chefAccountRepository, refreshTokenRepository, userRepository }) {
     this.chefAccountRepository = chefAccountRepository;
     this.refreshTokenRepository = refreshTokenRepository;
+    this.userRepository = userRepository;
   }
 
   async execute({ userId }) {
@@ -24,6 +25,8 @@ export class SuspendChef {
       userId,
       CHEF_STATUS.SUSPENDED
     );
+
+    await this.userRepository.incrementTokenVersion(userId);
 
     await this.refreshTokenRepository.revokeAllForOwnerAndSelectedRole(
       userId,

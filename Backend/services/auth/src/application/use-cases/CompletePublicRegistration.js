@@ -16,12 +16,14 @@ export class CompletePublicRegistration {
     userRepository,
     chefAccountRepository,
     refreshTokenRepository,
+    registrationTokenRepository,
     tokenService,
     refreshTokenExpiresDays
   }) {
     this.userRepository = userRepository;
     this.chefAccountRepository = chefAccountRepository;
     this.refreshTokenRepository = refreshTokenRepository;
+    this.registrationTokenRepository = registrationTokenRepository;
     this.tokenService = tokenService;
     this.refreshTokenExpiresDays = refreshTokenExpiresDays;
   }
@@ -65,9 +67,28 @@ export class CompletePublicRegistration {
       throw new UnauthorizedError("Invalid registration token");
     }
 
+    if (!registrationPayload.jti) {
+      throw new UnauthorizedError("Invalid registration token");
+    }
+
+    const storedRegistrationToken =
+      await this.registrationTokenRepository.findByTokenId(registrationPayload.jti);
+
+    if (!storedRegistrationToken || !storedRegistrationToken.canBeUsed()) {
+      throw new UnauthorizedError("Invalid or expired registration token");
+    }
+
     const normalizedPhone = PhoneNumber.normalize(registrationPayload.phone);
     const role = registrationPayload.role;
     const flow = this.normalizeFlow(registrationPayload.flow);
+
+    if (
+      storedRegistrationToken.phone !== normalizedPhone ||
+      storedRegistrationToken.role !== role ||
+      storedRegistrationToken.flow !== flow
+    ) {
+      throw new UnauthorizedError("Invalid registration token");
+    }
 
     if (![USER_ROLES.CLIENT, USER_ROLES.CHEF].includes(role)) {
       throw new AppError("Invalid public role", 400, "INVALID_PUBLIC_ROLE");
@@ -92,6 +113,13 @@ export class CompletePublicRegistration {
         409,
         "USERNAME_ALREADY_IN_USE"
       );
+    }
+
+    const consumedRegistrationToken =
+      await this.registrationTokenRepository.consume(registrationPayload.jti);
+
+    if (!consumedRegistrationToken) {
+      throw new UnauthorizedError("Invalid or expired registration token");
     }
 
     if (!user) {
@@ -161,6 +189,7 @@ export class CompletePublicRegistration {
       roles: user.roles,
       selectedRole: role,
       scope: AUTH_SCOPES.PUBLIC,
+      tokenVersion: user.tokenVersion || 0,
       ...roleData
     };
 
@@ -199,6 +228,7 @@ export class CompletePublicRegistration {
         address: user.address,
         roles: user.roles,
         selectedRole: role,
+        tokenVersion: user.tokenVersion || 0,
         ...roleData
       }
     };

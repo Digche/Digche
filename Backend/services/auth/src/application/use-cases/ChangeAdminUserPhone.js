@@ -65,10 +65,10 @@ export class ChangeAdminUserPhone {
       );
     }
 
-    const updatedAdminUser = await this.adminUserRepository.updatePhone(
-      adminId,
-      normalizedNewPhone
-    );
+    await this.adminUserRepository.updatePhone(adminId, normalizedNewPhone);
+
+    const updatedAdminUser =
+      await this.adminUserRepository.incrementTokenVersion(adminId);
 
     await this.refreshTokenRepository.revokeAllForOwner(
       updatedAdminUser.id,

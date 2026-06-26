@@ -1,9 +1,11 @@
 import { AppError, NotFoundError } from "../errors/AppError.js";
 import { ADMIN_ROLES } from "../../domain/constants/roles.js";
+import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
 
 export class DisableAdminUser {
-  constructor({ adminUserRepository }) {
+  constructor({ adminUserRepository, refreshTokenRepository }) {
     this.adminUserRepository = adminUserRepository;
+    this.refreshTokenRepository = refreshTokenRepository;
   }
 
   async execute({ adminId, requestedBy }) {
@@ -29,7 +31,14 @@ export class DisableAdminUser {
       throw new AppError("Manager cannot be disabled from this endpoint", 400, "CANNOT_DISABLE_MANAGER");
     }
 
-    const disabledAdminUser = await this.adminUserRepository.disable(adminId);
+    await this.adminUserRepository.disable(adminId);
+    const disabledAdminUser =
+      await this.adminUserRepository.incrementTokenVersion(adminId);
+
+    await this.refreshTokenRepository.revokeAllForOwner(
+      disabledAdminUser.id,
+      TOKEN_OWNER_TYPES.ADMIN
+    );
 
     return {
       admin: {

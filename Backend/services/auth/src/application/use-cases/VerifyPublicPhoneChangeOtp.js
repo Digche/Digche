@@ -81,12 +81,15 @@ export class VerifyPublicPhoneChangeOtp {
       throw new UnauthorizedError("Invalid or expired OTP code");
     }
 
-    const updatedUser = await this.userRepository.updatePhone(
-      userId,
-      normalizedNewPhone
-    );
+    const consumed = await this.otpRepository.consume(otpCode.id);
 
-    await this.otpRepository.consume(otpCode.id);
+    if (!consumed) {
+      throw new UnauthorizedError("Invalid or expired OTP code");
+    }
+
+    await this.userRepository.updatePhone(userId, normalizedNewPhone);
+
+    const updatedUser = await this.userRepository.incrementTokenVersion(userId);
 
     await this.refreshTokenRepository.revokeAllForOwner(
       updatedUser.id,
@@ -116,6 +119,7 @@ export class VerifyPublicPhoneChangeOtp {
       roles: updatedUser.roles,
       selectedRole: currentSelectedRole,
       scope: AUTH_SCOPES.PUBLIC,
+      tokenVersion: updatedUser.tokenVersion || 0,
       ...roleData
     };
 
@@ -152,6 +156,7 @@ export class VerifyPublicPhoneChangeOtp {
         address: updatedUser.address,
         roles: updatedUser.roles,
         selectedRole: currentSelectedRole,
+        tokenVersion: updatedUser.tokenVersion || 0,
         ...roleData
       }
     };

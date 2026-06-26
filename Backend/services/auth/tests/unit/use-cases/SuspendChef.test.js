@@ -7,19 +7,35 @@ import { TOKEN_OWNER_TYPES } from "../../../src/domain/constants/tokenOwnerTypes
 
 import { FakeChefAccountRepository } from "../fakes/FakeChefAccountRepository.js";
 import { FakeRefreshTokenRepository } from "../fakes/FakeRefreshTokenRepository.js";
+import { FakeUserRepository } from "../fakes/FakeUserRepository.js";
 import { expectAppError } from "../helpers/expectAppError.js";
 
-function makeUseCase({ chefAccounts = [], refreshTokens = [] } = {}) {
+function makeUseCase({ chefAccounts = [], refreshTokens = [], users = [] } = {}) {
   const chefAccountRepository = new FakeChefAccountRepository({ chefAccounts });
   const refreshTokenRepository = new FakeRefreshTokenRepository({ refreshTokens });
-  const useCase = new SuspendChef({ chefAccountRepository, refreshTokenRepository });
+  const userRepository = new FakeUserRepository({ users });
+  const useCase = new SuspendChef({
+    chefAccountRepository,
+    refreshTokenRepository,
+    userRepository
+  });
 
-  return { useCase, chefAccountRepository, refreshTokenRepository };
+  return { useCase, chefAccountRepository, refreshTokenRepository, userRepository };
 }
 
 describe("SuspendChef", () => {
   it("suspends a chef account and revokes chef refresh tokens", async () => {
-    const { useCase, chefAccountRepository, refreshTokenRepository } = makeUseCase({
+    const { useCase, chefAccountRepository, refreshTokenRepository, userRepository } = makeUseCase({
+      users: [
+        {
+          id: "user-1",
+          phone: "+989121234567",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
+          roles: [USER_ROLES.CHEF]
+        }
+      ],
       chefAccounts: [
         {
           id: "chef-1",
@@ -61,6 +77,12 @@ describe("SuspendChef", () => {
       }
     ]);
     expect(refreshTokenRepository.revokedIds).toEqual(["refresh-chef"]);
+    expect(userRepository.incrementedTokenVersions).toEqual([
+      {
+        userId: "user-1",
+        tokenVersion: 1
+      }
+    ]);
   });
 
   it("returns not found when chef account does not exist", async () => {

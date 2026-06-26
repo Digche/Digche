@@ -50,7 +50,11 @@ export class RefreshAdminSession {
       throw new ForbiddenError("Admin user is disabled");
     }
 
-    await this.refreshTokenRepository.revoke(storedRefreshToken.id);
+    const revoked = await this.refreshTokenRepository.revoke(storedRefreshToken.id);
+
+    if (!revoked) {
+      throw new UnauthorizedError("Invalid or expired refresh token");
+    }
 
     const accessTokenPayload = {
       sub: adminUser.id,
@@ -61,6 +65,7 @@ export class RefreshAdminSession {
       role: adminUser.role,
       photoUrl: adminUser.photoUrl,
       scope: AUTH_SCOPES.ADMIN,
+      tokenVersion: adminUser.tokenVersion || 0,
       isManager: adminUser.isManager()
     };
 
@@ -96,6 +101,7 @@ export class RefreshAdminSession {
         username: adminUser.username,
         role: adminUser.role,
         photoUrl: adminUser.photoUrl,
+        tokenVersion: adminUser.tokenVersion || 0,
         isManager: adminUser.isManager()
       }
     };
