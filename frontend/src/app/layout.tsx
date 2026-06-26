@@ -3,8 +3,8 @@ import { AuthSessionProvider } from "@/features/auth/components/AuthSessionProvi
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Digcheh Auth",
-  description: "Authentication page for Digcheh",
+  title: "Digcheh",
+  description: "Digcheh home-made food marketplace",
 };
 
 export default function RootLayout({

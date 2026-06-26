@@ -54,7 +54,6 @@ type AuthStore = {
   refreshSession: () => Promise<PublicSessionResponse | null>;
   ensureSession: () => Promise<CurrentUser | null>;
   logout: () => Promise<void>;
-  switchRoleForTest: (role: UserRole) => void;
 };
 
 function buildDisplayName(user: PublicUser) {
@@ -162,9 +161,8 @@ export const useAuthStore = create<AuthStore>()(
         const accessToken = get().accessToken;
 
         if (!accessToken) {
-          return get().refreshSession().then((session) => {
-            return session ? toCurrentUser(session.user) : null;
-          });
+          const session = await get().refreshSession();
+          return session ? toCurrentUser(session.user) : null;
         }
 
         try {
@@ -274,21 +272,6 @@ export const useAuthStore = create<AuthStore>()(
         } catch {
           // خروج سمت فرانت انجام شده؛ خطای logout سمت بک را نادیده می‌گیریم.
         }
-      },
-
-      switchRoleForTest: (role) => {
-        const currentUser = get().currentUser;
-
-        if (!currentUser) {
-          return;
-        }
-
-        set({
-          currentUser: {
-            ...currentUser,
-            role,
-          },
-        });
       },
     }),
     {

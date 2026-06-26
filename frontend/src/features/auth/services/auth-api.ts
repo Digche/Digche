@@ -4,7 +4,13 @@ export type PublicAuthRole = "client" | "chef";
 export type FrontendAuthRole = "customer" | "chef";
 export type PublicAuthFlow = "login" | "register";
 
-export type ChefStatus = "active" | "suspended" | string;
+export type ChefStatus =
+  | "active"
+  | "pending"
+  | "suspended"
+  | "rejected"
+  | "disabled"
+  | string;
 
 export type PublicUser = {
   id: string;
@@ -63,6 +69,8 @@ type ErrorResponseBody = {
     code?: string;
     message?: string;
   };
+  code?: string;
+  message?: string;
 };
 
 type RequestJsonOptions = {
@@ -129,9 +137,7 @@ async function requestJson<ResponseBody>(
       cache: "no-store",
       headers,
       body:
-        options.body === undefined
-          ? undefined
-          : JSON.stringify(options.body),
+        options.body === undefined ? undefined : JSON.stringify(options.body),
     });
   } catch {
     throw new AuthApiError(
@@ -145,14 +151,13 @@ async function requestJson<ResponseBody>(
 
   if (!response.ok) {
     const errorBody = responseBody as ErrorResponseBody | null;
-    const backendMessage = errorBody?.error?.message;
-    const code = errorBody?.error?.code;
+    const { code, message } = extractErrorInfo(errorBody);
 
     throw new AuthApiError(
-      backendMessage || getFallbackHttpErrorMessage(response.status),
+      message || getFallbackHttpErrorMessage(response.status),
       response.status,
       code,
-      backendMessage
+      message
     );
   }
 
@@ -173,9 +178,36 @@ async function readJsonResponse(response: Response) {
   }
 }
 
+function extractErrorInfo(errorBody: ErrorResponseBody | null) {
+  return {
+    code: errorBody?.error?.code || errorBody?.code,
+    message: errorBody?.error?.message || errorBody?.message,
+  };
+}
+
 function getFallbackHttpErrorMessage(status: number) {
+  if (status === 400) {
+    return "اطلاعات ارسال‌شده به سرویس احراز هویت معتبر نیست.";
+  }
+
+  if (status === 401) {
+    return "احراز هویت ناموفق بود یا نشست کاربری منقضی شده است.";
+  }
+
+  if (status === 403) {
+    return "شما اجازه انجام این عملیات را ندارید.";
+  }
+
   if (status === 404) {
-    return "مسیر سرویس احراز هویت پیدا نشد.";
+    return "مسیر یا حساب کاربری موردنظر پیدا نشد.";
+  }
+
+  if (status === 409) {
+    return "این اطلاعات قبلاً ثبت شده است.";
+  }
+
+  if (status === 429) {
+    return "تعداد درخواست‌ها زیاد شده است. کمی بعد دوباره تلاش کنید.";
   }
 
   if (status === 502 || status === 503 || status === 504) {
@@ -379,12 +411,42 @@ export function getAuthErrorMessage(
     return error.message;
   }
 
+  if (
+    context.action === "requestOtp" &&
+    context.flow === "login" &&
+    error.status === 404
+  ) {
+    return `برای این شماره با نقش ${roleLabel} حسابی وجود ندارد. لطفاً ابتدا ثبت‌نام کنید.`;
+  }
+
+  if (
+    context.action === "requestOtp" &&
+    context.flow === "login" &&
+    error.status === 403
+  ) {
+    return "این حساب اجازه ورود ندارد یا ثبت‌نام آن کامل نشده است.";
+  }
+
   switch (error.code) {
+    case "PUBLIC_ACCOUNT_NOT_FOUND":
+    case "USER_NOT_FOUND":
+      if (context.flow === "login") {
+        return `برای این شماره با نقش ${roleLabel} حسابی وجود ندارد. لطفاً ابتدا ثبت‌نام کنید.`;
+      }
+
+      return "حساب کاربری پیدا نشد.";
+
+    case "PUBLIC_ACCOUNT_ROLE_NOT_FOUND":
+    case "USER_ROLE_NOT_FOUND":
+      return `این شماره با نقش ${roleLabel} ثبت‌نام نشده است. لطفاً نقش درست را انتخاب کنید یا ثبت‌نام کنید.`;
+
+    case "PUBLIC_ACCOUNT_PROFILE_INCOMPLETE":
+    case "PROFILE_INCOMPLETE":
+    case "USER_PROFILE_INCOMPLETE":
+      return "ثبت‌نام این حساب کامل نشده است. لطفاً از بخش ثبت‌نام، اطلاعات حساب را تکمیل کنید.";
+
     case "PUBLIC_ACCOUNT_ALREADY_EXISTS":
       return `برای این شماره با نقش ${roleLabel} قبلاً حساب ساخته شده است. لطفاً از بخش ورود استفاده کنید.`;
-
-    case "USERNAME_ALREADY_IN_USE":
-      return "این نام کاربری قبلاً استفاده شده است. یک نام کاربری دیگر وارد کنید.";
 
     case "USER_PROFILE_ALREADY_COMPLETED":
       return "پروفایل این شماره قبلاً تکمیل شده است. برای ورود از بخش ورود استفاده کنید.";
@@ -392,14 +454,67 @@ export function getAuthErrorMessage(
     case "PHONE_ALREADY_IN_USE":
       return "این شماره موبایل قبلاً برای حساب دیگری استفاده شده است.";
 
+    case "SAME_PHONE_NUMBER":
+      return "شماره جدید باید با شماره فعلی متفاوت باشد.";
+
+    case "CHEF_ACCOUNT_NOT_FOUND":
+      return "حساب آشپز برای این شماره پیدا نشد. لطفاً ابتدا به عنوان آشپز ثبت‌نام کنید.";
+
+    case "CHEF_ACCOUNT_PENDING":
+      return "حساب آشپز شما هنوز در انتظار تایید است.";
+
+    case "CHEF_ACCOUNT_REJECTED":
+      return "درخواست حساب آشپز شما رد شده است.";
+
+    case "CHEF_ACCOUNT_DISABLED":
+      return "حساب آشپز شما غیرفعال شده است.";
+
+    case "CHEF_ACCOUNT_INACTIVE":
+      return "حساب آشپز شما فعال نیست و فعلاً اجازه ورود ندارید.";
+
+    case "CHEF_ACCOUNT_SUSPENDED":
+      return "حساب آشپز شما تعلیق شده است و اجازه ورود ندارید.";
+
     case "INVALID_PUBLIC_ROLE":
       return "نوع کاربر معتبر نیست. لطفاً نقش مشتری یا آشپز را انتخاب کنید.";
 
     case "INVALID_PUBLIC_AUTH_FLOW":
       return "نوع عملیات معتبر نیست. لطفاً دوباره بین ورود و ثبت‌نام انتخاب کنید.";
 
+    case "USER_ID_REQUIRED":
+      return "شناسه کاربر پیدا نشد. لطفاً دوباره وارد شوید.";
+
+    case "SELECTED_ROLE_REQUIRED":
+      return "نقش فعال کاربر پیدا نشد. لطفاً دوباره وارد شوید.";
+
+    case "INVALID_PROFILE_FIELD":
+      return "فیلد پروفایل معتبر نیست.";
+
+    case "PHONE_REQUIRED":
+      return "شماره تماس را وارد کنید.";
+
+    case "INVALID_PHONE":
+    case "INVALID_PHONE_NUMBER":
+      return "شماره تماس معتبر نیست.";
+
     case "OTP_CODE_REQUIRED":
       return "کد تایید را وارد کنید.";
+
+    case "INVALID_OTP_CODE":
+    case "OTP_CODE_INVALID":
+    case "OTP_INVALID":
+      return "کد تایید اشتباه است.";
+
+    case "OTP_EXPIRED":
+    case "OTP_CODE_EXPIRED":
+      return "کد تایید منقضی شده است. لطفاً دوباره کد بگیرید.";
+
+    case "OTP_NOT_FOUND":
+      return "کد تایید پیدا نشد. لطفاً دوباره کد بگیرید.";
+
+    case "TOO_MANY_REQUESTS":
+    case "OTP_RATE_LIMITED":
+      return "تعداد درخواست‌های کد تایید زیاد شده است. کمی بعد دوباره تلاش کنید.";
 
     case "UNAUTHORIZED":
       if (context.action === "verifyOtp") {
@@ -421,6 +536,10 @@ export function getAuthErrorMessage(
         return "حساب آشپز شما تعلیق شده است و فعلاً اجازه ورود ندارید.";
       }
 
+      if (isChefInactiveError(error)) {
+        return "حساب آشپز شما فعال نیست و اجازه ورود ندارید.";
+      }
+
       if (isProfileIncompleteError(error)) {
         return "پروفایل این حساب کامل نیست. لطفاً ابتدا ثبت‌نام را کامل کنید.";
       }
@@ -430,9 +549,6 @@ export function getAuthErrorMessage(
       }
 
       return "شما اجازه دسترسی به این بخش را ندارید.";
-
-    case "TOO_MANY_REQUESTS":
-      return "تعداد درخواست‌های کد تایید زیاد شده است. کمی بعد دوباره تلاش کنید.";
 
     case "FIRST_NAME_REQUIRED":
       return "نام را وارد کنید.";
@@ -446,6 +562,9 @@ export function getAuthErrorMessage(
     case "USERNAME_REQUIRED":
       return "نام کاربری را وارد کنید.";
 
+    case "USERNAME_ALREADY_IN_USE":
+      return "این نام کاربری قبلاً استفاده شده است. یک نام کاربری دیگر وارد کنید.";
+
     case "USERNAME_TOO_SHORT":
       return "نام کاربری باید حداقل ۳ کاراکتر باشد.";
 
@@ -458,8 +577,20 @@ export function getAuthErrorMessage(
     case "REGISTRATION_TOKEN_REQUIRED":
       return "توکن ثبت‌نام پیدا نشد. لطفاً دوباره کد تایید بگیرید.";
 
+    case "REGISTRATION_TOKEN_INVALID":
+    case "INVALID_REGISTRATION_TOKEN":
+      return "توکن ثبت‌نام معتبر نیست. لطفاً دوباره کد تایید بگیرید.";
+
+    case "REGISTRATION_TOKEN_EXPIRED":
+      return "مهلت تکمیل ثبت‌نام تمام شده است. لطفاً دوباره کد تایید بگیرید.";
+
     case "REFRESH_TOKEN_REQUIRED":
       return "نشست کاربری معتبر نیست. لطفاً دوباره وارد شوید.";
+
+    case "REFRESH_TOKEN_INVALID":
+    case "INVALID_REFRESH_TOKEN":
+    case "REFRESH_TOKEN_EXPIRED":
+      return "نشست کاربری شما منقضی شده است. لطفاً دوباره وارد شوید.";
 
     case "ADDRESS_TOO_LONG":
       return "آدرس بیش از حد طولانی است.";
@@ -468,13 +599,24 @@ export function getAuthErrorMessage(
       return "آدرس تصویر بیش از حد طولانی است.";
 
     case "INVALID_PHOTO_URL":
-      return "آدرس تصویر معتبر نیست.";
+      return "آدرس تصویر معتبر نیست. آدرس باید با http یا https شروع شود.";
 
     case "INTERNAL_SERVER_ERROR":
       return "خطای داخلی سرویس احراز هویت. لطفاً لاگ بک‌اند را بررسی کنید.";
-      
 
     default:
+      if (error.status === 400) {
+        return error.message || "اطلاعات واردشده معتبر نیست.";
+      }
+
+      if (error.status === 409) {
+        return "این حساب قبلاً ثبت شده است. لطفاً از بخش ورود استفاده کنید.";
+      }
+
+      if (error.status === 429) {
+        return "تعداد درخواست‌ها زیاد شده است. کمی بعد دوباره تلاش کنید.";
+      }
+
       if (error.status === 502 || error.status === 503 || error.status === 504) {
         return "Gateway یا سرویس احراز هویت در دسترس نیست.";
       }
@@ -489,10 +631,26 @@ function isChefSuspendedError(error: AuthApiError) {
     .includes("chef account is suspended");
 }
 
+function isChefInactiveError(error: AuthApiError) {
+  const message = String(error.backendMessage || error.message).toLowerCase();
+
+  return (
+    message.includes("chef account is inactive") ||
+    message.includes("chef account is not active") ||
+    message.includes("chef account disabled") ||
+    message.includes("chef account rejected") ||
+    message.includes("chef account pending")
+  );
+}
+
 function isProfileIncompleteError(error: AuthApiError) {
-  return String(error.backendMessage || error.message)
-    .toLowerCase()
-    .includes("profile is not completed");
+  const message = String(error.backendMessage || error.message).toLowerCase();
+
+  return (
+    message.includes("profile is not completed") ||
+    message.includes("profile is incomplete") ||
+    message.includes("profile not completed")
+  );
 }
 
 function isRoleAccessError(error: AuthApiError) {
@@ -501,6 +659,7 @@ function isRoleAccessError(error: AuthApiError) {
   return (
     message.includes("selected role") ||
     message.includes("does not have selected role") ||
+    message.includes("does not have role") ||
     message.includes("permission")
   );
 }

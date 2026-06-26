@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEventHandler } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthCodeInput } from "./AuthCodeInput";
 import { AuthInput } from "./AuthInput";
 import { AuthPhoneNumberInput } from "./AuthPhoneNumberInput";
@@ -18,8 +18,8 @@ import {
   toBackendAuthRole,
   toFrontendAuthRole,
   verifyPublicOtp,
+  type FrontendAuthRole,
   type PublicAuthFlow,
-  type PublicAuthRole,
   type PublicAuthSuccessResponse,
 } from "../services/auth-api";
 import { useAuthStore as useSessionStore } from "@/store/auth-store";
@@ -30,6 +30,7 @@ import styles from "./AuthPage.module.css";
 
 export function AuthForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const mode = useAuthFormStore((state) => state.mode);
   const step = useAuthFormStore((state) => state.step);
@@ -99,6 +100,26 @@ export function AuthForm() {
     }
 
     return "ورود";
+  }
+
+  function getPostAuthRedirectPath(frontendRole: FrontendAuthRole) {
+    const nextPath = searchParams.get("next");
+
+    if (
+      nextPath &&
+      nextPath.startsWith("/") &&
+      !nextPath.startsWith("//")
+    ) {
+      if (frontendRole === "chef" && nextPath.startsWith("/chef")) {
+        return nextPath;
+      }
+
+      if (frontendRole === "customer" && !nextPath.startsWith("/chef")) {
+        return nextPath;
+      }
+    }
+
+    return frontendRole === "chef" ? "/chef" : "/";
   }
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
@@ -286,6 +307,11 @@ export function AuthForm() {
       return;
     }
 
+    if (authResult.user.selectedRole === "chef" && !authResult.user.chef) {
+      setErrorMessage("اطلاعات حساب آشپز از بک‌اند دریافت نشد.");
+      return;
+    }
+
     if (
       authResult.user.selectedRole === "chef" &&
       authResult.user.chef?.status &&
@@ -298,20 +324,33 @@ export function AuthForm() {
     setSession(authResult);
     resetForm();
 
-    router.replace(frontendRole === "chef" ? "/chef" : "/");
+    router.replace(getPostAuthRedirectPath(frontendRole));
+  }
+
+  function handleRoleChange(nextRole: FrontendAuthRole) {
+    setRole(nextRole);
+    setStep("phone");
+    setRegistrationToken(null);
+    clearErrorMessage();
   }
 
   function switchToLogin() {
     setMode("login");
+    setStep("phone");
+    setRegistrationToken(null);
+    clearErrorMessage();
   }
 
   function switchToSignup() {
     setMode("signup");
+    setStep("phone");
+    setRegistrationToken(null);
+    clearErrorMessage();
   }
 
   return (
     <form className={styles.form} dir="rtl" onSubmit={handleSubmit}>
-      <AuthRoleSelect value={role} onChange={setRole} />
+      <AuthRoleSelect value={role} onChange={handleRoleChange} />
 
       <div className={styles.formHeader}>
         <h2 className={styles.formTitle}>{title}</h2>

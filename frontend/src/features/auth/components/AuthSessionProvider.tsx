@@ -5,11 +5,38 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   getAccessTokenRefreshDelay,
   useAuthStore,
+  type UserRole,
 } from "@/store/auth-store";
 
 type AuthSessionProviderProps = {
   children: ReactNode;
 };
+
+function getProtectedRouteRole(pathname: string | null): UserRole | null {
+  if (!pathname) {
+    return null;
+  }
+
+  if (pathname === "/chef" || pathname.startsWith("/chef/")) {
+    return "chef";
+  }
+
+  if (pathname === "/cart" || pathname.startsWith("/cart/")) {
+    return "customer";
+  }
+
+  return null;
+}
+
+function buildAuthRedirect(pathname: string | null) {
+  const safePathname = pathname || "/";
+
+  if (safePathname === "/auth") {
+    return "/auth";
+  }
+
+  return `/auth?next=${encodeURIComponent(safePathname)}`;
+}
 
 export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
   const router = useRouter();
@@ -47,8 +74,15 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
       return;
     }
 
-    if (pathname?.startsWith("/chef") && currentUser?.role !== "chef") {
-      router.replace("/auth");
+    const protectedRole = getProtectedRouteRole(pathname);
+
+    if (protectedRole && !currentUser) {
+      router.replace(buildAuthRedirect(pathname));
+      return;
+    }
+
+    if (protectedRole && currentUser && currentUser.role !== protectedRole) {
+      router.replace(currentUser.role === "chef" ? "/chef" : "/");
       return;
     }
 
