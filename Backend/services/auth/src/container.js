@@ -91,6 +91,7 @@ export function createContainer() {
 
   const requestPublicOtp = new RequestPublicOtp({
     userRepository,
+    chefAccountRepository,
     otpRepository,
     otpCodeGenerator,
     otpHasher,

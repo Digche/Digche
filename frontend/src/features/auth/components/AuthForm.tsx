@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEventHandler } from "react";
+import { useState, type FormEventHandler } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthCodeInput } from "./AuthCodeInput";
 import { AuthInput } from "./AuthInput";
@@ -21,6 +21,7 @@ import {
   type FrontendAuthRole,
   type PublicAuthFlow,
   type PublicAuthSuccessResponse,
+  type RegistrationRequiredResponse,
 } from "../services/auth-api";
 import { useAuthStore as useSessionStore } from "@/store/auth-store";
 import { isValidIranMobileNumber } from "../utils/phone-number";
@@ -31,6 +32,8 @@ import styles from "./AuthPage.module.css";
 export function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [addRoleRegistration, setAddRoleRegistration] =
+    useState<RegistrationRequiredResponse | null>(null);
 
   const mode = useAuthFormStore((state) => state.mode);
   const step = useAuthFormStore((state) => state.step);
@@ -65,6 +68,7 @@ export function AuthForm() {
   const title = getFormTitle();
   const subtitle = getFormSubtitle();
   const submitText = isSubmitting ? "در حال ارسال..." : getSubmitText();
+  const isAddRoleModalOpen = Boolean(addRoleRegistration);
 
   function getFormTitle() {
     if (isVerificationStep) {
@@ -154,6 +158,7 @@ export function AuthForm() {
       setSubmitting(true);
       clearErrorMessage();
       setRegistrationToken(null);
+      setAddRoleRegistration(null);
 
       await requestPublicOtp({
         phone: form.phoneNumber,
@@ -206,6 +211,12 @@ export function AuthForm() {
         }
 
         setRegistrationToken(authResult.registrationToken);
+
+        if (authResult.registrationMode === "add_role") {
+          setAddRoleRegistration(authResult);
+          return;
+        }
+
         setStep("profile");
         return;
       }
@@ -213,15 +224,6 @@ export function AuthForm() {
       if (!isPublicAuthSuccessResponse(authResult)) {
         setErrorMessage(
           "پاسخ سرویس احراز هویت کامل نیست. accessToken یا refreshToken دریافت نشد."
-        );
-        return;
-      }
-
-      if (!isLogin) {
-        setErrorMessage(
-          `برای این شماره با نقش ${getFrontendRoleLabel(
-            role
-          )} قبلاً حساب وجود دارد. لطفاً از بخش ورود استفاده کنید.`
         );
         return;
       }
@@ -294,6 +296,37 @@ export function AuthForm() {
     }
   }
 
+  async function submitAddRoleStep() {
+    if (!addRoleRegistration?.registrationToken) {
+      setErrorMessage("توکن ثبت‌نام پیدا نشد. لطفاً دوباره کد تایید بگیرید.");
+      setAddRoleRegistration(null);
+      setRegistrationToken(null);
+      setStep("phone");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      clearErrorMessage();
+
+      const authResult = await completePublicRegistration({
+        registrationToken: addRoleRegistration.registrationToken,
+      });
+
+      completeAuthentication(authResult);
+    } catch (error) {
+      setErrorMessage(
+        getAuthErrorMessage(error, {
+          action: "completeRegistration",
+          flow: "register",
+          role,
+        })
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   function completeAuthentication(authResult: PublicAuthSuccessResponse) {
     const frontendRole = toFrontendAuthRole(authResult.user.selectedRole);
 
@@ -322,6 +355,7 @@ export function AuthForm() {
     }
 
     setSession(authResult);
+    setAddRoleRegistration(null);
     resetForm();
 
     router.replace(getPostAuthRedirectPath(frontendRole));
@@ -331,6 +365,7 @@ export function AuthForm() {
     setRole(nextRole);
     setStep("phone");
     setRegistrationToken(null);
+    setAddRoleRegistration(null);
     clearErrorMessage();
   }
 
@@ -338,6 +373,7 @@ export function AuthForm() {
     setMode("login");
     setStep("phone");
     setRegistrationToken(null);
+    setAddRoleRegistration(null);
     clearErrorMessage();
   }
 
@@ -345,11 +381,13 @@ export function AuthForm() {
     setMode("signup");
     setStep("phone");
     setRegistrationToken(null);
+    setAddRoleRegistration(null);
     clearErrorMessage();
   }
 
   return (
     <form className={styles.form} dir="rtl" onSubmit={handleSubmit}>
+      <div className={isAddRoleModalOpen ? styles.formDimmed : undefined}>
       <AuthRoleSelect value={role} onChange={handleRoleChange} />
 
       <div className={styles.formHeader}>
@@ -458,6 +496,47 @@ export function AuthForm() {
             {isLogin ? "ثبت‌نام" : "ورود"}
           </button>
         </p>
+      ) : null}
+      </div>
+
+      {addRoleRegistration ? (
+        <div className={styles.addRoleOverlay} role="dialog" aria-modal="true">
+          <div className={styles.addRoleBox}>
+            <h3 className={styles.addRoleTitle}>
+              نقش {getFrontendRoleLabel(addRoleRegistration.role)} به حساب شما اضافه می‌شود
+            </h3>
+
+            <p className={styles.addRoleText}>
+              شما قبلاً با همین شماره ثبت‌نام کرده‌اید. نقش جدید با همان
+              مشخصات حساب قبلی به پروفایل شما اضافه خواهد شد.
+            </p>
+
+            {addRoleRegistration.existingUser?.username ? (
+              <p className={styles.addRoleMeta}>
+                نام کاربری فعلی: {addRoleRegistration.existingUser.username}
+              </p>
+            ) : null}
+
+            {errorMessage ? (
+              <p className={styles.addRoleError} role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
+
+            <button
+              className={styles.addRoleButton}
+              type="button"
+              disabled={isSubmitting}
+              onClick={submitAddRoleStep}
+            >
+              {isSubmitting
+                ? "در حال ورود..."
+                : addRoleRegistration.role === "chef"
+                  ? "ورود به پنل آشپز"
+                  : "ورود به برنامه"}
+            </button>
+          </div>
+        </div>
       ) : null}
     </form>
   );

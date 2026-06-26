@@ -8,6 +8,7 @@ import { OTP_PURPOSES } from "../../domain/constants/otpPurposes.js";
 import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
 import { AUTH_SCOPES } from "../../domain/constants/authScopes.js";
 import { PUBLIC_AUTH_FLOWS } from "../../domain/constants/authFlows.js";
+import { REGISTRATION_MODES } from "../../domain/constants/registrationModes.js";
 import { PhoneNumber } from "../../domain/value-objects/PhoneNumber.js";
 
 export class VerifyPublicOtp {
@@ -81,11 +82,27 @@ export class VerifyPublicOtp {
       );
     }
 
+    if (
+      normalizedFlow === PUBLIC_AUTH_FLOWS.REGISTER &&
+      user &&
+      user.hasCompletedProfile() &&
+      !user.hasRole(role)
+    ) {
+      return await this.createRegistrationRequiredResponse({
+        phone: normalizedPhone,
+        role,
+        flow: normalizedFlow,
+        registrationMode: REGISTRATION_MODES.ADD_ROLE,
+        existingUser: this.toExistingUserResponse(user)
+      });
+    }
+
     if (!user || !user.hasRole(role) || !user.hasCompletedProfile()) {
       return await this.createRegistrationRequiredResponse({
         phone: normalizedPhone,
         role,
-        flow: normalizedFlow
+        flow: normalizedFlow,
+        registrationMode: REGISTRATION_MODES.COMPLETE_PROFILE
       });
     }
 
@@ -98,7 +115,8 @@ export class VerifyPublicOtp {
         return await this.createRegistrationRequiredResponse({
           phone: normalizedPhone,
           role,
-          flow: normalizedFlow
+          flow: normalizedFlow,
+          registrationMode: REGISTRATION_MODES.COMPLETE_PROFILE
         });
       }
 
@@ -167,13 +185,20 @@ export class VerifyPublicOtp {
     };
   }
 
-  async createRegistrationRequiredResponse({ phone, role, flow }) {
+  async createRegistrationRequiredResponse({
+    phone,
+    role,
+    flow,
+    registrationMode,
+    existingUser = null
+  }) {
     const tokenId = this.tokenService.generateTokenId();
 
     const registrationToken = this.tokenService.signRegistrationToken({
       phone,
       role,
       flow,
+      registrationMode,
       scope: "public_registration",
       jti: tokenId
     });
@@ -192,10 +217,21 @@ export class VerifyPublicOtp {
 
     return {
       requiresRegistration: true,
+      registrationMode,
       registrationToken,
       phone,
       role,
-      flow
+      flow,
+      ...(existingUser ? { existingUser } : {})
+    };
+  }
+
+  toExistingUserResponse(user) {
+    return {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      roles: user.roles
     };
   }
 

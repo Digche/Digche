@@ -186,6 +186,7 @@ export function createHttpTestApp(context) {
   const publicAuthController = new PublicAuthController({
     requestPublicOtp: new RequestPublicOtp({
       userRepository: context.userRepository,
+      chefAccountRepository: context.chefAccountRepository,
       otpRepository: context.otpRepository,
       otpCodeGenerator: context.otpCodeGenerator,
       otpHasher: context.otpHasher,
