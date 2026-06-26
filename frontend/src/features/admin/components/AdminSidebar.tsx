@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { useAuthStore } from "@/store/auth-store";
+import { useAdminAuthStore } from "@/features/admin/auth/store/admin-auth-store";
 import type { AdminMenuItem } from "../types/admin.types";
 
 const menuItems: AdminMenuItem[] = [
@@ -49,14 +49,14 @@ const menuItems: AdminMenuItem[] = [
 export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const logout = useAuthStore((state) => state.logout);
+  const logout = useAdminAuthStore((state) => state.logout);
 
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     setIsOpen(false);
-    router.push("/");
+    router.push("/admin-login");
   };
 
   return (
