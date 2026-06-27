@@ -3,17 +3,20 @@ using System;
 using FoodOrdering.Core.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FoodOrdering.Core.Infrastructure.Data.Migrations
+namespace FoodOrdering.Core.Infrastructure.FoodOrdering.Core.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(CoreDbContext))]
-    partial class CoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260627214702_AddCategoryToDish")]
+    partial class AddCategoryToDish
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,6 +67,46 @@ namespace FoodOrdering.Core.Infrastructure.Data.Migrations
                     b.HasIndex("DishId");
 
                     b.ToTable("CartItems");
+                });
+
+            modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.ChefProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Balance")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("KitchenName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Specialty")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("ChefProfiles");
                 });
 
             modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.Comment", b =>
@@ -143,9 +186,6 @@ namespace FoodOrdering.Core.Infrastructure.Data.Migrations
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
-
-                    b.Property<int>("StockQuantity")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -229,6 +269,17 @@ namespace FoodOrdering.Core.Infrastructure.Data.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users", (string)null);
+                });
+
             modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.CartItem", b =>
                 {
                     b.HasOne("FoodOrdering.Core.Domain.Entities.Cart", "Cart")
@@ -259,6 +310,28 @@ namespace FoodOrdering.Core.Infrastructure.Data.Migrations
                     b.Navigation("Dish");
                 });
 
+            modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.Dish", b =>
+                {
+                    b.HasOne("FoodOrdering.Core.Domain.Entities.ChefProfile", "Chef")
+                        .WithMany("Dishes")
+                        .HasForeignKey("ChefId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chef");
+                });
+
+            modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.Order", b =>
+                {
+                    b.HasOne("FoodOrdering.Core.Domain.Entities.ChefProfile", "Chef")
+                        .WithMany("Orders")
+                        .HasForeignKey("ChefId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Chef");
+                });
+
             modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.OrderItem", b =>
                 {
                     b.HasOne("FoodOrdering.Core.Domain.Entities.Dish", "Dish")
@@ -281,6 +354,13 @@ namespace FoodOrdering.Core.Infrastructure.Data.Migrations
             modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.Cart", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.ChefProfile", b =>
+                {
+                    b.Navigation("Dishes");
+
+                    b.Navigation("Orders");
                 });
 
             modelBuilder.Entity("FoodOrdering.Core.Domain.Entities.Dish", b =>

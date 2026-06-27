@@ -12,20 +12,17 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
     private readonly ICartRepository _cartRepository;
     private readonly IOrderRepository _orderRepository;
     private readonly IDishRepository _dishRepository;
-    private readonly IChefProfileRepository _chefProfileRepository;
     private readonly IUserContext _userContext;
 
     public CreateOrderCommandHandler(
         ICartRepository cartRepository,
         IOrderRepository orderRepository,
         IDishRepository dishRepository,
-        IChefProfileRepository chefProfileRepository,
         IUserContext userContext)
     {
         _cartRepository = cartRepository;
         _orderRepository = orderRepository;
         _dishRepository = dishRepository;
-        _chefProfileRepository = chefProfileRepository;
         _userContext = userContext;
     }
 
@@ -44,12 +41,12 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
         if (dto.DeliveryAddress.Length < 10) // حداقل طول آدرس
             return Result<OrderDto>.Failure("آدرس تحویل باید حداقل ۱۰ کاراکتر باشد.");
 
-        // 3. بررسی آشپز و دریافت هزینه ارسال از پروفایل
-        var chef = await _chefProfileRepository.GetByIdAsync(dto.ChefId, cancellationToken);
-        if (chef is null)
-            return Result<OrderDto>.Failure("آشپز یافت نشد.");
-        if (chef.Status != ChefProfileStatus.Approved)
-            return Result<OrderDto>.Failure("آشپز تأیید نشده است.");
+        // // 3. بررسی آشپز و دریافت هزینه ارسال از پروفایل
+        // var chef = await _chefProfileRepository.GetByIdAsync(dto.ChefId, cancellationToken);
+        // if (chef is null)
+        //     return Result<OrderDto>.Failure("آشپز یافت نشد.");
+        // if (chef.Status != ChefProfileStatus.Approved)
+        //     return Result<OrderDto>.Failure("آشپز تأیید نشده است.");
 
         var deliveryFee = 100; 
         

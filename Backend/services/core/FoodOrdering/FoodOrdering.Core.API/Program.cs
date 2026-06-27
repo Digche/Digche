@@ -66,9 +66,9 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<CoreDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register Repositories
+// Register Repositories (فقط Repositoryهای مورد نیاز)
 builder.Services.AddScoped<ICartRepository, CartRepository>();
-builder.Services.AddScoped<IChefProfileRepository, ChefProfileRepository>();
+// builder.Services.AddScoped<IChefProfileRepository, ChefProfileRepository>(); // <-- حذف شد
 builder.Services.AddScoped<IDishRepository, DishRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
@@ -156,7 +156,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"An error occurred while applying migrations: {ex.Message}");
-        throw; // یا می‌توانید ادامه دهید، اما بهتر است برنامه متوقف شود تا خطا مشخص باشد
+        throw;
     }
 }
 

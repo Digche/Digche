@@ -24,15 +24,13 @@ public class GetDishByIdQueryHandler : IRequestHandler<GetDishByIdQuery, Result<
         {
             Id = dish.Id,
             ChefId = dish.ChefId,
-            Name = dish.Name,
+            Title = dish.Name,
             Description = dish.Description,
             Price = dish.Price,
-            ImageUrl = dish.ImageUrl,
+            Image = dish.ImageUrl,
             Ingredients = dish.Ingredients,
-            PrepTime = dish.PrepTime,
             IsAvailable = dish.IsAvailable,
-            StockQuantity = dish.StockQuantity,
-            CreatedAt = dish.CreatedAt
+            Remaining = dish.StockQuantity,
         };
 
         return Result<DishDto>.Success(dto);

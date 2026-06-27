@@ -27,15 +27,13 @@ public class GetDishesByChefIdQueryHandler : IRequestHandler<GetDishesByChefIdQu
         {
             Id = d.Id,
             ChefId = d.ChefId,
-            Name = d.Name,
+            Title = d.Name,
             Description = d.Description,
             Price = d.Price,
-            ImageUrl = d.ImageUrl,
+            Image = d.ImageUrl,
             Ingredients = d.Ingredients,
-            PrepTime = d.PrepTime,
             IsAvailable = d.IsAvailable,
-            StockQuantity = d.StockQuantity,
-            CreatedAt = d.CreatedAt
+            Remaining = d.StockQuantity,
         });
 
         return Result<IEnumerable<DishDto>>.Success(dtos);

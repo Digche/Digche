@@ -10,16 +10,13 @@ namespace FoodOrdering.Core.Application.Commands.AddDish;
 public class AddDishCommandHandler : IRequestHandler<AddDishCommand, Result<Guid>>
 {
     private readonly IDishRepository _dishRepository;
-    private readonly IChefProfileRepository _chefProfileRepository;
     private readonly IUserContext _userContext;
 
     public AddDishCommandHandler(
         IDishRepository dishRepository,
-        IChefProfileRepository chefProfileRepository,
         IUserContext userContext)
     {
         _dishRepository = dishRepository;
-        _chefProfileRepository = chefProfileRepository;
         _userContext = userContext;
     }
 
@@ -32,42 +29,43 @@ public class AddDishCommandHandler : IRequestHandler<AddDishCommand, Result<Guid
         var dto = request.Dto;
 
         // 2. اعتبارسنجی اولیه
-        if (string.IsNullOrWhiteSpace(dto.Name))
+        if (string.IsNullOrWhiteSpace(dto.Title))
             return Result<Guid>.Failure("نام غذا نمی‌تواند خالی باشد.");
 
         if (dto.Price <= 0)
             return Result<Guid>.Failure("قیمت باید بزرگتر از صفر باشد.");
 
-        if (dto.PrepTime <= 0)
-            return Result<Guid>.Failure("زمان آماده‌سازی باید بزرگتر از صفر باشد.");
 
-        if (dto.StockQuantity < 0)
+        if (dto.Remaining < 0)
             return Result<Guid>.Failure("موجودی نمی‌تواند منفی باشد.");
 
-        // 3. بررسی وجود و تأیید شدن آشپز
-        var chef = await _chefProfileRepository.GetByIdAsync(chefId, cancellationToken);
-        if (chef is null)
-            return Result<Guid>.Failure("آشپز یافت نشد.");
+        // // 3. بررسی وجود و تأیید شدن آشپز
+        // var chef = await _chefProfileRepository.GetByIdAsync(chefId, cancellationToken);
+        // if (chef is null)
+        //     return Result<Guid>.Failure("آشپز یافت نشد.");
 
-        if (chef.Status != ChefProfileStatus.Approved)
-            return Result<Guid>.Failure("آشپز تأیید نشده است.");
+        // if (chef.Status != ChefProfileStatus.Approved)
+        //     return Result<Guid>.Failure("آشپز تأیید نشده است.");
 
         // 4. ایجاد غذا
+
+        var PrepTime = 60;
         var dish = new Dish(
             chefId,
-            dto.Name,
+            dto.Title,
             dto.Price,
-            dto.PrepTime,
-            dto.StockQuantity,
-            dto.Description
+            PrepTime,
+            dto.Remaining,
+            dto.Description,
+            dto.Category
         );
 
         // 5. تنظیم فیلدهای اختیاری
         if (!string.IsNullOrWhiteSpace(dto.Ingredients))
             dish.SetIngredients(dto.Ingredients);
         
-        if (!string.IsNullOrWhiteSpace(dto.ImageUrl))
-            dish.SetImageUrl(dto.ImageUrl);
+        if (!string.IsNullOrWhiteSpace(dto.Image))
+            dish.SetImageUrl(dto.Image);
 
         // 6. ذخیره
         await _dishRepository.AddAsync(dish, cancellationToken);

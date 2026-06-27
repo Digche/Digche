@@ -8,16 +8,13 @@ public class ApproveOrderCommandHandler : IRequestHandler<ApproveOrderCommand, R
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUserContext _userContext;
-    private readonly IChefProfileRepository _chefProfileRepository;
 
     public ApproveOrderCommandHandler(
         IOrderRepository orderRepository,
-        IUserContext userContext,
-        IChefProfileRepository chefProfileRepository)
+        IUserContext userContext)
     {
         _orderRepository = orderRepository;
         _userContext = userContext;
-        _chefProfileRepository = chefProfileRepository;
     }
 
     public async Task<Result<bool>> Handle(ApproveOrderCommand request, CancellationToken cancellationToken)
@@ -34,9 +31,9 @@ public class ApproveOrderCommandHandler : IRequestHandler<ApproveOrderCommand, R
 
         // 3. بررسی اینکه آشپز جاری همان آشپز سفارش است
         var chefId = _userContext.GetCurrentUserId();
-        var chefProfile = await _chefProfileRepository.GetByUserIdAsync(chefId, cancellationToken);
-        if (chefProfile is null || chefProfile.Id != order.ChefId)
-            return Result<bool>.Failure("You are not the chef for this order.");
+        // var chefProfile = await _chefProfileRepository.GetByUserIdAsync(chefId, cancellationToken);
+        // if (chefProfile is null || chefProfile.Id != order.ChefId)
+        //     return Result<bool>.Failure("You are not the chef for this order.");
 
         // 4. تأیید سفارش
         if (!order.Approve())

@@ -17,7 +17,7 @@ public class Order
     private readonly List<OrderItem> _items = new();
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
-    public ChefProfile? Chef { get; private set; }
+    // public ChefProfile? Chef { get; private set; }
 
     private Order() { }
 

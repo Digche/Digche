@@ -30,12 +30,15 @@ public class DishRepository : IDishRepository
             .ToListAsync(cancellation);
 
     public async Task AddAsync(Dish dish, CancellationToken cancellation = default)
-        => await _context.Dishes.AddAsync(dish, cancellation);
+    {
+        await _context.Dishes.AddAsync(dish, cancellation);
+        await _context.SaveChangesAsync(cancellation);
+    }
 
-    public Task UpdateAsync(Dish dish, CancellationToken cancellation = default)
+    public async Task UpdateAsync(Dish dish, CancellationToken cancellation = default)
     {
         _context.Dishes.Update(dish);
-        return Task.CompletedTask;
+        await _context.SaveChangesAsync(cancellation);
     }
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellation = default)

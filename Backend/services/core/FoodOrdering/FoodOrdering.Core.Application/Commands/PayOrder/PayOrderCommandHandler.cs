@@ -7,16 +7,13 @@ namespace FoodOrdering.Core.Application.Commands.PayOrder;
 public class PayOrderCommandHandler : IRequestHandler<PayOrderCommand, Result<bool>>
 {
     private readonly IOrderRepository _orderRepository;
-    private readonly IChefProfileRepository _chefProfileRepository;
     private readonly IUserContext _userContext;
 
     public PayOrderCommandHandler(
         IOrderRepository orderRepository,
-        IChefProfileRepository chefProfileRepository,
         IUserContext userContext)
     {
         _orderRepository = orderRepository;
-        _chefProfileRepository = chefProfileRepository;
         _userContext = userContext;
     }
 
@@ -47,15 +44,15 @@ public class PayOrderCommandHandler : IRequestHandler<PayOrderCommand, Result<bo
             return Result<bool>.Failure("Could not mark order as paid.");
 
         // 7. واریز مبلغ به حساب آشپز
-        var chefProfile = await _chefProfileRepository.GetByIdAsync(order.ChefId, cancellationToken);
-        if (chefProfile is null)
-            return Result<bool>.Failure("Chef profile not found.");
+        // var chefProfile = await _chefProfileRepository.GetByIdAsync(order.ChefId, cancellationToken);
+        // if (chefProfile is null)
+        //     return Result<bool>.Failure("Chef profile not found.");
 
-        chefProfile.AddEarnings(order.TotalPrice);   // کل مبلغ به آشپز تعلق می‌گیرد
+        // chefProfile.AddEarnings(order.TotalPrice);   // کل مبلغ به آشپز تعلق می‌گیرد
 
         // 8. ذخیره تغییرات (هر دو موجودیت)
         await _orderRepository.UpdateAsync(order, cancellationToken);
-        await _chefProfileRepository.UpdateAsync(chefProfile, cancellationToken);
+        // await _chefProfileRepository.UpdateAsync(chefProfile, cancellationToken);
 
         return Result<bool>.Success(true);
     }

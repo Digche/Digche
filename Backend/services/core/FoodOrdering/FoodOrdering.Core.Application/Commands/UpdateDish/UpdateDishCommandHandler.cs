@@ -34,24 +34,24 @@ public class UpdateDishCommandHandler : IRequestHandler<UpdateDishCommand, Resul
         var dto = request.Dto;
 
         // 4. اعتبارسنجی اولیه
-        if (string.IsNullOrWhiteSpace(dto.Name))
+        if (string.IsNullOrWhiteSpace(dto.Title))
             return Result<bool>.Failure("نام غذا نمی‌تواند خالی باشد.");
 
         if (dto.Price <= 0)
             return Result<bool>.Failure("قیمت باید بزرگتر از صفر باشد.");
 
-        if (dto.PrepTime <= 0)
-            return Result<bool>.Failure("زمان آماده‌سازی باید بزرگتر از صفر باشد.");
-
         // 5. به‌روزرسانی اطلاعات
-        if (!dish.UpdateInfo(dto.Name, dto.Description, dto.PrepTime, dto.Ingredients, dto.ImageUrl))
+        var PrepTime = 60;
+        if (!dish.UpdateInfo(dto.Title, dto.Description, PrepTime, dto.Ingredients, dto.Image, dto.Category))
             return Result<bool>.Failure("به‌روزرسانی اطلاعات با شکست مواجه شد.");
 
         if (!dish.UpdatePrice(dto.Price))
             return Result<bool>.Failure("قیمت وارد شده معتبر نیست.");
 
-        if (!dish.UpdateAvailability(dto.IsAvailable))
-            return Result<bool>.Failure("عدم امکان فعال‌سازی با موجودی صفر.");
+        if (!dish.SetStockQuantity(dto.Remaining))
+            return Result<bool>.Failure("مقدار موجودی نامعتبر است.");
+
+        dish.UpdateAvailability(dto.Remaining > 0);
 
         // 6. ذخیره تغییرات
         await _dishRepository.UpdateAsync(dish, cancellationToken);
