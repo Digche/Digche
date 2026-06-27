@@ -30,4 +30,8 @@ export class UserRepository {
   async updatePhone(userId, newPhone) {
     throw new Error("UserRepository.updatePhone is not implemented");
   }
+
+  async incrementTokenVersion(userId) {
+    throw new Error("UserRepository.incrementTokenVersion is not implemented");
+  }
 }

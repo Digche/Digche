@@ -9,6 +9,7 @@ import { CHEF_STATUS } from "../../domain/constants/statuses.js";
 import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
 import { AUTH_SCOPES } from "../../domain/constants/authScopes.js";
 import { PUBLIC_AUTH_FLOWS } from "../../domain/constants/authFlows.js";
+import { REGISTRATION_MODES } from "../../domain/constants/registrationModes.js";
 import { PhoneNumber } from "../../domain/value-objects/PhoneNumber.js";
 
 export class CompletePublicRegistration {
@@ -16,12 +17,14 @@ export class CompletePublicRegistration {
     userRepository,
     chefAccountRepository,
     refreshTokenRepository,
+    registrationTokenRepository,
     tokenService,
     refreshTokenExpiresDays
   }) {
     this.userRepository = userRepository;
     this.chefAccountRepository = chefAccountRepository;
     this.refreshTokenRepository = refreshTokenRepository;
+    this.registrationTokenRepository = registrationTokenRepository;
     this.tokenService = tokenService;
     this.refreshTokenExpiresDays = refreshTokenExpiresDays;
   }
@@ -40,18 +43,6 @@ export class CompletePublicRegistration {
       );
     }
 
-    const normalizedFirstName = this.normalizeName(
-      firstName,
-      "FIRST_NAME_REQUIRED"
-    );
-
-    const normalizedLastName = this.normalizeName(
-      lastName,
-      "LAST_NAME_REQUIRED"
-    );
-
-    const normalizedUsername = this.normalizeUsername(username);
-
     let registrationPayload;
 
     try {
@@ -65,21 +56,92 @@ export class CompletePublicRegistration {
       throw new UnauthorizedError("Invalid registration token");
     }
 
+    if (!registrationPayload.jti) {
+      throw new UnauthorizedError("Invalid registration token");
+    }
+
+    const storedRegistrationToken =
+      await this.registrationTokenRepository.findByTokenId(registrationPayload.jti);
+
+    if (!storedRegistrationToken || !storedRegistrationToken.canBeUsed()) {
+      throw new UnauthorizedError("Invalid or expired registration token");
+    }
+
     const normalizedPhone = PhoneNumber.normalize(registrationPayload.phone);
     const role = registrationPayload.role;
     const flow = this.normalizeFlow(registrationPayload.flow);
+    const registrationMode = this.normalizeRegistrationMode(
+      registrationPayload.registrationMode
+    );
+
+    if (
+      storedRegistrationToken.phone !== normalizedPhone ||
+      storedRegistrationToken.role !== role ||
+      storedRegistrationToken.flow !== flow
+    ) {
+      throw new UnauthorizedError("Invalid registration token");
+    }
 
     if (![USER_ROLES.CLIENT, USER_ROLES.CHEF].includes(role)) {
       throw new AppError("Invalid public role", 400, "INVALID_PUBLIC_ROLE");
     }
 
-    let user = await this.userRepository.findByPhone(normalizedPhone);
+    if (registrationMode === REGISTRATION_MODES.ADD_ROLE) {
+      return await this.completeAddRoleRegistration({
+        tokenId: registrationPayload.jti,
+        phone: normalizedPhone,
+        role,
+        flow
+      });
+    }
+
+    return await this.completeProfileRegistration({
+      tokenId: registrationPayload.jti,
+      phone: normalizedPhone,
+      role,
+      flow,
+      firstName,
+      lastName,
+      username
+    });
+  }
+
+  async completeProfileRegistration({
+    tokenId,
+    phone,
+    role,
+    flow,
+    firstName,
+    lastName,
+    username
+  }) {
+    const normalizedFirstName = this.normalizeName(
+      firstName,
+      "FIRST_NAME_REQUIRED"
+    );
+
+    const normalizedLastName = this.normalizeName(
+      lastName,
+      "LAST_NAME_REQUIRED"
+    );
+
+    const normalizedUsername = this.normalizeUsername(username);
+
+    let user = await this.userRepository.findByPhone(phone);
 
     if (user && user.hasRole(role) && user.hasCompletedProfile()) {
       throw new AppError(
         "Public account already exists for this phone and role",
         409,
         "PUBLIC_ACCOUNT_ALREADY_EXISTS"
+      );
+    }
+
+    if (user && user.hasCompletedProfile() && user.username !== normalizedUsername) {
+      throw new AppError(
+        "User already has completed profile",
+        409,
+        "USER_PROFILE_ALREADY_COMPLETED"
       );
     }
 
@@ -94,13 +156,21 @@ export class CompletePublicRegistration {
       );
     }
 
+    const consumedRegistrationToken =
+      await this.registrationTokenRepository.consume(tokenId);
+
+    if (!consumedRegistrationToken) {
+      throw new UnauthorizedError("Invalid or expired registration token");
+    }
+
     if (!user) {
       user = await this.userRepository.create(
         new User({
-          phone: normalizedPhone,
+          phone,
           firstName: normalizedFirstName,
           lastName: normalizedLastName,
           username: normalizedUsername,
+          photoUrl: null,
           address: null,
           roles: []
         })
@@ -126,6 +196,42 @@ export class CompletePublicRegistration {
       user.roles = [...user.roles, role];
     }
 
+    return await this.issueSession({ user, role, flow });
+  }
+
+  async completeAddRoleRegistration({ tokenId, phone, role, flow }) {
+    const user = await this.userRepository.findByPhone(phone);
+
+    if (!user || !user.hasCompletedProfile()) {
+      throw new AppError(
+        "User profile is not completed",
+        409,
+        "USER_PROFILE_INCOMPLETE"
+      );
+    }
+
+    if (user.hasRole(role)) {
+      throw new AppError(
+        "Public account already exists for this phone and role",
+        409,
+        "PUBLIC_ACCOUNT_ALREADY_EXISTS"
+      );
+    }
+
+    const consumedRegistrationToken =
+      await this.registrationTokenRepository.consume(tokenId);
+
+    if (!consumedRegistrationToken) {
+      throw new UnauthorizedError("Invalid or expired registration token");
+    }
+
+    await this.userRepository.addRole(user.id, role);
+    user.roles = [...user.roles, role];
+
+    return await this.issueSession({ user, role, flow });
+  }
+
+  async issueSession({ user, role, flow }) {
     const roleData = {};
 
     if (role === USER_ROLES.CHEF) {
@@ -140,8 +246,8 @@ export class CompletePublicRegistration {
         );
       }
 
-      if (chefAccount.isDisabled()) {
-        throw new ForbiddenError("Chef account is disabled");
+      if (chefAccount.isSuspended()) {
+        throw new ForbiddenError("Chef account is suspended");
       }
 
       roleData.chef = {
@@ -155,11 +261,12 @@ export class CompletePublicRegistration {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      profileImageUrl: user.profileImageUrl,
+      photoUrl: user.photoUrl,
       address: user.address,
       roles: user.roles,
       selectedRole: role,
       scope: AUTH_SCOPES.PUBLIC,
+      tokenVersion: user.tokenVersion || 0,
       ...roleData
     };
 
@@ -194,13 +301,26 @@ export class CompletePublicRegistration {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        profileImageUrl: user.profileImageUrl,
+        photoUrl: user.photoUrl,
         address: user.address,
         roles: user.roles,
         selectedRole: role,
+        tokenVersion: user.tokenVersion || 0,
         ...roleData
       }
     };
+  }
+
+  normalizeRegistrationMode(registrationMode) {
+    const normalizedRegistrationMode = String(
+      registrationMode || REGISTRATION_MODES.COMPLETE_PROFILE
+    ).trim();
+
+    if (!Object.values(REGISTRATION_MODES).includes(normalizedRegistrationMode)) {
+      throw new UnauthorizedError("Invalid registration token");
+    }
+
+    return normalizedRegistrationMode;
   }
 
   normalizeName(value, errorCode) {

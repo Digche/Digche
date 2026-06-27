@@ -16,6 +16,8 @@ tags:
     description: Admin panel authentication
   - name: Admin Users
     description: Admin user management by manager
+  - name: Admin Chefs
+    description: Chef account management by admin and manager
 
 paths:
   /auth/health:
@@ -84,7 +86,8 @@ paths:
       summary: Verify OTP for public login or registration
       description: |
         If the user already has the selected role and completed profile, a public session is returned.
-        If registration is required, a temporary registrationToken is returned for completing registration.
+        If registration is required, a temporary registrationToken is returned.
+        registrationMode is complete_profile for a new/incomplete profile and add_role when an existing completed user is adding a new role.
       requestBody:
         required: true
         content:
@@ -157,6 +160,9 @@ paths:
                   firstName: "Reza"
                   lastName: "Chef"
                   username: "reza_chef"
+              addRole:
+                value:
+                  registrationToken: "registration_token_here"
       responses:
         "201":
           description: Registration completed and public session created
@@ -327,6 +333,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me/photo-url:
+    patch:
+      tags:
+        - Public Auth
+      summary: Update current public user's photo URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePhotoUrlInput"
+      responses:
+        "200":
+          description: Photo URL updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /auth/me/address:
     patch:
@@ -644,6 +677,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /admin/auth/me/photo-url:
+    patch:
+      tags:
+        - Admin Auth
+      summary: Update current admin user's photo URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePhotoUrlInput"
+      responses:
+        "200":
+          description: Photo URL updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProfileUpdateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   /admin/auth/change-phone/request-otp:
     post:
       tags:
@@ -892,6 +952,162 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /admin/chefs:
+    get:
+      tags:
+        - Admin Chefs
+      summary: List all chefs
+      description: Admin and manager can list all chef accounts with user profile details.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Chef list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChefListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/chefs/{userId}/suspend:
+    patch:
+      tags:
+        - Admin Chefs
+      summary: Suspend a chef
+      description: Admin and manager can change a chef account status from active to suspended. Existing public refresh tokens for the chef selected role are revoked.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Chef user id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Chef suspended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChefStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/chefs/{userId}/activate:
+    patch:
+      tags:
+        - Admin Chefs
+      summary: Activate a chef
+      description: Admin and manager can change a suspended chef account status back to active.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Chef user id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Chef activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChefStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /internal/auth/profiles/resolve:
+    post:
+      tags:
+        - Internal
+      summary: Resolve actor display profiles for internal services
+      description: Internal endpoint used by chat-service to hydrate participants. Requires x-internal-api-key.
+      parameters:
+        - in: header
+          name: x-internal-api-key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - participants
+              properties:
+                participants:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - id
+                      - type
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      type:
+                        type: string
+                        enum:
+                          - user
+                          - admin
+      responses:
+        "200":
+          description: Resolved profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profiles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        type:
+                          type: string
+                          enum:
+                            - user
+                            - admin
+                        displayName:
+                          type: string
+                          nullable: true
+                        photoUrl:
+                          type: string
+                          nullable: true
+                        phone:
+                          type: string
+                          nullable: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -975,9 +1191,6 @@ components:
       type: object
       required:
         - registrationToken
-        - firstName
-        - lastName
-        - username
       properties:
         registrationToken:
           type: string
@@ -1073,6 +1286,17 @@ components:
           pattern: "^[a-zA-Z0-9_]+$"
           example: "ali_ahmadi"
 
+    UpdatePhotoUrlInput:
+      type: object
+      required:
+        - photoUrl
+      properties:
+        photoUrl:
+          type: string
+          nullable: true
+          maxLength: 2048
+          example: "https://cdn.example.com/users/user-1/profile.jpg"
+
     UpdateAddressInput:
       type: object
       required:
@@ -1137,6 +1361,12 @@ components:
         requiresRegistration:
           type: boolean
           example: true
+        registrationMode:
+          type: string
+          enum:
+            - complete_profile
+            - add_role
+          example: complete_profile
         registrationToken:
           type: string
           example: "registration_token_here"
@@ -1151,6 +1381,29 @@ components:
           example: client
         flow:
           $ref: "#/components/schemas/PublicAuthFlow"
+        existingUser:
+          type: object
+          nullable: true
+          properties:
+            firstName:
+              type: string
+              nullable: true
+              example: Ali
+            lastName:
+              type: string
+              nullable: true
+              example: Ahmadi
+            username:
+              type: string
+              nullable: true
+              example: ali_ahmadi
+            roles:
+              type: array
+              items:
+                type: string
+                enum:
+                  - client
+                  - chef
 
     PublicUser:
       type: object
@@ -1174,7 +1427,7 @@ components:
           type: string
           nullable: true
           example: "Tehran, Vanak Square"
-        profileImageUrl:
+        photoUrl:
           type: string
           nullable: true
           example: "https://cdn.example.com/users/user-1/profile.jpg"
@@ -1195,12 +1448,101 @@ components:
           nullable: true
           properties:
             status:
-              type: string
-              enum:
-                - pending
-                - active
-                - rejected
-                - disabled
+              $ref: "#/components/schemas/ChefAccountStatus"
+
+    ChefAccountStatus:
+      type: string
+      enum:
+        - active
+        - suspended
+      example: active
+
+    ChefUserDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phone:
+          type: string
+          example: "+989121234567"
+        firstName:
+          type: string
+          nullable: true
+          example: "Sara"
+        lastName:
+          type: string
+          nullable: true
+          example: "Chef"
+        username:
+          type: string
+          nullable: true
+          example: "sara_chef"
+        photoUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/users/user-1/profile.jpg"
+        address:
+          type: string
+          nullable: true
+          example: "Tehran, Vanak Square"
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+              - client
+              - chef
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ChefWithDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ChefAccountStatus"
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        user:
+          $ref: "#/components/schemas/ChefUserDetails"
+
+    ChefStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ChefAccountStatus"
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
 
     AdminUser:
       type: object
@@ -1228,7 +1570,7 @@ components:
           enum:
             - admin
             - manager
-        profileImageUrl:
+        photoUrl:
           type: string
           nullable: true
           example: "https://cdn.example.com/admins/admin-1/profile.jpg"
@@ -1268,7 +1610,7 @@ components:
             - active
             - disabled
           example: active
-        profileImageUrl:
+        photoUrl:
           type: string
           nullable: true
           example: "https://cdn.example.com/admins/admin-1/profile.jpg"
@@ -1339,6 +1681,20 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AdminUserWithStatus"
+
+    ChefListResponse:
+      type: object
+      properties:
+        chefs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChefWithDetails"
+
+    ChefStatusResponse:
+      type: object
+      properties:
+        chef:
+          $ref: "#/components/schemas/ChefStatus"
 
     ChangeAdminUserPhoneResponse:
       type: object

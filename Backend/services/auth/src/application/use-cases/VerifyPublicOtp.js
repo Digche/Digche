@@ -1,12 +1,14 @@
 import { AppError, ForbiddenError, UnauthorizedError } from "../errors/AppError.js";
 
 import { RefreshToken } from "../../domain/entities/RefreshToken.js";
+import { RegistrationToken } from "../../domain/entities/RegistrationToken.js";
 
 import { USER_ROLES } from "../../domain/constants/roles.js";
 import { OTP_PURPOSES } from "../../domain/constants/otpPurposes.js";
 import { TOKEN_OWNER_TYPES } from "../../domain/constants/tokenOwnerTypes.js";
 import { AUTH_SCOPES } from "../../domain/constants/authScopes.js";
 import { PUBLIC_AUTH_FLOWS } from "../../domain/constants/authFlows.js";
+import { REGISTRATION_MODES } from "../../domain/constants/registrationModes.js";
 import { PhoneNumber } from "../../domain/value-objects/PhoneNumber.js";
 
 export class VerifyPublicOtp {
@@ -15,17 +17,21 @@ export class VerifyPublicOtp {
     chefAccountRepository,
     otpRepository,
     refreshTokenRepository,
+    registrationTokenRepository,
     otpHasher,
     tokenService,
-    refreshTokenExpiresDays
+    refreshTokenExpiresDays,
+    registrationTokenExpiresMinutes = 10
   }) {
     this.userRepository = userRepository;
     this.chefAccountRepository = chefAccountRepository;
     this.otpRepository = otpRepository;
     this.refreshTokenRepository = refreshTokenRepository;
+    this.registrationTokenRepository = registrationTokenRepository;
     this.otpHasher = otpHasher;
     this.tokenService = tokenService;
     this.refreshTokenExpiresDays = refreshTokenExpiresDays;
+    this.registrationTokenExpiresMinutes = registrationTokenExpiresMinutes;
   }
 
   async execute({ phone, code, role, flow }) {
@@ -55,7 +61,11 @@ export class VerifyPublicOtp {
       throw new UnauthorizedError("Invalid or expired OTP code");
     }
 
-    await this.otpRepository.consume(otpCode.id);
+    const consumed = await this.otpRepository.consume(otpCode.id);
+
+    if (!consumed) {
+      throw new UnauthorizedError("Invalid or expired OTP code");
+    }
 
     const user = await this.userRepository.findByPhone(normalizedPhone);
 
@@ -72,11 +82,27 @@ export class VerifyPublicOtp {
       );
     }
 
-    if (!user || !user.hasRole(role) || !user.hasCompletedProfile()) {
-      return this.createRegistrationRequiredResponse({
+    if (
+      normalizedFlow === PUBLIC_AUTH_FLOWS.REGISTER &&
+      user &&
+      user.hasCompletedProfile() &&
+      !user.hasRole(role)
+    ) {
+      return await this.createRegistrationRequiredResponse({
         phone: normalizedPhone,
         role,
-        flow: normalizedFlow
+        flow: normalizedFlow,
+        registrationMode: REGISTRATION_MODES.ADD_ROLE,
+        existingUser: this.toExistingUserResponse(user)
+      });
+    }
+
+    if (!user || !user.hasRole(role) || !user.hasCompletedProfile()) {
+      return await this.createRegistrationRequiredResponse({
+        phone: normalizedPhone,
+        role,
+        flow: normalizedFlow,
+        registrationMode: REGISTRATION_MODES.COMPLETE_PROFILE
       });
     }
 
@@ -86,15 +112,16 @@ export class VerifyPublicOtp {
       const chefAccount = await this.chefAccountRepository.findByUserId(user.id);
 
       if (!chefAccount) {
-        return this.createRegistrationRequiredResponse({
+        return await this.createRegistrationRequiredResponse({
           phone: normalizedPhone,
           role,
-          flow: normalizedFlow
+          flow: normalizedFlow,
+          registrationMode: REGISTRATION_MODES.COMPLETE_PROFILE
         });
       }
 
-      if (chefAccount.isDisabled()) {
-        throw new ForbiddenError("Chef account is disabled");
+      if (chefAccount.isSuspended()) {
+        throw new ForbiddenError("Chef account is suspended");
       }
 
       roleData.chef = {
@@ -108,11 +135,12 @@ export class VerifyPublicOtp {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      profileImageUrl: user.profileImageUrl,
+      photoUrl: user.photoUrl,
       address: user.address,
       roles: user.roles,
       selectedRole: role,
       scope: AUTH_SCOPES.PUBLIC,
+      tokenVersion: user.tokenVersion || 0,
       ...roleData
     };
 
@@ -147,30 +175,63 @@ export class VerifyPublicOtp {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        profileImageUrl: user.profileImageUrl,
+        photoUrl: user.photoUrl,
         address: user.address,
         roles: user.roles,
         selectedRole: role,
+        tokenVersion: user.tokenVersion || 0,
         ...roleData
       }
     };
   }
 
-  createRegistrationRequiredResponse({ phone, role, flow }) {
+  async createRegistrationRequiredResponse({
+    phone,
+    role,
+    flow,
+    registrationMode,
+    existingUser = null
+  }) {
+    const tokenId = this.tokenService.generateTokenId();
+
     const registrationToken = this.tokenService.signRegistrationToken({
       phone,
       role,
       flow,
+      registrationMode,
       scope: "public_registration",
-      jti: this.tokenService.generateTokenId()
+      jti: tokenId
     });
+
+    await this.registrationTokenRepository.create(
+      new RegistrationToken({
+        tokenId,
+        phone,
+        role,
+        flow,
+        expiresAt: new Date(
+          Date.now() + this.registrationTokenExpiresMinutes * 60 * 1000
+        )
+      })
+    );
 
     return {
       requiresRegistration: true,
+      registrationMode,
       registrationToken,
       phone,
       role,
-      flow
+      flow,
+      ...(existingUser ? { existingUser } : {})
+    };
+  }
+
+  toExistingUserResponse(user) {
+    return {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      roles: user.roles
     };
   }
 

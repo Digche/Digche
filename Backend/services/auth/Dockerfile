@@ -4,10 +4,10 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --omit=dev
 
-COPY . .
+COPY src ./src
 
 EXPOSE 3001
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "npm run db:migrate && npm start"]

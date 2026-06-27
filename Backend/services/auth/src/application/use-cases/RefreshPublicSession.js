@@ -71,8 +71,8 @@ export class RefreshPublicSession {
         throw new ForbiddenError("Chef account not found");
       }
 
-      if (chefAccount.isDisabled()) {
-        throw new ForbiddenError("Chef account is disabled");
+      if (chefAccount.isSuspended()) {
+        throw new ForbiddenError("Chef account is suspended");
       }
 
       roleData.chef = {
@@ -80,7 +80,11 @@ export class RefreshPublicSession {
       };
     }
 
-    await this.refreshTokenRepository.revoke(storedRefreshToken.id);
+    const revoked = await this.refreshTokenRepository.revoke(storedRefreshToken.id);
+
+    if (!revoked) {
+      throw new UnauthorizedError("Invalid or expired refresh token");
+    }
 
     const newAccessTokenPayload = {
       sub: user.id,
@@ -88,11 +92,12 @@ export class RefreshPublicSession {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      profileImageUrl: user.profileImageUrl,
+      photoUrl: user.photoUrl,
       address: user.address,
       roles: user.roles,
       selectedRole,
       scope: AUTH_SCOPES.PUBLIC,
+      tokenVersion: user.tokenVersion || 0,
       ...roleData
     };
 
@@ -127,10 +132,11 @@ export class RefreshPublicSession {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        profileImageUrl: user.profileImageUrl,
+        photoUrl: user.photoUrl,
         address: user.address,
         roles: user.roles,
         selectedRole,
+        tokenVersion: user.tokenVersion || 0,
         ...roleData
       }
     };

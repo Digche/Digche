@@ -5,9 +5,10 @@ export class User {
     firstName = null,
     lastName = null,
     username = null,
-    profileImageUrl = null,
+    photoUrl = null,
     address = null,
     roles = [],
+    tokenVersion = 0,
     createdAt = null,
     updatedAt = null
   }) {
@@ -20,9 +21,10 @@ export class User {
     this.firstName = firstName;
     this.lastName = lastName;
     this.username = username;
-    this.profileImageUrl = profileImageUrl;
+    this.photoUrl = photoUrl;
     this.address = address;
     this.roles = roles;
+    this.tokenVersion = tokenVersion;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }

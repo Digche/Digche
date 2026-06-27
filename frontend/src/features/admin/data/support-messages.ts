@@ -1,0 +1,95 @@
+import type { AdminSupportMessage } from "../types/admin.types";
+
+export const supportMessages: AdminSupportMessage[] = [
+  {
+    id: "ticket-1",
+    userFullName: "سارا محمدی",
+    userAvatar: "/images/avatars/user-1.webp",
+    role: "مشتری",
+    subject: "خطا در پرداخت",
+    date: "امروز",
+    status: "pending",
+    isSeen: false,
+    message:
+      "سلام، بعد از ثبت سفارش به درگاه پرداخت منتقل شدم، اما در پرداخت مشکلی پیش اومد. چجوری پیگیری کنم؟",
+    time: "21:56",
+  },
+  {
+    id: "ticket-2",
+    userFullName: "محیا ابراهیمی",
+    userAvatar: "/images/avatars/user-2.webp",
+    role: "مشتری",
+    subject: "تعویض رمز عبور",
+    date: "1405/01/26",
+    status: "pending",
+    isSeen: false,
+    message:
+      "برای ورود به حسابم رمز قبلی را فراموش کردم و پیامک بازیابی هم برای من ارسال نمی‌شود.",
+    time: "18:20",
+  },
+  {
+    id: "ticket-3",
+    userFullName: "مجید مجیدی",
+    userAvatar: "/images/avatars/user-3.webp",
+    role: "مشتری",
+    subject: "اعتراض به آشپز",
+    date: "1405/01/05",
+    status: "pending",
+    isSeen: false,
+    message:
+      "کیفیت غذا با توضیحاتی که در صفحه غذا نوشته شده بود متفاوت بود و می‌خوام این مورد بررسی بشه.",
+    time: "13:45",
+  },
+  {
+    id: "ticket-4",
+    userFullName: "فریده یحیی",
+    userAvatar: "/images/avatars/user-1.webp",
+    role: "آشپز",
+    subject: "راهنمای ثبت غذا",
+    date: "1405/01/02",
+    status: "pending",
+    isSeen: false,
+    message:
+      "برای ثبت غذای جدید در پنل آشپز، در مرحله بارگذاری تصویر به مشکل خوردم.",
+    time: "10:12",
+  },
+  {
+    id: "ticket-5",
+    userFullName: "حنیف طیابی",
+    userAvatar: "/images/avatars/user-2.webp",
+    role: "مشتری",
+    subject: "مشکل در ثبت سفارش",
+    date: "1404/12/25",
+    status: "pending",
+    isSeen: false,
+    message:
+      "بعد از انتخاب غذا و رفتن به سبد خرید، دکمه ثبت سفارش برای من فعال نمی‌شود.",
+    time: "09:48",
+  },
+  {
+    id: "ticket-6",
+    userFullName: "مختار ثقفی",
+    userAvatar: "/images/avatars/user-3.webp",
+    role: "آشپز",
+    subject: "بروزرسانی اطلاعات",
+    date: "1404/12/25",
+    status: "pending",
+    isSeen: false,
+    message:
+      "می‌خواهم اطلاعات پروفایل آشپزخانه و شماره تماس خودم را تغییر بدهم.",
+    time: "08:30",
+  },
+  {
+    id: "ticket-7",
+    userFullName: "مسعود عامل",
+    userAvatar: "/images/avatars/user-1.webp",
+    role: "مشتری",
+    subject: "اعتراض به غذا",
+    date: "1404/12/25",
+    status: "pending",
+    isSeen: false,
+    message:
+      "غذا دیرتر از زمان اعلام‌شده رسید و می‌خوام وضعیت سفارش بررسی شود.",
+    time: "22:10",
+  },
+];

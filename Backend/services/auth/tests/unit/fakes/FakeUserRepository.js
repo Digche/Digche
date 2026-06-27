@@ -8,6 +8,7 @@ export class FakeUserRepository {
     this.completedProfiles = [];
     this.updatedPhones = [];
     this.updatedProfileFields = [];
+    this.incrementedTokenVersions = [];
   }
 
   toUser(user) {
@@ -51,8 +52,9 @@ export class FakeUserRepository {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      profileImageUrl: user.profileImageUrl,
+      photoUrl: user.photoUrl,
       address: user.address,
+      tokenVersion: user.tokenVersion || 0,
       roles: user.roles || [],
       createdAt: user.createdAt || new Date("2026-01-01T00:00:00.000Z"),
       updatedAt: user.updatedAt || new Date("2026-01-01T00:00:00.000Z")
@@ -96,6 +98,20 @@ export class FakeUserRepository {
     user.phone = newPhone;
     user.updatedAt = new Date("2026-01-02T00:00:00.000Z");
     this.updatedPhones.push({ userId, newPhone });
+
+    return user;
+  }
+
+  async incrementTokenVersion(userId) {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      return null;
+    }
+
+    user.tokenVersion = Number(user.tokenVersion || 0) + 1;
+    user.updatedAt = new Date("2026-01-06T00:00:00.000Z");
+    this.incrementedTokenVersions.push({ userId, tokenVersion: user.tokenVersion });
 
     return user;
   }

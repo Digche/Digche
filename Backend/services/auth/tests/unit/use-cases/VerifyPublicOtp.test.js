@@ -12,6 +12,7 @@ import { FakeChefAccountRepository } from "../fakes/FakeChefAccountRepository.js
 import { FakeOtpHasher } from "../fakes/FakeOtpHasher.js";
 import { FakeOtpRepository } from "../fakes/FakeOtpRepository.js";
 import { FakeRefreshTokenRepository } from "../fakes/FakeRefreshTokenRepository.js";
+import { FakeRegistrationTokenRepository } from "../fakes/FakeRegistrationTokenRepository.js";
 import { FakeTokenService } from "../fakes/FakeTokenService.js";
 import { FakeUserRepository } from "../fakes/FakeUserRepository.js";
 import { makeOtpCode } from "../helpers/makeOtpCode.js";
@@ -22,6 +23,7 @@ function makeUseCase({ users = [], chefAccounts = [], otps = [] } = {}) {
   const chefAccountRepository = new FakeChefAccountRepository({ chefAccounts });
   const otpRepository = new FakeOtpRepository({ otps });
   const refreshTokenRepository = new FakeRefreshTokenRepository();
+  const registrationTokenRepository = new FakeRegistrationTokenRepository();
   const otpHasher = new FakeOtpHasher();
   const tokenService = new FakeTokenService();
 
@@ -30,15 +32,18 @@ function makeUseCase({ users = [], chefAccounts = [], otps = [] } = {}) {
     chefAccountRepository,
     otpRepository,
     refreshTokenRepository,
+    registrationTokenRepository,
     otpHasher,
     tokenService,
-    refreshTokenExpiresDays: 7
+    refreshTokenExpiresDays: 7,
+    registrationTokenExpiresMinutes: 10
   });
 
   return {
     useCase,
     userRepository,
     otpRepository,
+    registrationTokenRepository,
     refreshTokenRepository,
     tokenService
   };
@@ -237,7 +242,7 @@ describe("VerifyPublicOtp", () => {
     });
   });
 
-  it("rejects disabled chef account", async () => {
+  it("rejects suspended chef account", async () => {
     const { useCase } = makeUseCase({
       users: [
         {
@@ -253,7 +258,7 @@ describe("VerifyPublicOtp", () => {
         {
           id: "chef-1",
           userId: "user-1",
-          status: CHEF_STATUS.DISABLED
+          status: CHEF_STATUS.SUSPENDED
         }
       ],
       otps: [

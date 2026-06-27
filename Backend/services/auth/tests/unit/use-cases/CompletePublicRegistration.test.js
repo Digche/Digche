@@ -8,6 +8,7 @@ import { TOKEN_OWNER_TYPES } from "../../../src/domain/constants/tokenOwnerTypes
 
 import { FakeChefAccountRepository } from "../fakes/FakeChefAccountRepository.js";
 import { FakeRefreshTokenRepository } from "../fakes/FakeRefreshTokenRepository.js";
+import { FakeRegistrationTokenRepository } from "../fakes/FakeRegistrationTokenRepository.js";
 import { FakeTokenService } from "../fakes/FakeTokenService.js";
 import { FakeUserRepository } from "../fakes/FakeUserRepository.js";
 import { expectAppError } from "../helpers/expectAppError.js";
@@ -16,16 +17,33 @@ function makeUseCase({ users = [], chefAccounts = [], registrationPayload = null
   const userRepository = new FakeUserRepository({ users });
   const chefAccountRepository = new FakeChefAccountRepository({ chefAccounts });
   const refreshTokenRepository = new FakeRefreshTokenRepository();
+  const registrationTokenRepository = new FakeRegistrationTokenRepository({
+    registrationTokens: registrationPayload?.jti
+      ? [
+          {
+            tokenId: registrationPayload.jti,
+            phone: registrationPayload.phone,
+            role: registrationPayload.role,
+            flow: registrationPayload.flow || "register",
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+          }
+        ]
+      : []
+  });
   const tokenService = new FakeTokenService();
 
   if (registrationPayload) {
-    tokenService.registerRegistrationToken("registration-token", registrationPayload);
+    tokenService.registerRegistrationToken("registration-token", {
+      flow: "register",
+      ...registrationPayload
+    });
   }
 
   const useCase = new CompletePublicRegistration({
     userRepository,
     chefAccountRepository,
     refreshTokenRepository,
+    registrationTokenRepository,
     tokenService,
     refreshTokenExpiresDays: 7
   });
@@ -35,6 +53,7 @@ function makeUseCase({ users = [], chefAccounts = [], registrationPayload = null
     userRepository,
     chefAccountRepository,
     refreshTokenRepository,
+    registrationTokenRepository,
     tokenService
   };
 }

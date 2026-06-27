@@ -5,16 +5,19 @@ import { AUTH_SCOPES } from "../../domain/constants/authScopes.js";
 const ADMIN_PROFILE_FIELDS = {
   FIRST_NAME: "firstName",
   LAST_NAME: "lastName",
-  USERNAME: "username"
+  USERNAME: "username",
+  PHOTO_URL: "photoUrl"
 };
 
 export class UpdateAdminProfileField {
   constructor({
     adminUserRepository,
-    tokenService
+    tokenService,
+    allowedPhotoUrlOrigins = []
   }) {
     this.adminUserRepository = adminUserRepository;
     this.tokenService = tokenService;
+    this.allowedPhotoUrlOrigins = allowedPhotoUrlOrigins;
   }
 
   async execute({ adminId, field, value }) {
@@ -51,8 +54,9 @@ export class UpdateAdminProfileField {
       lastName: updatedAdminUser.lastName,
       username: updatedAdminUser.username,
       role: updatedAdminUser.role,
-      profileImageUrl: updatedAdminUser.profileImageUrl,
+      photoUrl: updatedAdminUser.photoUrl,
       scope: AUTH_SCOPES.ADMIN,
+      tokenVersion: updatedAdminUser.tokenVersion || 0,
       isManager: updatedAdminUser.isManager()
     };
 
@@ -67,7 +71,8 @@ export class UpdateAdminProfileField {
         lastName: updatedAdminUser.lastName,
         username: updatedAdminUser.username,
         role: updatedAdminUser.role,
-        profileImageUrl: updatedAdminUser.profileImageUrl,
+        photoUrl: updatedAdminUser.photoUrl,
+        tokenVersion: updatedAdminUser.tokenVersion || 0,
         isManager: updatedAdminUser.isManager()
       }
     };
@@ -80,6 +85,10 @@ export class UpdateAdminProfileField {
 
     if (field === ADMIN_PROFILE_FIELDS.LAST_NAME) {
       return this.normalizeName(value, "LAST_NAME_REQUIRED");
+    }
+
+    if (field === ADMIN_PROFILE_FIELDS.PHOTO_URL) {
+      return this.normalizePhotoUrl(value);
     }
 
     const normalizedUsername = this.normalizeUsername(value);
@@ -95,6 +104,41 @@ export class UpdateAdminProfileField {
     }
 
     return normalizedUsername;
+  }
+
+  normalizePhotoUrl(value) {
+    const normalizedPhotoUrl = String(value || "").trim();
+
+    if (!normalizedPhotoUrl) {
+      return null;
+    }
+
+    if (normalizedPhotoUrl.length > 2048) {
+      throw new AppError(
+        "Photo URL must be at most 2048 characters",
+        400,
+        "PHOTO_URL_TOO_LONG"
+      );
+    }
+
+    try {
+      const parsedUrl = new URL(normalizedPhotoUrl);
+
+      if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+        throw new Error("Invalid protocol");
+      }
+
+      if (
+        this.allowedPhotoUrlOrigins.length > 0 &&
+        !this.allowedPhotoUrlOrigins.includes(parsedUrl.origin)
+      ) {
+        throw new Error("Photo URL origin is not allowed");
+      }
+    } catch (error) {
+      throw new AppError("Photo URL is invalid", 400, "INVALID_PHOTO_URL");
+    }
+
+    return normalizedPhotoUrl;
   }
 
   normalizeName(value, errorCode) {

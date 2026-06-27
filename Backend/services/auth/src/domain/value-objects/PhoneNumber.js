@@ -1,7 +1,10 @@
 export class PhoneNumber {
   static normalize(phone) {
     if (!phone) {
-      throw new Error("Phone number is required");
+      throw new PhoneNumberValidationError(
+        "Phone number is required",
+        "PHONE_NUMBER_REQUIRED"
+      );
     }
 
     let value = String(phone).trim();
@@ -22,7 +25,10 @@ export class PhoneNumber {
     }
 
     if (!/^\+989\d{9}$/.test(value)) {
-      throw new Error("Invalid Iranian mobile number");
+      throw new PhoneNumberValidationError(
+        "Invalid Iranian mobile number",
+        "INVALID_PHONE_NUMBER"
+      );
     }
 
     return value;
@@ -41,5 +47,14 @@ export class PhoneNumber {
 
       return digit;
     });
+  }
+}
+
+export class PhoneNumberValidationError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.name = "PhoneNumberValidationError";
+    this.statusCode = 400;
+    this.code = code;
   }
 }

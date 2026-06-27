@@ -3,20 +3,26 @@ import { describe, expect, it } from "vitest";
 import { DisableAdminUser } from "../../../src/application/use-cases/DisableAdminUser.js";
 import { ADMIN_ROLES } from "../../../src/domain/constants/roles.js";
 import { ADMIN_STATUS } from "../../../src/domain/constants/statuses.js";
+import { TOKEN_OWNER_TYPES } from "../../../src/domain/constants/tokenOwnerTypes.js";
 
 import { FakeAdminUserRepository } from "../fakes/FakeAdminUserRepository.js";
+import { FakeRefreshTokenRepository } from "../fakes/FakeRefreshTokenRepository.js";
 import { expectAppError } from "../helpers/expectAppError.js";
 
 function makeUseCase({ adminUsers = [] } = {}) {
   const adminUserRepository = new FakeAdminUserRepository({ adminUsers });
-  const useCase = new DisableAdminUser({ adminUserRepository });
+  const refreshTokenRepository = new FakeRefreshTokenRepository();
+  const useCase = new DisableAdminUser({
+    adminUserRepository,
+    refreshTokenRepository
+  });
 
-  return { useCase, adminUserRepository };
+  return { useCase, adminUserRepository, refreshTokenRepository };
 }
 
 describe("DisableAdminUser", () => {
   it("disables a normal admin user", async () => {
-    const { useCase, adminUserRepository } = makeUseCase({
+    const { useCase, adminUserRepository, refreshTokenRepository } = makeUseCase({
       adminUsers: [
         {
           id: "admin-1",
@@ -38,6 +44,12 @@ describe("DisableAdminUser", () => {
       status: ADMIN_STATUS.DISABLED
     });
     expect(adminUserRepository.disabledIds).toEqual(["admin-1"]);
+    expect(refreshTokenRepository.revokedOwners).toEqual([
+      {
+        ownerId: "admin-1",
+        ownerType: TOKEN_OWNER_TYPES.ADMIN
+      }
+    ]);
   });
 
   it("does not allow manager to disable itself", async () => {

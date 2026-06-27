@@ -1,5 +1,7 @@
 import { ChefAccount } from "../../../domain/entities/ChefAccount.js";
 import { ChefAccountModel } from "../models/ChefAccountModel.js";
+import { UserModel } from "../models/UserModel.js";
+import { UserRoleModel } from "../models/UserRoleModel.js";
 
 export class SequelizeChefAccountRepository {
   async findByUserId(userId) {
@@ -12,6 +14,26 @@ export class SequelizeChefAccountRepository {
     }
 
     return this.toDomain(chefAccount);
+  }
+
+  async listDetailed() {
+    const chefAccounts = await ChefAccountModel.findAll({
+      include: [
+        {
+          model: UserModel,
+          as: "user",
+          include: [
+            {
+              model: UserRoleModel,
+              as: "roles"
+            }
+          ]
+        }
+      ],
+      order: [["createdAt", "DESC"]]
+    });
+
+    return chefAccounts.map((chefAccount) => this.toDetailedObject(chefAccount));
   }
 
   async create(chefAccount) {
@@ -47,5 +69,31 @@ export class SequelizeChefAccountRepository {
       createdAt: chefAccountModel.createdAt,
       updatedAt: chefAccountModel.updatedAt
     });
+  }
+
+  toDetailedObject(chefAccountModel) {
+    const user = chefAccountModel.user;
+
+    return {
+      id: chefAccountModel.id,
+      userId: chefAccountModel.userId,
+      status: chefAccountModel.status,
+      createdAt: chefAccountModel.createdAt,
+      updatedAt: chefAccountModel.updatedAt,
+      user: user
+        ? {
+            id: user.id,
+            phone: user.phone,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            photoUrl: user.photoUrl,
+            address: user.address,
+            roles: user.roles ? user.roles.map((userRole) => userRole.role) : [],
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+          }
+        : null
+    };
   }
 }

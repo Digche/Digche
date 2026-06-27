@@ -83,8 +83,9 @@ export class SequelizeUserRepository {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      profileImageUrl: user.profileImageUrl,
-      address: user.address
+      photoUrl: user.photoUrl,
+      address: user.address,
+      tokenVersion: user.tokenVersion
     });
 
     return new User({
@@ -93,8 +94,9 @@ export class SequelizeUserRepository {
       firstName: createdUser.firstName,
       lastName: createdUser.lastName,
       username: createdUser.username,
-      profileImageUrl: createdUser.profileImageUrl,
+      photoUrl: createdUser.photoUrl,
       address: createdUser.address,
+      tokenVersion: createdUser.tokenVersion,
       roles: [],
       createdAt: createdUser.createdAt,
       updatedAt: createdUser.updatedAt
@@ -160,6 +162,27 @@ export class SequelizeUserRepository {
     return this.toDomain(user);
   }
 
+  async incrementTokenVersion(userId) {
+    const user = await UserModel.findByPk(userId, {
+      include: [
+        {
+          model: UserRoleModel,
+          as: "roles"
+        }
+      ]
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    user.tokenVersion = Number(user.tokenVersion || 0) + 1;
+
+    await user.save();
+
+    return this.toDomain(user);
+  }
+
   toDomain(userModel) {
     const roles = userModel.roles
       ? userModel.roles.map((userRole) => userRole.role)
@@ -171,8 +194,9 @@ export class SequelizeUserRepository {
       firstName: userModel.firstName,
       lastName: userModel.lastName,
       username: userModel.username,
-      profileImageUrl: userModel.profileImageUrl,
+      photoUrl: userModel.photoUrl,
       address: userModel.address,
+      tokenVersion: userModel.tokenVersion || 0,
       roles,
       createdAt: userModel.createdAt,
       updatedAt: userModel.updatedAt

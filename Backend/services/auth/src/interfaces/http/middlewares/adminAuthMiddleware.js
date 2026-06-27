@@ -2,8 +2,11 @@ import { ForbiddenError, UnauthorizedError } from "../../../application/errors/A
 import { AUTH_SCOPES } from "../../../domain/constants/authScopes.js";
 import { extractBearerToken } from "./extractBearerToken.js";
 
-export function createAdminAuthMiddleware({ tokenService }) {
-  return function adminAuthMiddleware(req, res, next) {
+export function createAdminAuthMiddleware({
+  tokenService,
+  adminUserRepository
+}) {
+  return async function adminAuthMiddleware(req, res, next) {
     try {
       const token = extractBearerToken(req);
 
@@ -17,16 +20,31 @@ export function createAdminAuthMiddleware({ tokenService }) {
         throw new ForbiddenError("Admin access token required");
       }
 
+      const adminUser = await adminUserRepository.findById(payload.sub);
+
+      if (!adminUser) {
+        throw new UnauthorizedError("Admin user not found");
+      }
+
+      if (!adminUser.isActive()) {
+        throw new ForbiddenError("Admin user is disabled");
+      }
+
+      if (Number(payload.tokenVersion || 0) !== Number(adminUser.tokenVersion || 0)) {
+        throw new UnauthorizedError("Access token has been revoked");
+      }
+
       req.auth = {
         scope: payload.scope,
-        adminId: payload.sub,
-        phone: payload.phone,
-        firstName: payload.firstName,
-        lastName: payload.lastName,
-        username: payload.username,
-        role: payload.role,
-        profileImageUrl: payload.profileImageUrl,
-        isManager: Boolean(payload.isManager),
+        adminId: adminUser.id,
+        phone: adminUser.phone,
+        firstName: adminUser.firstName,
+        lastName: adminUser.lastName,
+        username: adminUser.username,
+        role: adminUser.role,
+        photoUrl: adminUser.photoUrl,
+        tokenVersion: adminUser.tokenVersion || 0,
+        isManager: adminUser.isManager(),
         raw: payload
       };
 

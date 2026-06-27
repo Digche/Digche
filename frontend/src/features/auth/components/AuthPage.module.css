@@ -1,0 +1,614 @@
+.authScreen {
+  width: 100%;
+  min-height: 100svh;
+  height: 100svh;
+  background: #f7a45a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(18px, 4vh, 58px) clamp(18px, 6.5vw, 118px);
+  overflow: hidden;
+}
+
+.authCard {
+  width: min(100%, 1364px);
+  height: min(880px, calc(100svh - 48px));
+  max-height: calc(100svh - 48px);
+  min-height: 0;
+  background: #ffffff;
+  border-radius: 11px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 49% 51%;
+  direction: ltr;
+  box-shadow: 0 24px 60px rgba(59, 33, 12, 0.08);
+}
+
+.heroPanel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #ead0ad;
+  overflow: hidden;
+}
+
+.heroImage {
+  object-fit: cover;
+  object-position: center center;
+}
+
+.formPanel {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(26px, 4.5vh, 46px) clamp(38px, 5vw, 78px);
+  direction: rtl;
+  overflow: hidden;
+}
+
+.formWrap {
+  width: min(100%, 500px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brandHeader {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: clamp(20px, 3vh, 28px);
+}
+
+.brandLogo {
+  width: clamp(104px, 8.5vw, 150px);
+  height: auto;
+  object-fit: contain;
+}
+
+.form {
+  width: 100%;
+  position: relative;
+}
+
+.formDimmed {
+  filter: blur(2px);
+  opacity: 0.42;
+  pointer-events: none;
+  user-select: none;
+}
+
+.roleTabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 3vw, 38px);
+  margin-bottom: clamp(22px, 3vh, 30px);
+  direction: rtl;
+}
+
+.roleTab {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: #777777;
+  font-size: clamp(18px, 1.55vw, 24px);
+  font-weight: 500;
+  line-height: 1.7;
+  cursor: pointer;
+  padding: 0 0 4px;
+  transition: color 160ms ease;
+}
+
+.roleTab::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 160ms ease;
+}
+
+.roleTab:hover,
+.roleTabActive {
+  color: #d46a2c;
+}
+
+.roleTabActive {
+  font-weight: 800;
+}
+
+.roleTabActive::after {
+  transform: scaleX(1);
+}
+
+.roleTab:focus-visible,
+.footerAction:focus-visible,
+.submitButton:focus-visible,
+.passwordToggle:focus-visible {
+  outline: 2px solid rgba(212, 106, 44, 0.38);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
+.formHeader {
+  margin-bottom: clamp(22px, 3vh, 30px);
+  text-align: right;
+}
+
+.formTitle {
+  margin: 0;
+  color: #d46a2c;
+  font-size: clamp(27px, 2.35vw, 39px);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.formSubtitle {
+  margin: 3px 0 0;
+  color: #777777;
+  font-size: clamp(14px, 1.1vw, 18px);
+  font-weight: 400;
+  line-height: 1.8;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2.5vh, 22px);
+}
+
+.field {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.fieldLabel {
+  position: absolute;
+  top: -10px;
+  right: 44px;
+  z-index: 1;
+  padding: 0 10px;
+  background: #ffffff;
+  color: #9a9a9a;
+  font-size: 15px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.input,
+.select {
+  width: 100%;
+  height: clamp(44px, 6vh, 48px);
+  border: 1.5px solid rgba(86, 86, 86, 0.66);
+  border-radius: 999px;
+  outline: none;
+  background: #ffffff;
+  color: #222222;
+  font-size: clamp(17px, 1.35vw, 22px);
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  direction: rtl;
+  padding: 0 28px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.input::placeholder {
+  color: #9d9d9d;
+  opacity: 1;
+}
+
+.input:focus,
+.select:focus {
+  border-color: #d46a2c;
+  box-shadow: 0 0 0 4px rgba(212, 106, 44, 0.12);
+}
+
+.passwordInput {
+  padding-left: 52px;
+}
+
+.passwordToggle {
+  position: absolute;
+  left: 15px;
+  top: 7px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: rgba(74, 74, 74, 0.58);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.passwordToggle svg {
+  width: 23px;
+  height: 23px;
+}
+
+.passwordToggle:hover,
+.passwordToggleActive {
+  color: rgba(74, 74, 74, 0.9);
+}
+
+.passwordToggle:active {
+  transform: scale(0.96);
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.select {
+  appearance: none;
+  cursor: pointer;
+  padding-left: 44px;
+}
+
+.selectIcon {
+  position: absolute;
+  left: 22px;
+  top: 15px;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  color: rgba(74, 74, 74, 0.75);
+}
+
+.submitButton {
+  display: block;
+  width: min(314px, 72%);
+  height: clamp(49px, 6.2vh, 53px);
+  margin: clamp(24px, 3.5vh, 30px) auto 0;
+  border: 0;
+  border-radius: 999px;
+  background: #89b948;
+  color: #101010;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.submitButton:hover {
+  filter: brightness(0.97);
+  box-shadow: 0 12px 24px rgba(137, 185, 72, 0.22);
+}
+
+.submitButton:active {
+  transform: translateY(1px);
+}
+
+.submitButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.authFooter {
+  margin: clamp(20px, 3vh, 25px) 0 0;
+  color: #666666;
+  font-size: clamp(16px, 1.25vw, 21px);
+  font-weight: 400;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.footerAction {
+  margin-right: 7px;
+  border: 0;
+  background: transparent;
+  color: #d46a2c;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.footerAction:hover {
+  color: #b85220;
+}
+
+.footerAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.addRoleOverlay {
+  position: absolute;
+  inset: -18px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.38);
+  backdrop-filter: blur(10px);
+}
+
+.addRoleBox {
+  width: min(100%, 430px);
+  border: 1px solid rgba(212, 106, 44, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 22px 60px rgba(73, 40, 15, 0.16);
+  padding: 28px 26px;
+  text-align: center;
+}
+
+.addRoleTitle {
+  margin: 0;
+  color: #d46a2c;
+  font-size: 23px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.addRoleText {
+  margin: 14px 0 0;
+  color: #555555;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 2;
+}
+
+.addRoleMeta {
+  margin: 14px 0 0;
+  color: #777777;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.addRoleError {
+  margin: 16px 0 0;
+  border: 1px solid rgba(180, 35, 24, 0.18);
+  border-radius: 14px;
+  background: #fff1f0;
+  color: #b42318;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.8;
+}
+
+.addRoleButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 260px);
+  height: 50px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 999px;
+  background: #89b948;
+  color: #101010;
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.addRoleButton:hover {
+  filter: brightness(0.97);
+  box-shadow: 0 12px 24px rgba(137, 185, 72, 0.22);
+}
+
+.addRoleButton:active {
+  transform: translateY(1px);
+}
+
+.addRoleButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+/* حالت میانی دسکتاپ: دو ستون باید یک مستطیل یک‌دست باشند */
+@media (max-width: 1180px) and (min-width: 769px) {
+  .authScreen {
+    height: 100svh;
+    min-height: 100svh;
+    padding: 24px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .authCard {
+    width: min(100%, 980px);
+    height: calc(100svh - 48px);
+    max-height: calc(100svh - 48px);
+    min-height: 0;
+    grid-template-columns: 50% 50%;
+  }
+
+  .heroPanel {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .heroImage {
+    object-fit: cover;
+    object-position: center center;
+  }
+
+  .formPanel {
+    height: 100%;
+    min-height: 0;
+    padding: 24px 42px;
+    overflow: hidden;
+  }
+
+  .formWrap {
+    max-height: 100%;
+  }
+
+  .brandHeader {
+    margin-bottom: 18px;
+  }
+
+  .brandLogo {
+    width: 104px;
+  }
+
+  .roleTabs {
+    margin-bottom: 20px;
+    gap: 34px;
+  }
+
+  .roleTab {
+    font-size: 19px;
+  }
+
+  .formHeader {
+    margin-bottom: 20px;
+  }
+
+  .formTitle {
+    font-size: 30px;
+  }
+
+  .formSubtitle {
+    font-size: 14px;
+  }
+
+  .fields {
+    gap: 18px;
+  }
+
+  .input,
+  .select {
+    height: 44px;
+    font-size: 18px;
+  }
+
+  .submitButton {
+    height: 48px;
+    margin-top: 24px;
+    width: min(290px, 72%);
+    font-size: 19px;
+  }
+
+  .authFooter {
+    margin-top: 20px;
+    font-size: 17px;
+  }
+}
+
+/* از این عرض به پایین، layout موبایل/تبلت عمودی می‌شود */
+@media (max-width: 768px) {
+  .authScreen {
+    min-height: 100svh;
+    height: auto;
+    padding: 18px;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .authCard {
+    width: min(100%, 560px);
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    grid-template-columns: 1fr;
+    border-radius: 10px;
+  }
+
+  .heroPanel {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 3 / 4;
+    background: #ead0ad;
+  }
+
+  .heroImage {
+    object-fit: cover;
+    object-position: center center;
+  }
+
+  .formPanel {
+    height: auto;
+    min-height: 0;
+    padding: 34px 22px 40px;
+    overflow: visible;
+  }
+
+  .formWrap {
+    max-height: none;
+  }
+
+  .brandHeader {
+    margin-bottom: 22px;
+  }
+
+  .brandLogo {
+    width: 118px;
+  }
+
+  .roleTabs {
+    gap: 30px;
+    margin-bottom: 24px;
+  }
+
+  .formHeader {
+    margin-bottom: 23px;
+  }
+
+  .fieldLabel {
+    right: 30px;
+  }
+
+  .input,
+  .select {
+    height: 48px;
+  }
+
+  .submitButton {
+    width: 78%;
+    height: 53px;
+    border-radius: 999px;
+  }
+}
+
+@media (max-width: 390px) {
+  .authScreen {
+    padding: 12px;
+  }
+
+  .formPanel {
+    padding: 30px 18px 36px;
+  }
+
+  .brandLogo {
+    width: 108px;
+  }
+
+  .roleTabs {
+    gap: 24px;
+  }
+
+  .submitButton {
+    width: 84%;
+  }
+}

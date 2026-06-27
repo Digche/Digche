@@ -12,8 +12,8 @@ import { FakeOtpSender } from "../fakes/FakeOtpSender.js";
 import { FakeUserRepository } from "../fakes/FakeUserRepository.js";
 import { expectAppError } from "../helpers/expectAppError.js";
 
-function makeUseCase({ recentCounts = {} } = {}) {
-  const userRepository = new FakeUserRepository();
+function makeUseCase({ recentCounts = {}, users = [] } = {}) {
+  const userRepository = new FakeUserRepository({ users });
   const otpRepository = new FakeOtpRepository({ recentCounts });
   const otpCodeGenerator = new FakeOtpCodeGenerator("123456");
   const otpHasher = new FakeOtpHasher();
@@ -34,7 +34,18 @@ function makeUseCase({ recentCounts = {} } = {}) {
 
 describe("RequestPublicOtp", () => {
   it("sends public login OTP for the selected role", async () => {
-    const { useCase, otpRepository, otpSender } = makeUseCase();
+    const { useCase, otpRepository, otpSender } = makeUseCase({
+      users: [
+        {
+          id: "user-1",
+          phone: "+989121234567",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
+          roles: [USER_ROLES.CLIENT]
+        }
+      ]
+    });
 
     const result = await useCase.execute({
       phone: "09121234567",
@@ -60,6 +71,22 @@ describe("RequestPublicOtp", () => {
         purpose: OTP_PURPOSES.PUBLIC_LOGIN
       }
     ]);
+  });
+
+  it("rejects login OTP when public account does not exist", async () => {
+    const { useCase } = makeUseCase();
+
+    await expectAppError(
+      useCase.execute({
+        phone: "09121234567",
+        role: USER_ROLES.CLIENT,
+        flow: PUBLIC_AUTH_FLOWS.LOGIN
+      }),
+      {
+        statusCode: 404,
+        code: "NOT_FOUND"
+      }
+    );
   });
 
   it("rejects missing or invalid public role", async () => {
@@ -102,6 +129,33 @@ describe("RequestPublicOtp", () => {
       {
         statusCode: 429,
         code: "TOO_MANY_REQUESTS"
+      }
+    );
+  });
+
+  it("rejects duplicate phone and role at register request time", async () => {
+    const { useCase } = makeUseCase({
+      users: [
+        {
+          id: "user-1",
+          phone: "+989121234567",
+          firstName: "Ali",
+          lastName: "Ahmadi",
+          username: "ali_ahmadi",
+          roles: [USER_ROLES.CLIENT]
+        }
+      ]
+    });
+
+    await expectAppError(
+      useCase.execute({
+        phone: "09121234567",
+        role: USER_ROLES.CLIENT,
+        flow: PUBLIC_AUTH_FLOWS.REGISTER
+      }),
+      {
+        statusCode: 409,
+        code: "PUBLIC_ACCOUNT_ALREADY_EXISTS"
       }
     );
   });

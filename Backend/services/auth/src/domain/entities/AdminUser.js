@@ -10,8 +10,9 @@ export class AdminUser {
     username = null,
     role = ADMIN_ROLES.ADMIN,
     status = ADMIN_STATUS.ACTIVE,
-    profileImageUrl = null,
+    photoUrl = null,
     createdBy = null,
+    tokenVersion = 0,
     createdAt = null,
     updatedAt = null
   }) {
@@ -26,8 +27,9 @@ export class AdminUser {
     this.username = username;
     this.role = role;
     this.status = status;
-    this.profileImageUrl = profileImageUrl;
+    this.photoUrl = photoUrl;
     this.createdBy = createdBy;
+    this.tokenVersion = tokenVersion;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }

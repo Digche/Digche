@@ -2,10 +2,12 @@ import express from "express";
 
 import { AdminAuthController } from "../../../../src/interfaces/http/controllers/AdminAuthController.js";
 import { AdminUserController } from "../../../../src/interfaces/http/controllers/AdminUserController.js";
+import { ChefAdminController } from "../../../../src/interfaces/http/controllers/ChefAdminController.js";
 import { PublicAuthController } from "../../../../src/interfaces/http/controllers/PublicAuthController.js";
 
 import { createAdminAuthRoutes } from "../../../../src/interfaces/http/routes/adminAuthRoutes.js";
 import { createAdminUserRoutes } from "../../../../src/interfaces/http/routes/adminUserRoutes.js";
+import { createChefAdminRoutes } from "../../../../src/interfaces/http/routes/chefAdminRoutes.js";
 import { createPublicAuthRoutes } from "../../../../src/interfaces/http/routes/publicAuthRoutes.js";
 
 import { createAdminAuthMiddleware } from "../../../../src/interfaces/http/middlewares/adminAuthMiddleware.js";
@@ -24,6 +26,9 @@ import { ListAdminUsers } from "../../../../src/application/use-cases/ListAdminU
 import { DisableAdminUser } from "../../../../src/application/use-cases/DisableAdminUser.js";
 import { EnableAdminUser } from "../../../../src/application/use-cases/EnableAdminUser.js";
 import { ChangeAdminUserPhone } from "../../../../src/application/use-cases/ChangeAdminUserPhone.js";
+import { ListChefs } from "../../../../src/application/use-cases/ListChefs.js";
+import { SuspendChef } from "../../../../src/application/use-cases/SuspendChef.js";
+import { ActivateChef } from "../../../../src/application/use-cases/ActivateChef.js";
 
 import { RequestPublicOtp } from "../../../../src/application/use-cases/RequestPublicOtp.js";
 import { VerifyPublicOtp } from "../../../../src/application/use-cases/VerifyPublicOtp.js";
@@ -41,6 +46,7 @@ import { FakeOtpHasher } from "../../../unit/fakes/FakeOtpHasher.js";
 import { FakeOtpRepository } from "../../../unit/fakes/FakeOtpRepository.js";
 import { FakeOtpSender } from "../../../unit/fakes/FakeOtpSender.js";
 import { FakeRefreshTokenRepository } from "../../../unit/fakes/FakeRefreshTokenRepository.js";
+import { FakeRegistrationTokenRepository } from "../../../unit/fakes/FakeRegistrationTokenRepository.js";
 import { FakeTokenService } from "../../../unit/fakes/FakeTokenService.js";
 import { FakeUserRepository } from "../../../unit/fakes/FakeUserRepository.js";
 
@@ -51,6 +57,7 @@ export function createBaseTestContext(overrides = {}) {
     adminUserRepository: overrides.adminUserRepository || new FakeAdminUserRepository({ adminUsers: overrides.adminUsers || [] }),
     otpRepository: overrides.otpRepository || new FakeOtpRepository({ otps: overrides.otps || [], recentCounts: overrides.recentCounts || {} }),
     refreshTokenRepository: overrides.refreshTokenRepository || new FakeRefreshTokenRepository({ refreshTokens: overrides.refreshTokens || [] }),
+    registrationTokenRepository: overrides.registrationTokenRepository || new FakeRegistrationTokenRepository({ registrationTokens: overrides.registrationTokens || [] }),
     otpCodeGenerator: overrides.otpCodeGenerator || new FakeOtpCodeGenerator(overrides.otpCode || "123456"),
     otpHasher: overrides.otpHasher || new FakeOtpHasher(),
     otpSender: overrides.otpSender || new FakeOtpSender(),
@@ -69,11 +76,14 @@ export function createHttpTestApp(context) {
   app.use(express.json());
 
   const adminAuthMiddleware = createAdminAuthMiddleware({
-    tokenService: context.tokenService
+    tokenService: context.tokenService,
+    adminUserRepository: context.adminUserRepository
   });
 
   const publicAuthMiddleware = createPublicAuthMiddleware({
-    tokenService: context.tokenService
+    tokenService: context.tokenService,
+    userRepository: context.userRepository,
+    chefAccountRepository: context.chefAccountRepository
   });
 
   const logoutSession = new LogoutSession({
@@ -147,7 +157,8 @@ export function createHttpTestApp(context) {
       adminUserRepository: context.adminUserRepository
     }),
     disableAdminUser: new DisableAdminUser({
-      adminUserRepository: context.adminUserRepository
+      adminUserRepository: context.adminUserRepository,
+      refreshTokenRepository: context.refreshTokenRepository
     }),
     enableAdminUser: new EnableAdminUser({
       adminUserRepository: context.adminUserRepository
@@ -158,9 +169,24 @@ export function createHttpTestApp(context) {
     })
   });
 
+  const chefAdminController = new ChefAdminController({
+    listChefs: new ListChefs({
+      chefAccountRepository: context.chefAccountRepository
+    }),
+    suspendChef: new SuspendChef({
+      chefAccountRepository: context.chefAccountRepository,
+      refreshTokenRepository: context.refreshTokenRepository,
+      userRepository: context.userRepository
+    }),
+    activateChef: new ActivateChef({
+      chefAccountRepository: context.chefAccountRepository
+    })
+  });
+
   const publicAuthController = new PublicAuthController({
     requestPublicOtp: new RequestPublicOtp({
       userRepository: context.userRepository,
+      chefAccountRepository: context.chefAccountRepository,
       otpRepository: context.otpRepository,
       otpCodeGenerator: context.otpCodeGenerator,
       otpHasher: context.otpHasher,
@@ -173,14 +199,17 @@ export function createHttpTestApp(context) {
       chefAccountRepository: context.chefAccountRepository,
       otpRepository: context.otpRepository,
       refreshTokenRepository: context.refreshTokenRepository,
+      registrationTokenRepository: context.registrationTokenRepository,
       otpHasher: context.otpHasher,
       tokenService: context.tokenService,
-      refreshTokenExpiresDays: context.refreshTokenExpiresDays
+      refreshTokenExpiresDays: context.refreshTokenExpiresDays,
+      registrationTokenExpiresMinutes: 10
     }),
     completePublicRegistration: new CompletePublicRegistration({
       userRepository: context.userRepository,
       chefAccountRepository: context.chefAccountRepository,
       refreshTokenRepository: context.refreshTokenRepository,
+      registrationTokenRepository: context.registrationTokenRepository,
       tokenService: context.tokenService,
       refreshTokenExpiresDays: context.refreshTokenExpiresDays
     }),
@@ -213,6 +242,7 @@ export function createHttpTestApp(context) {
 
   app.use("/admin/auth", createAdminAuthRoutes(adminAuthController, adminAuthMiddleware));
   app.use("/admin/admin-users", createAdminUserRoutes(adminUserController, adminAuthMiddleware));
+  app.use("/admin/chefs", createChefAdminRoutes(chefAdminController, adminAuthMiddleware));
   app.use("/auth", createPublicAuthRoutes(publicAuthController, publicAuthMiddleware));
 
   app.use(errorHandler);
@@ -228,7 +258,8 @@ export function registerAdminAccessToken(context, token, overrides = {}) {
     lastName: overrides.lastName ?? null,
     username: overrides.username ?? null,
     role: overrides.role || "manager",
-    profileImageUrl: overrides.profileImageUrl ?? null,
+    photoUrl: overrides.photoUrl ?? null,
+    tokenVersion: overrides.tokenVersion ?? 0,
     isManager: overrides.isManager ?? overrides.role !== "admin",
     scope: "admin"
   });
@@ -243,11 +274,12 @@ export function registerPublicAccessToken(context, token, overrides = {}) {
     firstName: overrides.firstName || "Ali",
     lastName: overrides.lastName || "Ahmadi",
     username: overrides.username || "ali_ahmadi",
-    profileImageUrl: overrides.profileImageUrl ?? null,
+    photoUrl: overrides.photoUrl ?? null,
     address: overrides.address ?? null,
     roles: overrides.roles || ["client"],
     selectedRole: overrides.selectedRole || "client",
     chef: overrides.chef || null,
+    tokenVersion: overrides.tokenVersion ?? 0,
     scope: "public"
   });
 

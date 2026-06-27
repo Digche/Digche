@@ -9,6 +9,7 @@ export class FakeAdminUserRepository {
     this.updatedProfileFields = [];
     this.disabledIds = [];
     this.enabledIds = [];
+    this.incrementedTokenVersions = [];
   }
 
   toAdminUser(adminUser) {
@@ -40,8 +41,9 @@ export class FakeAdminUserRepository {
       username: adminUser.username,
       role: adminUser.role,
       status: adminUser.status,
-      profileImageUrl: adminUser.profileImageUrl,
+      photoUrl: adminUser.photoUrl,
       createdBy: adminUser.createdBy,
+      tokenVersion: adminUser.tokenVersion || 0,
       createdAt: adminUser.createdAt || new Date("2026-01-01T00:00:00.000Z"),
       updatedAt: adminUser.updatedAt || new Date("2026-01-01T00:00:00.000Z")
     });
@@ -108,6 +110,20 @@ export class FakeAdminUserRepository {
     adminUser.status = ADMIN_STATUS.ACTIVE;
     adminUser.updatedAt = new Date("2026-01-04T00:00:00.000Z");
     this.enabledIds.push(id);
+
+    return adminUser;
+  }
+
+  async incrementTokenVersion(id) {
+    const adminUser = await this.findById(id);
+
+    if (!adminUser) {
+      return null;
+    }
+
+    adminUser.tokenVersion = Number(adminUser.tokenVersion || 0) + 1;
+    adminUser.updatedAt = new Date("2026-01-06T00:00:00.000Z");
+    this.incrementedTokenVersions.push({ id, tokenVersion: adminUser.tokenVersion });
 
     return adminUser;
   }

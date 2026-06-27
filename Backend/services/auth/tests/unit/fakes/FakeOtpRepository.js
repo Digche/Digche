@@ -38,7 +38,13 @@ export class FakeOtpRepository {
 
     const otpCode = this.otps.find((candidate) => candidate.id === id);
     if (otpCode) {
+      if (otpCode.consumedAt) {
+        return false;
+      }
       otpCode.consumedAt = new Date();
+      return true;
     }
+
+    return false;
   }
 }

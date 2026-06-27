@@ -40,7 +40,7 @@ export class EnableAdminUser {
         username: enabledAdminUser.username,
         role: enabledAdminUser.role,
         status: enabledAdminUser.status,
-        profileImageUrl: enabledAdminUser.profileImageUrl,
+        photoUrl: enabledAdminUser.photoUrl,
         createdBy: enabledAdminUser.createdBy,
         updatedAt: enabledAdminUser.updatedAt
       }

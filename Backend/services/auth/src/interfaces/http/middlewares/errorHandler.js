@@ -10,6 +10,15 @@ export function errorHandler(error, req, res, next) {
     });
   }
 
+  if (error.statusCode && error.code) {
+    return res.status(error.statusCode).json({
+      error: {
+        code: error.code,
+        message: error.message
+      }
+    });
+  }
+
   console.error("Unhandled error", error);
 
   return res.status(500).json({

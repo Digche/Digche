@@ -1,11 +1,33 @@
 @import "tailwindcss";
 
 @theme {
-  /* اگر رنگ خاصی مثل رنگ قهوه‌ای لوگو را می‌خواهید اینجا تعریف کنید */
   --color-brand-brown: #A65D39;
 }
 
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  font-family: system-ui, -apple-system, sans-serif;
-  direction: rtl; /* برای راست‌چین شدن کل سایت */
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Tahoma, Arial, Helvetica, sans-serif;
+  direction: rtl;
+}
+
+button,
+input,
+select {
+  font: inherit;
 }

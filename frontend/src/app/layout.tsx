@@ -1,24 +1,26 @@
-import "./globals.css"; 
+import type { Metadata } from "next";
+import { AuthSessionProvider } from "@/features/auth/components/AuthSessionProvider";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "Digcheh",
+  description: "Digcheh home-made food marketplace",
+};
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="fa" dir="ltr">
+    <html lang="fa" dir="rtl">
       <body>
-            <div className=" h-screen w-screen gap-15 overflow-x-hidden">
-
-                {/* <div className=" h-full w-full max-w-lg bg-amber-600 mx-auto"> */}
-                  {children}
-                {/* </div> */}
-            </div>
-
+        <AuthSessionProvider>
+          <div className="h-screen w-screen gap-15 overflow-x-hidden">
+            {children}
+          </div>
+        </AuthSessionProvider>
       </body>
     </html>
-  )
+  );
 }
-
-
-

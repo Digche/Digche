@@ -59,8 +59,9 @@ export class SequelizeAdminUserRepository {
       username: adminUser.username,
       role: adminUser.role,
       status: adminUser.status,
-      profileImageUrl: adminUser.profileImageUrl,
-      createdBy: adminUser.createdBy
+      photoUrl: adminUser.photoUrl,
+      createdBy: adminUser.createdBy,
+      tokenVersion: adminUser.tokenVersion
     });
 
     return this.toDomain(createdAdminUser);
@@ -116,6 +117,20 @@ export class SequelizeAdminUserRepository {
     return this.toDomain(adminUser);
   }
 
+  async incrementTokenVersion(id) {
+    const adminUser = await AdminUserModel.findByPk(id);
+
+    if (!adminUser) {
+      return null;
+    }
+
+    adminUser.tokenVersion = Number(adminUser.tokenVersion || 0) + 1;
+
+    await adminUser.save();
+
+    return this.toDomain(adminUser);
+  }
+
   toDomain(adminUserModel) {
     return new AdminUser({
       id: adminUserModel.id,
@@ -125,8 +140,9 @@ export class SequelizeAdminUserRepository {
       username: adminUserModel.username,
       role: adminUserModel.role,
       status: adminUserModel.status,
-      profileImageUrl: adminUserModel.profileImageUrl,
+      photoUrl: adminUserModel.photoUrl,
       createdBy: adminUserModel.createdBy,
+      tokenVersion: adminUserModel.tokenVersion || 0,
       createdAt: adminUserModel.createdAt,
       updatedAt: adminUserModel.updatedAt
     });

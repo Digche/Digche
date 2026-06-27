@@ -52,7 +52,11 @@ export class VerifyAdminOtp {
       throw new UnauthorizedError("Invalid or expired OTP code");
     }
 
-    await this.otpRepository.consume(otpCode.id);
+    const consumed = await this.otpRepository.consume(otpCode.id);
+
+    if (!consumed) {
+      throw new UnauthorizedError("Invalid or expired OTP code");
+    }
 
     const accessTokenPayload = {
       sub: adminUser.id,
@@ -61,8 +65,9 @@ export class VerifyAdminOtp {
       lastName: adminUser.lastName,
       username: adminUser.username,
       role: adminUser.role,
-      profileImageUrl: adminUser.profileImageUrl,
+      photoUrl: adminUser.photoUrl,
       scope: AUTH_SCOPES.ADMIN,
+      tokenVersion: adminUser.tokenVersion || 0,
       isManager: adminUser.isManager()
     };
 
@@ -96,7 +101,8 @@ export class VerifyAdminOtp {
         lastName: adminUser.lastName,
         username: adminUser.username,
         role: adminUser.role,
-        profileImageUrl: adminUser.profileImageUrl,
+        photoUrl: adminUser.photoUrl,
+        tokenVersion: adminUser.tokenVersion || 0,
         isManager: adminUser.isManager()
       }
     };

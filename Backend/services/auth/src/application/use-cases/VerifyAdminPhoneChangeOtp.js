@@ -85,12 +85,16 @@ export class VerifyAdminPhoneChangeOtp {
       throw new UnauthorizedError("Invalid or expired OTP code");
     }
 
-    const updatedAdminUser = await this.adminUserRepository.updatePhone(
-      adminUser.id,
-      normalizedNewPhone
-    );
+    const consumed = await this.otpRepository.consume(otpCode.id);
 
-    await this.otpRepository.consume(otpCode.id);
+    if (!consumed) {
+      throw new UnauthorizedError("Invalid or expired OTP code");
+    }
+
+    await this.adminUserRepository.updatePhone(adminUser.id, normalizedNewPhone);
+
+    const updatedAdminUser =
+      await this.adminUserRepository.incrementTokenVersion(adminUser.id);
 
     await this.refreshTokenRepository.revokeAllForOwner(
       updatedAdminUser.id,
@@ -104,8 +108,9 @@ export class VerifyAdminPhoneChangeOtp {
       lastName: updatedAdminUser.lastName,
       username: updatedAdminUser.username,
       role: updatedAdminUser.role,
-      profileImageUrl: updatedAdminUser.profileImageUrl,
+      photoUrl: updatedAdminUser.photoUrl,
       isManager: updatedAdminUser.role === ADMIN_ROLES.MANAGER,
+      tokenVersion: updatedAdminUser.tokenVersion || 0,
       scope: AUTH_SCOPES.ADMIN
     };
 
@@ -139,7 +144,8 @@ export class VerifyAdminPhoneChangeOtp {
         lastName: updatedAdminUser.lastName,
         username: updatedAdminUser.username,
         role: updatedAdminUser.role,
-        profileImageUrl: updatedAdminUser.profileImageUrl,
+        photoUrl: updatedAdminUser.photoUrl,
+        tokenVersion: updatedAdminUser.tokenVersion || 0,
         isManager: updatedAdminUser.role === ADMIN_ROLES.MANAGER
       }
     };

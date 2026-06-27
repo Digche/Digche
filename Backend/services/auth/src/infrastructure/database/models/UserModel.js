@@ -29,14 +29,20 @@ export const UserModel = sequelize.define(
       allowNull: true,
       unique: true
     },
-    profileImageUrl: {
+    photoUrl: {
       type: DataTypes.STRING(2048),
       allowNull: true,
-      field: "profile_image_url"
+      field: "photo_url"
     },
     address: {
       type: DataTypes.STRING(500),
       allowNull: true
+    },
+    tokenVersion: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: "token_version"
     }
   },
   {

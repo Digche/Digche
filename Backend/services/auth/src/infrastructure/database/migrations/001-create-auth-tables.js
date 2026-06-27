@@ -86,7 +86,7 @@ export async function up({ queryInterface, DataTypes, transaction }) {
       status: {
         type: DataTypes.STRING(50),
         allowNull: false,
-        defaultValue: "pending"
+        defaultValue: "active"
       },
       created_at: {
         type: DataTypes.DATE,
