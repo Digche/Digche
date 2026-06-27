@@ -1,32 +1,30 @@
-import jwt from "jsonwebtoken";
-
 import { ForbiddenError, UnauthorizedError } from "../../../application/errors/AppError.js";
 import { ADMIN_ROLES, USER_ROLES } from "../../../domain/constants/roles.js";
 import { extractBearerToken } from "./extractBearerToken.js";
 
-export function createPublicAuthMiddleware({ jwtSecret }) {
-  if (!jwtSecret) {
-    throw new Error("JWT_SECRET is required");
+export function createPublicAuthMiddleware({ authTokenClient }) {
+  if (!authTokenClient) {
+    throw new Error("authTokenClient is required");
   }
 
-  return function publicAuthMiddleware(req, res, next) {
+  return async function publicAuthMiddleware(req, res, next) {
     try {
-      const payload = verifyAccessToken({ req, jwtSecret });
+      const actor = await verifyAccessToken({ req, authTokenClient });
 
-      if (payload.scope !== "public") {
+      if (actor.scope !== "public") {
         throw new ForbiddenError("Public access token required");
       }
 
-      if (!Object.values(USER_ROLES).includes(payload.selectedRole)) {
+      if (!Object.values(USER_ROLES).includes(actor.selectedRole)) {
         throw new ForbiddenError("Client or chef role required");
       }
 
       req.auth = {
-        id: payload.sub,
-        scope: payload.scope,
-        role: payload.selectedRole,
-        phone: payload.phone,
-        raw: payload
+        id: actor.id,
+        scope: actor.scope,
+        role: actor.selectedRole,
+        phone: actor.phone,
+        raw: actor
       };
 
       next();
@@ -36,30 +34,30 @@ export function createPublicAuthMiddleware({ jwtSecret }) {
   };
 }
 
-export function createAdminAuthMiddleware({ jwtSecret }) {
-  if (!jwtSecret) {
-    throw new Error("JWT_SECRET is required");
+export function createAdminAuthMiddleware({ authTokenClient }) {
+  if (!authTokenClient) {
+    throw new Error("authTokenClient is required");
   }
 
-  return function adminAuthMiddleware(req, res, next) {
+  return async function adminAuthMiddleware(req, res, next) {
     try {
-      const payload = verifyAccessToken({ req, jwtSecret });
+      const actor = await verifyAccessToken({ req, authTokenClient });
 
-      if (payload.scope !== "admin") {
+      if (actor.scope !== "admin") {
         throw new ForbiddenError("Admin access token required");
       }
 
-      if (!Object.values(ADMIN_ROLES).includes(payload.role)) {
+      if (!Object.values(ADMIN_ROLES).includes(actor.role)) {
         throw new ForbiddenError("Admin or manager role required");
       }
 
       req.auth = {
-        id: payload.sub,
-        scope: payload.scope,
-        role: payload.role,
-        phone: payload.phone,
-        isManager: Boolean(payload.isManager),
-        raw: payload
+        id: actor.id,
+        scope: actor.scope,
+        role: actor.role,
+        phone: actor.phone,
+        isManager: Boolean(actor.isManager),
+        raw: actor
       };
 
       next();
@@ -69,18 +67,22 @@ export function createAdminAuthMiddleware({ jwtSecret }) {
   };
 }
 
-function verifyAccessToken({ req, jwtSecret }) {
+async function verifyAccessToken({ req, authTokenClient }) {
   const token = extractBearerToken(req);
 
   if (!token) {
     throw new UnauthorizedError("Access token is required");
   }
 
-  return jwt.verify(token, jwtSecret);
+  return authTokenClient.verify(token);
 }
 
 function normalizeAuthError(error) {
-  if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+  if (
+    error.name === "JsonWebTokenError" ||
+    error.name === "TokenExpiredError" ||
+    error.statusCode === 401
+  ) {
     return new UnauthorizedError("Invalid or expired access token");
   }
 

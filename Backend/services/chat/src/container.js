@@ -4,6 +4,7 @@ import { SequelizeConversationRepository } from "./infrastructure/database/repos
 import { SequelizeMessageRepository } from "./infrastructure/database/repositories/SequelizeMessageRepository.js";
 import { ChatRealtimeHub } from "./infrastructure/realtime/ChatRealtimeHub.js";
 import { AuthProfileClient } from "./infrastructure/http/AuthProfileClient.js";
+import { AuthTokenClient } from "./infrastructure/http/AuthTokenClient.js";
 import { ProfileHydrator } from "./application/services/ProfileHydrator.js";
 
 import { StartConversation } from "./application/use-cases/StartConversation.js";
@@ -20,6 +21,11 @@ export function createContainer() {
   const conversationRepository = new SequelizeConversationRepository();
   const messageRepository = new SequelizeMessageRepository();
   const realtimeHub = new ChatRealtimeHub();
+  const authTokenClient = new AuthTokenClient({
+    baseUrl: env.auth.internalBaseUrl,
+    internalApiKey: env.auth.internalApiKey,
+    timeoutMs: env.auth.tokenVerifyTimeoutMs
+  });
   const authProfileClient = new AuthProfileClient({
     baseUrl: env.auth.internalBaseUrl,
     internalApiKey: env.auth.internalApiKey,
@@ -66,7 +72,7 @@ export function createContainer() {
   });
 
   const webSocketController = new ChatWebSocketController({
-    jwtSecret: env.jwt.secret,
+    authTokenClient,
     realtimeHub,
     conversationRepository,
     sendMessage,
@@ -77,7 +83,7 @@ export function createContainer() {
     chatController,
     webSocketController,
     authMiddleware: createAuthMiddleware({
-      jwtSecret: env.jwt.secret
+      authTokenClient
     })
   };
 }

@@ -11,6 +11,7 @@ import { createInternalAuthRoutes } from "./interfaces/http/routes/internalAuthR
 import { requestLogger } from "./interfaces/http/middlewares/requestLogger.js";
 import { errorHandler } from "./interfaces/http/middlewares/errorHandler.js";
 import { setupSwagger } from "./interfaces/http/swagger.js";
+import { env } from "./config/env.js";
 
 export function createApp() {
   const app = express();
@@ -18,11 +19,13 @@ export function createApp() {
   const container = createContainer();
 
   app.use(helmet());
-  app.use(cors());
+  app.use(cors(createCorsOptions(env.cors.allowedOrigins)));
   app.use(requestLogger);
   app.use(express.json());
 
-  setupSwagger(app);
+  if (env.docs.enabled) {
+    setupSwagger(app);
+  }
 
   app.get("/health", (req, res) => {
     res.json({
@@ -74,4 +77,17 @@ export function createApp() {
   app.use(errorHandler);
 
   return app;
+}
+
+function createCorsOptions(allowedOrigins) {
+  return {
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    }
+  };
 }

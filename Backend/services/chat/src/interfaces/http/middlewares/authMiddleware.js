@@ -1,12 +1,10 @@
-import jwt from "jsonwebtoken";
-
 import { UnauthorizedError, ForbiddenError } from "../../../application/errors/AppError.js";
 import { PARTICIPANT_TYPES } from "../../../domain/constants/participantTypes.js";
 import { extractBearerToken } from "./extractBearerToken.js";
 
-export function createAuthMiddleware({ jwtSecret }) {
-  if (!jwtSecret) {
-    throw new Error("JWT_SECRET is required");
+export function createAuthMiddleware({ authTokenClient }) {
+  if (!authTokenClient) {
+    throw new Error("authTokenClient is required");
   }
 
   return async function authMiddleware(request) {
@@ -16,57 +14,52 @@ export function createAuthMiddleware({ jwtSecret }) {
       throw new UnauthorizedError("Access token is required");
     }
 
-    request.auth = verifyChatAccessToken({ token, jwtSecret });
+    request.auth = await verifyChatAccessToken({ token, authTokenClient });
   };
 }
 
-export function verifyChatAccessToken({ token, jwtSecret }) {
+export async function verifyChatAccessToken({ token, authTokenClient }) {
   try {
-    const payload = jwt.verify(token, jwtSecret);
+    const actor = await authTokenClient.verify(token);
 
-    if (!payload.sub) {
+    if (!actor.id) {
       throw new UnauthorizedError("Invalid access token subject");
     }
 
-    if (payload.scope === "admin") {
+    if (actor.scope === "admin") {
       return {
-        id: payload.sub,
+        id: actor.id,
         type: PARTICIPANT_TYPES.ADMIN,
-        scope: payload.scope,
-        phone: payload.phone,
-        role: payload.role,
-        displayName: displayNameFromPayload(payload),
-        raw: payload
+        scope: actor.scope,
+        phone: actor.phone,
+        role: actor.role,
+        displayName: actor.displayName,
+        raw: actor
       };
     }
 
-    if (payload.scope === "public") {
+    if (actor.scope === "public") {
       return {
-        id: payload.sub,
+        id: actor.id,
         type: PARTICIPANT_TYPES.USER,
-        scope: payload.scope,
-        phone: payload.phone,
-        selectedRole: payload.selectedRole,
-        displayName: displayNameFromPayload(payload),
-        raw: payload
+        scope: actor.scope,
+        phone: actor.phone,
+        selectedRole: actor.selectedRole,
+        displayName: actor.displayName,
+        raw: actor
       };
     }
 
     throw new ForbiddenError("Unsupported access token scope");
   } catch (error) {
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError" ||
+      error.statusCode === 401
+    ) {
       throw new UnauthorizedError("Invalid or expired access token");
     }
 
     throw error;
   }
-}
-
-function displayNameFromPayload(payload) {
-  const fullName = [payload.firstName, payload.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-
-  return fullName || payload.username || payload.phone || null;
 }

@@ -7,6 +7,7 @@ import { createContainer } from "./container.js";
 import { registerChatRoutes } from "./interfaces/http/routes/chatRoutes.js";
 import { errorHandler } from "./interfaces/http/middlewares/errorHandler.js";
 import { setupSwagger } from "./interfaces/http/swagger.js";
+import { env } from "./config/env.js";
 
 export async function createApp() {
   const app = Fastify({
@@ -20,12 +21,21 @@ export async function createApp() {
   });
 
   await app.register(cors, {
-    origin: true
+    origin(origin, callback) {
+      if (!origin || env.cors.allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    }
   });
 
   await app.register(websocket);
 
-  setupSwagger(app);
+  if (env.docs.enabled) {
+    setupSwagger(app);
+  }
 
   await registerChatRoutes({
     app,

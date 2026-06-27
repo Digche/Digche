@@ -1,6 +1,7 @@
 import { env } from "./config/env.js";
 
 import { SequelizeTicketRepository } from "./infrastructure/database/repositories/SequelizeTicketRepository.js";
+import { AuthTokenClient } from "./infrastructure/http/AuthTokenClient.js";
 import { CreateTicket } from "./application/use-cases/CreateTicket.js";
 import { ListTickets } from "./application/use-cases/ListTickets.js";
 import { GetTicket } from "./application/use-cases/GetTicket.js";
@@ -13,6 +14,11 @@ import {
 
 export function createContainer() {
   const ticketRepository = new SequelizeTicketRepository();
+  const authTokenClient = new AuthTokenClient({
+    baseUrl: env.auth.internalBaseUrl,
+    internalApiKey: env.auth.internalApiKey,
+    timeoutMs: env.auth.tokenVerifyTimeoutMs
+  });
 
   const createTicket = new CreateTicket({
     ticketRepository
@@ -40,10 +46,10 @@ export function createContainer() {
   return {
     ticketController,
     publicAuthMiddleware: createPublicAuthMiddleware({
-      jwtSecret: env.jwt.secret
+      authTokenClient
     }),
     adminAuthMiddleware: createAdminAuthMiddleware({
-      jwtSecret: env.jwt.secret
+      authTokenClient
     })
   };
 }
