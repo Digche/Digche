@@ -204,7 +204,7 @@ export default function ChefOrdersHistoryScreen() {
               value={searchTerm}
               onChange={setSearchTerm}
               placeholder="جست و جو در سفارش ها..."
-              className="max-w-[420px]"
+              className="max-w-105"
             />
           </div>
 
@@ -232,7 +232,7 @@ export default function ChefOrdersHistoryScreen() {
           <div className="hidden lg:block" />
         </div>
 
-        <div className="mx-auto max-w-[980px]">
+        <div className="mx-auto max-w-245">
           {groupedOrders.length === 0 ? (
             <div className="rounded-3xl border border-orange-100 bg-[#FFF9F4] p-10 text-center">
               <h2 className="text-xl font-bold text-gray-800">
@@ -244,7 +244,7 @@ export default function ChefOrdersHistoryScreen() {
               </p>
             </div>
           ) : (
-            <div className="max-h-[650px] space-y-4 overflow-y-auto pb-2 pl-2">
+            <div className="max-h-162.5 space-y-4 overflow-y-auto pb-2 pl-2">
               {groupedOrders.map((group) => (
                 <ChefOrdersHistoryGroup
                   key={group.key}

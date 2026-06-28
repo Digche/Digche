@@ -11,8 +11,8 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
       <div dir="rtl" className="min-h-screen bg-[#FFF9F4]">
         <CustomerSidebar />
 
-        <main className="min-h-screen px-4 pb-8 pt-20 md:py-8 md:pr-[370px] md:pl-8">
-          <div className="mx-auto w-full lg:max-w-[1500px]">
+        <main className="min-h-screen px-4 pb-8 pt-20 md:py-8 md:pr-92.5 md:pl-8">
+          <div className="mx-auto w-full lg:max-w-375">
             {children}
           </div>
         </main>

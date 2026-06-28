@@ -148,7 +148,7 @@ export default function FoodDetailsHero({
     <section
       dir="rtl"
       onClick={goToFoodDetails}
-      className={`overflow-hidden rounded-[2rem] border border-orange-100 bg-white p-4 shadow-sm sm:p-5 ${clickableClasses}`}
+      className={`overflow-hidden rounded-4xl border border-orange-100 bg-white p-4 shadow-sm sm:p-5 ${clickableClasses}`}
     >
       {/* Desktop / Tablet */}
       <div className="hidden items-stretch gap-6 lg:flex">
@@ -209,7 +209,7 @@ export default function FoodDetailsHero({
           </div>
         </div>
 
-        <div className="relative h-[390px] w-[43%] shrink-0 overflow-hidden rounded-[1.7rem] bg-[#FDF7F2]">
+        <div className="relative h-97.5 w-[43%] shrink-0 overflow-hidden rounded-[1.7rem] bg-[#FDF7F2]">
           <Image
             src={food.image}
             alt={food.title}
@@ -271,7 +271,7 @@ export default function FoodDetailsHero({
             />
           </div>
 
-          <div className="relative aspect-square w-[42%] shrink-0 overflow-hidden rounded-[1.5rem] bg-[#FDF7F2]">
+          <div className="relative aspect-square w-[42%] shrink-0 overflow-hidden rounded-3xl bg-[#FDF7F2]">
             <Image
               src={food.image}
               alt={food.title}

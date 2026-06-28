@@ -142,9 +142,9 @@ export default function AddFoodForm() {
 
 
   return (
-    <section dir="rtl" className="relative overflow-hidden rounded-[2rem] border border-orange-100 bg-white shadow-sm">
+    <section dir="rtl" className="relative overflow-hidden rounded-4xl border border-orange-100 bg-white shadow-sm">
       
-      <div className="absolute inset-0 opacity-60  [background-size:76px_76px]" />
+      <div className="absolute inset-0 opacity-60  bg-size-[76px_76px]" />
 
       <div className="relative p-5 sm:p-8 lg:p-10">
 
@@ -245,7 +245,7 @@ export default function AddFoodForm() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="group flex min-h-[150px] w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dotted border-gray-800 bg-[#F2CDB5]/35 px-4 text-center transition hover:bg-[#F2CDB5]/50"
+                  className="group flex min-h-37.5 w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dotted border-gray-800 bg-[#F2CDB5]/35 px-4 text-center transition hover:bg-[#F2CDB5]/50"
                 >
                   {form.image ? (
                     <div className="relative h-36 w-full overflow-hidden rounded-xl">

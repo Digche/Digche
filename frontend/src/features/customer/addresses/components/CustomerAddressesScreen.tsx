@@ -16,9 +16,9 @@ export default function CustomerAddressesScreen() {
           👋 خوش اومدی!
         </h1>
 
-        <div className="w-full max-w-4xl rounded-md border border-gray-950 bg-white px-8 py-8 shadow-sm md:min-h-[350px]">
+        <div className="w-full max-w-4xl rounded-md border border-gray-950 bg-white px-8 py-8 shadow-sm md:min-h-87.5">
           {customerAddresses.length === 0 ? (
-            <div className="flex min-h-[220px] items-center justify-center">
+            <div className="flex min-h-55 items-center justify-center">
               <p className="text-sm text-gray-500">
                 هنوز آدرسی ثبت نکرده‌اید.
               </p>
