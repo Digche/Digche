@@ -11,7 +11,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to Arvan server
+      - name: Checkout production
+        uses: actions/checkout@v4
+        with:
+          ref: production
+
+      - name: Create release archive
+        run: |
+          tar \
+            --exclude='.git' \
+            --exclude='frontend/node_modules' \
+            --exclude='frontend/.next' \
+            --exclude='Backend/**/node_modules' \
+            -czf /tmp/digche-release.tgz .
+
+      - name: Upload and deploy to Arvan server
         env:
           ARVAN_HOST: ${{ secrets.ARVAN_HOST }}
           ARVAN_USER: ${{ secrets.ARVAN_USER }}
@@ -22,13 +36,37 @@ jobs:
           chmod 600 ~/.ssh/digche_deploy_key
           ssh-keyscan -H "$ARVAN_HOST" >> ~/.ssh/known_hosts
 
+          scp -i ~/.ssh/digche_deploy_key /tmp/digche-release.tgz "$ARVAN_USER@$ARVAN_HOST:/tmp/digche-release.tgz"
+
           ssh -i ~/.ssh/digche_deploy_key "$ARVAN_USER@$ARVAN_HOST" << 'EOF'
             set -e
 
-            cd /opt/digche
-            git fetch origin
-            git checkout production
-            git reset --hard origin/production
+            rm -rf /tmp/digche-env
+            mkdir -p /tmp/digche-env/services/auth
+            mkdir -p /tmp/digche-env/services/chat
+            mkdir -p /tmp/digche-env/services/media
+            mkdir -p /tmp/digche-env/services/ticket
+
+            cp /opt/digche/Backend/.env /tmp/digche-env/root.env
+            cp /opt/digche/Backend/services/auth/.env /tmp/digche-env/services/auth/.env
+            cp /opt/digche/Backend/services/chat/.env /tmp/digche-env/services/chat/.env
+            cp /opt/digche/Backend/services/media/.env /tmp/digche-env/services/media/.env
+            cp /opt/digche/Backend/services/ticket/.env /tmp/digche-env/services/ticket/.env
+
+            rm -rf /opt/digche-new
+            mkdir -p /opt/digche-new
+            tar -xzf /tmp/digche-release.tgz -C /opt/digche-new
+
+            rm -rf /opt/digche
+            mv /opt/digche-new /opt/digche
+
+            cp /tmp/digche-env/root.env /opt/digche/Backend/.env
+            cp /tmp/digche-env/services/auth/.env /opt/digche/Backend/services/auth/.env
+            cp /tmp/digche-env/services/chat/.env /opt/digche/Backend/services/chat/.env
+            cp /tmp/digche-env/services/media/.env /opt/digche/Backend/services/media/.env
+            cp /tmp/digche-env/services/ticket/.env /opt/digche/Backend/services/ticket/.env
+
+            sudo chown -R ubuntu:ubuntu /opt/digche
 
             sudo cp /opt/digche/deploy/nginx/digche.conf /etc/nginx/sites-available/digche
             sudo ln -sf /etc/nginx/sites-available/digche /etc/nginx/sites-enabled/digche
@@ -48,5 +86,6 @@ jobs:
 
             curl -f http://127.0.0.1:8080/health
             curl -f http://127.0.0.1:8080/auth/health
+            curl -f http://127.0.0.1:8080/chat/health
             curl -f http://127.0.0.1:3000/auth
           EOF
