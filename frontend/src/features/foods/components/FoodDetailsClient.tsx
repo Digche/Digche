@@ -5,6 +5,8 @@ import { useAuthStore } from "@/store/auth-store";
 import { getCommentsByFoodId } from "@/data/comments";
 import FoodDetailsHero from "./FoodDetailsHero";
 import FoodComments from "./FoodComments";
+import { useFoodDetail } from "../hooks/use-food-detail";
+import { useFoodComments } from "../hooks/use-food-comments";
 
 type FoodDetailsClientProps = {
   foodID: string;
@@ -13,9 +15,8 @@ type FoodDetailsClientProps = {
 export default function FoodDetailsClient({ foodID }: FoodDetailsClientProps) {
   const currentUser = useAuthStore((state) => state.currentUser);
 
-  const food = useFoodStore((state) =>
-    state.foods.find((food) => food.id === Number(foodID))
-  );
+  const { data: food } = useFoodDetail(foodID);
+  const { data: comments = [] } = useFoodComments(foodID);
 
   if (!food) {
     return (
@@ -28,7 +29,6 @@ export default function FoodDetailsClient({ foodID }: FoodDetailsClientProps) {
     );
   }
 
-  const comments = getCommentsByFoodId(foodID);
 
   const canAddToCart = currentUser?.role === "customer";
 
@@ -43,7 +43,7 @@ export default function FoodDetailsClient({ foodID }: FoodDetailsClientProps) {
         canEditFood={canEditFood}
       />
 
-      <FoodComments comments={comments} />
+      {/* <FoodComments comments={comments} /> */}
     </>
   );
 }

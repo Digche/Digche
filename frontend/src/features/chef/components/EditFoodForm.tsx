@@ -37,16 +37,6 @@ const categories = [
   "ماکارونی و پاستا",
 ];
 
-function ingredientsArrayToText(ingredients?: string[]) {
-  return ingredients?.join("، ") ?? "";
-}
-
-function ingredientsTextToArray(value: string) {
-  return value
-    .split(/[،,]/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
 
 export default function EditFoodForm({ foodID }: EditFoodFormProps) {
   const router = useRouter();
@@ -83,8 +73,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
       location: food.location,
       image: food.image,
       description: food.description ?? "",
-      ingredients: ingredientsArrayToText(food.ingredients),
-    });
+      ingredients: food.ingredients ?? "",    });
   }, [food]);
 
   if (!food) {
@@ -156,8 +145,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
       location: form.location.trim(),
       image: form.image,
       description: form.description.trim(),
-      ingredients: ingredientsTextToArray(form.ingredients),
-    });
+      ingredients: form.ingredients.trim(),    });
 
     setIsSubmitting(false);
 

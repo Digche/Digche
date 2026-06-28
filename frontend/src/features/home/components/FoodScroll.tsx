@@ -5,10 +5,10 @@ import FoodCard from "@/features/foods/components/FoodCard";
 import Link from "next/link";
 import { useFoodStore } from "@/store/food-store";
 import FoodCardClient from "@/features/foods/components/FoodCartClient";
+import { useNearbyFoods } from "@/features/foods/hooks/use-nearby-foods";
 
 export default function FoodScroll() {
-  const foods = useFoodStore((state) => state.foods);
-
+const { data: foods = [], isLoading, isError } = useNearbyFoods();
   return (
     <section className="max-w-7xl mx-auto px-6 py-12 rtl" dir="rtl">
       <div className="flex justify-between items-center mb-6">
