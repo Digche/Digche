@@ -1,0 +1,52 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - production
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Arvan server
+        env:
+          ARVAN_HOST: ${{ secrets.ARVAN_HOST }}
+          ARVAN_USER: ${{ secrets.ARVAN_USER }}
+          ARVAN_SSH_KEY: ${{ secrets.ARVAN_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$ARVAN_SSH_KEY" > ~/.ssh/digche_deploy_key
+          chmod 600 ~/.ssh/digche_deploy_key
+          ssh-keyscan -H "$ARVAN_HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/digche_deploy_key "$ARVAN_USER@$ARVAN_HOST" << 'EOF'
+            set -e
+
+            cd /opt/digche
+            git fetch origin
+            git checkout production
+            git reset --hard origin/production
+
+            sudo cp /opt/digche/deploy/nginx/digche.conf /etc/nginx/sites-available/digche
+            sudo ln -sf /etc/nginx/sites-available/digche /etc/nginx/sites-enabled/digche
+            sudo rm -f /etc/nginx/sites-enabled/default
+
+            cd /opt/digche/Backend
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+            cd /opt/digche/frontend
+            npm ci
+            npm run build
+            pm2 restart digche-frontend --update-env || pm2 start npm --name digche-frontend -- run start -- -p 3000
+            pm2 save
+
+            sudo nginx -t
+            sudo systemctl reload nginx
+
+            curl -f http://127.0.0.1:8080/health
+            curl -f http://127.0.0.1:8080/auth/health
+            curl -f http://127.0.0.1:3000/auth
+          EOF
