@@ -16,7 +16,7 @@ export type Food = {
   price: string;
   unit?: string;
   image: string;
-  ingredients?: string[];
+  ingredients?: string;
   description: string;
 };
 
@@ -27,7 +27,7 @@ type AddFoodPayload = {
   price: string;
   unit?: string;
   image: string;
-  ingredients?: string[];
+  ingredients?: string;
   description: string;
   chef: string;
   chefId: number;
