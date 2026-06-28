@@ -2,10 +2,15 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Check,
+  CheckCheck,
   ChevronDown,
+  Clock3,
   MessageSquareText,
-  RefreshCcw,
+  RotateCcw,
   SendHorizonal,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useChat } from "../hooks/useChat";
@@ -13,6 +18,7 @@ import type {
   ChatConversation,
   ChatMessage,
   ChatParticipant,
+  ChatUiMessage,
   StartChatConversationInput,
 } from "../types/chat.types";
 
@@ -71,6 +77,26 @@ function getPreview(message?: ChatMessage | null) {
   return message.body.length > 34 ? `${message.body.slice(0, 34)}...` : message.body;
 }
 
+function MessageStatus({ message }: { message: ChatUiMessage }) {
+  if (message.deliveryStatus === "sending") {
+    return <Clock3 size={12} className="text-gray-400" aria-label="در حال ارسال" />;
+  }
+
+  if (message.deliveryStatus === "failed") {
+    return <RotateCcw size={12} className="text-red-500" aria-label="ارسال نشد" />;
+  }
+
+  if (message.deliveryStatus === "seen") {
+    return <CheckCheck size={14} className="text-green-600" aria-label="دیده شد" />;
+  }
+
+  if (message.deliveryStatus === "sent") {
+    return <Check size={14} className="text-gray-500" aria-label="ارسال شد" />;
+  }
+
+  return null;
+}
+
 export function ChatBox({
   mode,
   initialConversationId = null,
@@ -80,6 +106,7 @@ export function ChatBox({
   const accessToken = useAuthStore((state) => state.accessToken);
   const [messageText, setMessageText] = useState("");
   const [isAwayFromBottom, setIsAwayFromBottom] = useState(false);
+  const [isNearTop, setIsNearTop] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const currentActorId = getCurrentActorId(currentUser);
@@ -95,10 +122,15 @@ export function ChatBox({
     selectedMessages,
     isLoading,
     isMessagesLoading,
+    isOlderMessagesLoading,
     isSending,
     errorMessage,
-    refreshConversations,
+    socketStatus,
+    typingText,
+    typingConversationIds,
     selectConversation,
+    loadOlderMessages,
+    sendTyping,
     sendMessage,
     isMine,
   } = useChat({
@@ -116,6 +148,24 @@ export function ChatBox({
     ? getConversationAvatar(selectedConversation, currentActorId)
     : "/images/chef.webp";
 
+  const selectedParticipant = selectedConversation
+    ? getOtherParticipant(selectedConversation, currentActorId)
+    : null;
+
+  const selectedPresenceLabel = selectedConversation
+    ? selectedParticipant?.isOnline
+      ? "آنلاین"
+      : "آفلاین"
+    : "";
+
+  const selectedPresenceClass = typingText
+    ? "text-[#E8793E]"
+    : selectedParticipant?.isOnline
+      ? "text-green-600"
+      : "text-gray-500";
+
+  const selectedStatusLabel = typingText ? "در حال نوشتن..." : selectedPresenceLabel;
+
   function scrollToBottom(behavior: ScrollBehavior = "smooth") {
     messagesEndRef.current?.scrollIntoView({
       behavior,
@@ -130,6 +180,7 @@ export function ChatBox({
       element.scrollHeight - element.scrollTop - element.clientHeight;
 
     setIsAwayFromBottom(distanceFromBottom > 140);
+    setIsNearTop(element.scrollTop < 80);
   }
 
   useEffect(() => {
@@ -141,6 +192,12 @@ export function ChatBox({
       window.setTimeout(() => scrollToBottom("smooth"), 0);
     }
   }, [selectedMessages.length, isAwayFromBottom]);
+
+  useEffect(() => {
+    if (isNearTop && selectedConversationId && !isOlderMessagesLoading) {
+      void loadOlderMessages();
+    }
+  }, [isNearTop, isOlderMessagesLoading, loadOlderMessages, selectedConversationId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -174,14 +231,6 @@ export function ChatBox({
     >
       <aside dir="rtl" className="min-h-0 border-r border-gray-200 bg-white">
         <div className="flex h-[76px] items-center justify-between border-b border-gray-200 px-5">
-          <button
-            type="button"
-            onClick={() => void refreshConversations()}
-            className="rounded-full p-2 text-gray-500 transition hover:bg-orange-50 hover:text-[#E8793E]"
-            aria-label="به‌روزرسانی گفتگوها"
-          >
-            <RefreshCcw size={18} />
-          </button>
 
           <h2 className="text-2xl font-bold text-gray-950">گفتگو ها</h2>
         </div>
@@ -255,20 +304,36 @@ export function ChatBox({
       >
         <header
           dir="ltr"
-          className="flex h-[76px] shrink-0 items-center justify-end gap-4 border-b border-gray-200 bg-white/95 px-5"
+          className="flex h-[76px] shrink-0 items-center justify-between gap-4 border-b border-gray-200 bg-white/95 px-5"
         >
-          <div dir="rtl" className="text-right">
-            <h1 className="text-xl font-bold text-gray-950">{selectedTitle}</h1>
-            <p className="mt-1 text-xs text-gray-500">
-              {mode === "chef" ? "گفتگوی مشتری" : "گفتگوی سفارش"}
-            </p>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            {socketStatus === "open" ? (
+              <>
+                <Wifi size={16} className="text-green-600" />
+                زنده
+              </>
+            ) : (
+              <>
+                <WifiOff size={16} className="text-orange-500" />
+                در حال اتصال
+              </>
+            )}
           </div>
 
-          <img
-            src={selectedAvatar}
-            alt={selectedTitle}
-            className="h-14 w-14 rounded-full border border-gray-200 object-cover"
-          />
+          <div className="flex items-center gap-4">
+            <div dir="rtl" className="text-right">
+              <h1 className="text-xl font-bold text-gray-950">{selectedTitle}</h1>
+              <p className={`mt-1 text-xs font-bold ${selectedPresenceClass}`}>
+                {selectedStatusLabel}
+              </p>
+            </div>
+
+            <img
+              src={selectedAvatar}
+              alt={selectedTitle}
+              className="h-14 w-14 rounded-full border border-gray-200 object-cover"
+            />
+          </div>
         </header>
 
         <div
@@ -316,6 +381,8 @@ export function ChatBox({
                         className={[
                           "rounded-lg border border-gray-900 px-5 py-3 text-sm leading-7 text-gray-950 shadow-sm",
                           mine ? "bg-[#F1F7A1]" : "bg-white",
+                          message.deliveryStatus === "failed" ? "border-red-400" : "",
+                          message.deliveryStatus === "sending" ? "opacity-75" : "",
                         ].join(" ")}
                       >
                         {message.body}
@@ -323,11 +390,12 @@ export function ChatBox({
 
                       <div
                         className={[
-                          "mt-1 text-[11px] text-gray-500",
-                          mine ? "text-left" : "text-right",
+                          "mt-1 flex items-center gap-2 text-[11px] text-gray-500",
+                          mine ? "justify-end text-left" : "justify-start text-right",
                         ].join(" ")}
                       >
-                        {formatTime(message.createdAt)}
+                        <span>{formatTime(message.createdAt)}</span>
+                        {mine ? <MessageStatus message={message} /> : null}
                       </div>
                     </div>
                   </div>
@@ -381,7 +449,10 @@ export function ChatBox({
             <input
               dir="rtl"
               value={messageText}
-              onChange={(event) => setMessageText(event.target.value)}
+              onChange={(event) => {
+                setMessageText(event.target.value);
+                sendTyping();
+              }}
               disabled={!selectedConversation || isSending}
               placeholder="پیام خود را بنویسید..."
               className="h-9 min-w-0 flex-1 bg-transparent px-2 text-right text-sm outline-none placeholder:text-gray-500"

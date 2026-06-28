@@ -1,6 +1,7 @@
 export type ChatParticipantType = "user" | "admin";
 export type ChatConversationType = "direct" | "support" | "order";
 export type ChatSocketStatus = "idle" | "connecting" | "open" | "closed" | "error";
+export type ChatDeliveryStatus = "sending" | "sent" | "failed" | "seen";
 
 export type ChatParticipant = {
   id: string;
@@ -28,6 +29,11 @@ export type ChatMessage = {
   clientMessageId?: string | null;
   metadata?: Record<string, unknown> | null;
   createdAt: string;
+};
+
+export type ChatUiMessage = ChatMessage & {
+  deliveryStatus?: ChatDeliveryStatus;
+  isOptimistic?: boolean;
 };
 
 export type ChatConversation = {
