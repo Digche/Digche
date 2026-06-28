@@ -68,7 +68,7 @@ public class CoreDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // ---- Dish (با افزودن Category) ----
+        // ---- Dish ----
         modelBuilder.Entity<Dish>(entity =>
         {
             entity.HasKey(d => d.Id);
@@ -77,19 +77,15 @@ public class CoreDbContext : DbContext
             entity.Property(d => d.Price).HasPrecision(18, 2);
             entity.Property(d => d.Ingredients).HasMaxLength(500);
             entity.Property(d => d.ImageUrl).HasMaxLength(500);
-            
-            // تنظیمات جدید برای Category
             entity.Property(d => d.Category)
-                  .HasMaxLength(100)          // حداکثر طول دلخواه
-                  .IsRequired()               // در صورت اجباری بودن
-                  .HasDefaultValue("General"); // مقدار پیش‌فرض برای رکوردهای موجود
-
+                  .HasMaxLength(100)
+                  .IsRequired()
+                  .HasDefaultValue("General");
             entity.HasIndex(d => d.ChefId);
             entity.HasIndex(d => d.IsAvailable);
-
             entity.Property(d => d.StockQuantity)
-            .HasField("_stockQuantity")
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
+                .HasField("_stockQuantity")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
         // ---- Comment ----
@@ -100,7 +96,6 @@ public class CoreDbContext : DbContext
             entity.Property(c => c.Rating);
             entity.HasIndex(c => c.DishId);
             entity.HasIndex(c => c.UserId);
-
             entity.HasOne(c => c.Dish)
                 .WithMany(d => d.Comments)
                 .HasForeignKey(c => c.DishId)
