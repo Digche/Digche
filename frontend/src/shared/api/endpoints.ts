@@ -1,9 +1,9 @@
 export const endpoints = {
   foods: {
-    list: "/foods",
-    nearby: "/foods/nearby",
-    detail: (foodId: number | string) => `/foods/${foodId}`,
-    comments: (foodId: number | string) => `/foods/${foodId}/comments`,
+    list: "/core/Dishes/available",
+    nearby: "/core/Dishes/available",
+    detail: (foodId: number | string) => `/core/Dishes/${foodId}`,
+    comments: (foodId: number | string) => `/core/Comments/dish/${foodId}`,
   },
 
   chefFoods: {
