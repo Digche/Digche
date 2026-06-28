@@ -9,4 +9,5 @@ public interface IOrderRepository
     Task<IEnumerable<Order>> GetByChefIdAsync(Guid chefId, CancellationToken cancellation = default);
     Task AddAsync(Order order, CancellationToken cancellation = default);
     Task UpdateAsync(Order order, CancellationToken cancellation = default);
+    Task<bool> HasOrdersForDishAsync(Guid dishId, CancellationToken cancellation = default);
 }

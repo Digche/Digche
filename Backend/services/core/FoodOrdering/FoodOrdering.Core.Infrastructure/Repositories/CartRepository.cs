@@ -28,4 +28,7 @@ public class CartRepository : ICartRepository
 
     public async Task<bool> ExistsByUserIdAsync(Guid userId, CancellationToken cancellation = default)
         => await _context.Carts.AnyAsync(c => c.UserId == userId, cancellation);
+
+    public async Task<bool> HasDishInAnyCartAsync(Guid dishId, CancellationToken cancellation = default)
+        => await _context.CartItems.AnyAsync(ci => ci.DishId == dishId, cancellation);
 }

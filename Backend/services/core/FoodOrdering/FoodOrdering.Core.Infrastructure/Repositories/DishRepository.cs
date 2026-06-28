@@ -41,6 +41,12 @@ public class DishRepository : IDishRepository
         await _context.SaveChangesAsync(cancellation);
     }
 
+    public async Task DeleteAsync(Dish dish, CancellationToken cancellation = default)
+    {
+        _context.Dishes.Remove(dish);
+        await _context.SaveChangesAsync(cancellation);
+    }
+
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellation = default)
         => await _context.Dishes.AnyAsync(d => d.Id == id, cancellation);
 }
