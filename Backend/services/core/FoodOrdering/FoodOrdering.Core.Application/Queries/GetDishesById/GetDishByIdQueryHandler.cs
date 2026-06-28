@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using FoodOrdering.Core.Application.Common;
 using FoodOrdering.Core.Application.DTOs;
 using FoodOrdering.Core.Domain.Interfaces;
@@ -31,6 +32,7 @@ public class GetDishByIdQueryHandler : IRequestHandler<GetDishByIdQuery, Result<
             Ingredients = dish.Ingredients,
             IsAvailable = dish.IsAvailable,
             Remaining = dish.StockQuantity,
+            Category = dish.Category
         };
 
         return Result<DishDto>.Success(dto);

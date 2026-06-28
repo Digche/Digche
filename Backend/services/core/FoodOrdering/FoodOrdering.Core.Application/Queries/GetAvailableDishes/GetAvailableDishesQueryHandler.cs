@@ -34,6 +34,7 @@ public class GetAvailableDishesQueryHandler : IRequestHandler<GetAvailableDishes
             Ingredients = d.Ingredients,
             IsAvailable = d.IsAvailable,
             Remaining = d.StockQuantity,
+            Category = d.Category
         });
 
         return Result<IEnumerable<DishDto>>.Success(dtos);
