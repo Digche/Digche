@@ -15,10 +15,10 @@ jobs:
         env:
           ARVAN_HOST: ${{ secrets.ARVAN_HOST }}
           ARVAN_USER: ${{ secrets.ARVAN_USER }}
-          ARVAN_SSH_KEY: ${{ secrets.ARVAN_SSH_KEY }}
+          ARVAN_SSH_KEY_B64: ${{ secrets.ARVAN_SSH_KEY_B64 }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "$ARVAN_SSH_KEY" > ~/.ssh/digche_deploy_key
+          printf '%s' "$ARVAN_SSH_KEY_B64" | base64 -d > ~/.ssh/digche_deploy_key
           chmod 600 ~/.ssh/digche_deploy_key
           ssh-keyscan -H "$ARVAN_HOST" >> ~/.ssh/known_hosts
 
