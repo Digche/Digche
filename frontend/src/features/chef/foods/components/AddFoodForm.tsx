@@ -10,6 +10,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useFoodStore } from "@/store/food-store";
 import FormField from "./FormField";
 import ChefProfileBadge from "../../components/ChefProfileBadge";
+import { useCreateChefFood } from "../../hooks/use-create-chef-food";
 
 type AddFoodFormState = {
   title: string;
@@ -38,7 +39,8 @@ export default function AddFoodForm() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const currentUser = useAuthStore((state) => state.currentUser);
-  const addFood = useFoodStore((state) => state.addFood);
+  
+  const createFood = useCreateChefFood();
 
   const [form, setForm] = useState<AddFoodFormState>({
     title: "",
@@ -112,19 +114,27 @@ export default function AddFoodForm() {
 
     setIsSubmitting(true);
 
-    addFood({
-      title: form.title.trim(),
-      category: form.category,
-      remaining: normalizeRemaining(form.remaining),
-      price: form.price.trim(),
-      unit: "تومان",
-      image: form.image || defaultImage,
-      ingredients: form.ingredients.trim(),
-      description: form.description.trim(),
-      chef: currentUser.name,
-      chefId: currentUser.id,
-      location: "تهران",
-    });
+    createFood.mutate(
+      {
+        title: form.title.trim(),
+        category: form.category,
+        remaining: normalizeRemaining(form.remaining),
+        price: form.price.trim(),
+        unit: "تومان",
+        image: form.image || defaultImage,
+        ingredients: form.ingredients.trim(),
+        description: form.description.trim(),
+        location: "تهران",
+      },
+      {
+        onSuccess: () => {
+          router.push("/chef/foods");
+        },
+        onError: (error) => {
+          alert(error instanceof Error ? error.message : "ثبت غذا ناموفق بود.");
+        },
+      }
+    );;
 
     setIsSubmitting(false);
     router.push("/chef/foods");

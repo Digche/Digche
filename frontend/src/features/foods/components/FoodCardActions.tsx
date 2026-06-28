@@ -4,33 +4,13 @@
 
 import Link from "next/link";
 import type { MouseEvent } from "react";
-import {
-  ShoppingCart,
-  Plus,
-  Minus,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2 } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
-import { useFoodStore } from "@/store/food-store";
-
-interface FoodCardActionFood {
-  id: number;
-  title: string;
-  category: string;
-  rating: number;
-  remaining: string;
-  chef: string;
-  chefId: number;
-  location: string;
-  price: string;
-  unit?: string;
-  image: string;
-  description?: string;
-}
+import type { Food } from "../types/food.types";
+import { useDeleteChefFood } from "@/features/chef/hooks/use-delete-chef-food";
 
 interface FoodCardActionsProps {
-  food: FoodCardActionFood;
+  food: Food;
   canEditFood: boolean;
   canAddToCart: boolean;
   compact?: boolean;
@@ -47,7 +27,7 @@ export default function FoodCardActions({
   const decreaseQuantity = useCartStore((state) => state.decreaseQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
 
-  const deleteFood = useFoodStore((state) => state.deleteFood);
+  const deleteFood = useDeleteChefFood();
 
   const cartItem = useCartStore((state) =>
     state.items.find((cartItem) => cartItem.id === food.id)
@@ -81,16 +61,20 @@ export default function FoodCardActions({
 
     if (!confirmed) return;
 
-    deleteFood(food.id);
-    removeFromCart(food.id);
+    deleteFood.mutate(food.id, {
+      onSuccess: () => {
+        removeFromCart(food.id);
+      },
+      onError: (error) => {
+        alert(error instanceof Error ? error.message : "حذف غذا ناموفق بود.");
+      },
+    });
   };
 
   if (canEditFood) {
     if (compact) {
       return (
-        <div className="flex  shrink-0 items-center gap-1.5">
-
-
+        <div className="flex shrink-0 items-center gap-1.5">
           <Link
             href={`/chef/foods/${food.id}/edit`}
             onClick={stopActionClick}
@@ -102,9 +86,10 @@ export default function FoodCardActions({
           <button
             type="button"
             onClick={handleDeleteFood}
-            className="rounded-full bg-[#FDF7F2] px-3 py-1.5 text-xs font-bold text-red-500 transition hover:bg-red-50"
+            disabled={deleteFood.isPending}
+            className="rounded-full bg-[#FDF7F2] px-3 py-1.5 text-xs font-bold text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            حذف
+            {deleteFood.isPending ? "..." : "حذف"}
           </button>
         </div>
       );
@@ -119,16 +104,16 @@ export default function FoodCardActions({
         >
           ویرایش
         </Link>
+
         <button
           type="button"
           onClick={handleDeleteFood}
-          className="flex items-center justify-center gap-2 rounded-full bg-[#FDF7F2] px-4 py-2 text-sm font-bold text-red-500 transition hover:bg-red-50"
+          disabled={deleteFood.isPending}
+          className="flex items-center justify-center gap-2 rounded-full bg-[#FDF7F2] px-4 py-2 text-sm font-bold text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Trash2 size={16} />
-          حذف
+          {deleteFood.isPending ? "در حال حذف..." : "حذف"}
         </button>
-
-
       </div>
     );
   }

@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { Save, ImageIcon } from "lucide-react";
 import { useFoodStore } from "@/store/food-store";
 import { useAuthStore } from "@/store/auth-store";
+import { useChefFoodDetail } from "../hooks/use-chef-food-detail";
+import { useUpdateChefFood } from "../hooks/use-update-chef-food";
 
 type EditFoodFormProps = {
   foodID: string;
@@ -43,11 +45,8 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
 
   const currentUser = useAuthStore((state) => state.currentUser);
 
-  const food = useFoodStore((state) =>
-    state.foods.find((food) => food.id === Number(foodID))
-  );
-
-  const updateFood = useFoodStore((state) => state.updateFood);
+  const { data: food, isLoading, isError } = useChefFoodDetail(foodID);
+  const updateFood = useUpdateChefFood();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -137,15 +136,29 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
 
     setIsSubmitting(true);
 
-    updateFood(food.id, {
-      title: form.title.trim(),
-      category: form.category,
-      price: form.price.trim(),
-      remaining: form.remaining.trim(),
-      location: form.location.trim(),
-      image: form.image,
-      description: form.description.trim(),
-      ingredients: form.ingredients.trim(),    });
+    updateFood.mutate(
+      {
+        foodId: food.id,
+        payload: {
+          title: form.title.trim(),
+          category: form.category,
+          price: form.price.trim(),
+          remaining: form.remaining.trim(),
+          location: form.location.trim(),
+          image: form.image,
+          description: form.description.trim(),
+          ingredients: form.ingredients.trim(),
+        },
+      },
+      {
+        onSuccess: () => {
+          router.push(`/foods/${food.id}`);
+        },
+        onError: (error) => {
+          alert(error instanceof Error ? error.message : "ویرایش غذا ناموفق بود.");
+        },
+      }
+    );
 
     setIsSubmitting(false);
 
