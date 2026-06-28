@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AuthSessionProvider } from "@/features/auth/components/AuthSessionProvider";
 import "./globals.css";
+import { ReactQueryProvider } from "@/shared/providers/ReactQueryProvider";
 
 export const metadata: Metadata = {
   title: "Digcheh",
@@ -16,9 +17,12 @@ export default function RootLayout({
     <html lang="fa" dir="rtl">
       <body>
         <AuthSessionProvider>
+            <ReactQueryProvider>
           <div className="h-screen w-screen gap-15 overflow-x-hidden">
             {children}
-          </div>
+          </div>  
+          </ReactQueryProvider>
+
         </AuthSessionProvider>
       </body>
     </html>

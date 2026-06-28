@@ -8,9 +8,11 @@ import { useFoodStore } from "@/store/food-store";
 import { useAuthStore } from "@/store/auth-store";
 import FoodDetailsHero from "@/features/foods/components/FoodDetailsHero";
 import PageHeader from "@/shared/components/SharedHeader";
+import { useFoods } from "@/features/foods/hooks/use-foods";
 
 export default function LocalsScreen() {
-  const foods = useFoodStore((state) => state.foods);
+  
+  const { data: foods = [] } = useFoods();
   const currentUser = useAuthStore((state) => state.currentUser);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,8 +23,7 @@ export default function LocalsScreen() {
     if (!normalizedSearch) return foods;
 
     return foods.filter((food) => {
-      const ingredientsText = food.ingredients?.join(" ") ?? "";
-
+        const ingredientsText = food.ingredients ?? "";
       return (
         food.title.toLowerCase().includes(normalizedSearch) ||
         food.category.toLowerCase().includes(normalizedSearch) ||

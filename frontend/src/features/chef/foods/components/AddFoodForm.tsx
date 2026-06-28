@@ -101,12 +101,6 @@ export default function AddFoodForm() {
       : `${trimmedValue} باقیمانده`;
   };
 
-  const normalizeIngredients = (value: string) => {
-    return value
-      .split(/[،,]/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -125,7 +119,7 @@ export default function AddFoodForm() {
       price: form.price.trim(),
       unit: "تومان",
       image: form.image || defaultImage,
-      ingredients: normalizeIngredients(form.ingredients),
+      ingredients: form.ingredients.trim(),
       description: form.description.trim(),
       chef: currentUser.name,
       chefId: currentUser.id,
