@@ -43,4 +43,19 @@ public class DishRepository : IDishRepository
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellation = default)
         => await _context.Dishes.AnyAsync(d => d.Id == id, cancellation);
+
+    public async Task DeleteAsync(Dish dish, CancellationToken cancellation = default)
+    {
+        try
+        {
+            _context.Dishes.Remove(dish);
+            await _context.SaveChangesAsync(cancellation);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("REFERENCE") == true)
+        {
+            // پرتاب یک استثنای خاص با پیام کاربرپسند
+            throw new InvalidOperationException("این غذا در سفارشات یا سبد خرید کاربران استفاده شده و قابل حذف نیست.");
+        }
+    }
+    
 }

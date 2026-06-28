@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using FoodOrdering.Core.Application.Commands.AddDish;
 using FoodOrdering.Core.Application.Commands.UpdateDish;
+using FoodOrdering.Core.Application.Commands.DeleteDish;
 
 namespace FoodOrdering.Core.API.Controllers;
 
@@ -83,6 +84,17 @@ public class DishesController : ControllerBase
             return BadRequest(new { message = result.ErrorMessage });
 
         return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteDish(Guid id)
+    {
+        var command = new DeleteDishCommand { DishId = id };
+        var result = await _mediator.Send(command);
+        if (!result.IsSuccess)
+            return BadRequest(result.ErrorMessage);
+
+        return NoContent();
     }
 
 }
