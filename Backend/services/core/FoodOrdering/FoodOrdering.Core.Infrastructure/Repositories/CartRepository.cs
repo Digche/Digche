@@ -17,13 +17,21 @@ public class CartRepository : ICartRepository
             .ThenInclude(i => i.Dish)
             .FirstOrDefaultAsync(c => c.UserId == userId, cancellation);
 
+    // فقط افزودن به ChangeTracker، بدون SaveChanges
     public async Task AddAsync(Cart cart, CancellationToken cancellation = default)
-        => await _context.Carts.AddAsync(cart, cancellation);
-
-    public Task UpdateAsync(Cart cart, CancellationToken cancellation = default)
     {
-        _context.Carts.Update(cart);
-        return Task.CompletedTask;
+        await _context.Carts.AddAsync(cart, cancellation);
+        // SaveChanges حذف شد
+    }
+
+    public async Task UpdateAsync(Cart cart, CancellationToken cancellation = default)
+    {
+        foreach (var e in _context.ChangeTracker.Entries())
+        {
+            Console.WriteLine($"{e.Entity.GetType().Name} : {e.State}");
+        }
+
+        await _context.SaveChangesAsync(cancellation);
     }
 
     public async Task<bool> ExistsByUserIdAsync(Guid userId, CancellationToken cancellation = default)
