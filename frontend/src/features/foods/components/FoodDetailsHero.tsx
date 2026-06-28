@@ -28,7 +28,7 @@ interface FoodDetailsHeroProps {
     price: string;
     unit?: string;
     image: string;
-    ingredients?: string[];
+    ingredients?: string;
     description: string;
   };
   canEditFood: boolean;
@@ -91,8 +91,14 @@ function InfoPill({
   );
 }
 
-function IngredientsBox({ ingredients }: { ingredients?: string[] }) {
-  if (!ingredients || ingredients.length === 0) {
+function IngredientsBox({ ingredients }: { ingredients?: string }) {
+  const ingredientsList =
+    ingredients
+      ?.split(/[،,]/)
+      .map((ingredient) => ingredient.trim())
+      .filter(Boolean) ?? [];
+
+  if (ingredientsList.length === 0) {
     return null;
   }
 
@@ -105,7 +111,7 @@ function IngredientsBox({ ingredients }: { ingredients?: string[] }) {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {ingredients.map((ingredient) => (
+        {ingredientsList.map((ingredient) => (
           <span
             key={ingredient}
             className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
