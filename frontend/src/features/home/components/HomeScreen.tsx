@@ -1,9 +1,9 @@
-import CategorySection from "./CategorySection";
 import HomeFooter from "./HomeFooter";
 import HomeHeader from "./HomeHeader";
 import FoodScroll from "./FoodScroll";
 import ProvinceCityDropdown from "./ProvinceCityDropdown";
 import SearchBox from "./SearchBox";
+import CategorySection from "@/features/categories/components/CategorySection";
 
 export default function HomeScreen() {
     return (

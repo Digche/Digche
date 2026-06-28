@@ -5,17 +5,26 @@ import { useAuthStore } from "@/store/auth-store";
 import SearchInput from "@/shared/components/SearchInput";
 import PageHeader from "@/shared/components/SharedHeader";
 import FoodDetailsHero from "@/features/foods/components/FoodDetailsHero";
-import { useFoods } from "@/features/foods/hooks/use-foods";
+import { useFoodsByCategory } from "@/features/foods/hooks/use-foods-by-category";
+import { getFoodCategoryBySlug } from "../utils/category-slug";
 
-function toSearchableText(value?: string | number | null) {
-  return String(value ?? "").toLowerCase();
-}
+type CategoryFoodsScreenProps = {
+  categorySlug: string;
+};
 
-export default function LocalsScreen() {
+export default function CategoryFoodsScreen({
+  categorySlug,
+}: CategoryFoodsScreenProps) {
   const currentUser = useAuthStore((state) => state.currentUser);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: foods = [], isLoading, isError } = useFoods();
+  const category = getFoodCategoryBySlug(categorySlug);
+
+  const {
+    data: foods = [],
+    isLoading,
+    isError,
+  } = useFoodsByCategory(category?.title);
 
   const filteredFoods = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -26,29 +35,49 @@ export default function LocalsScreen() {
       const ingredientsText = food.ingredients ?? "";
 
       return (
-        toSearchableText(food.title).includes(normalizedSearch) ||
-        toSearchableText(food.category).includes(normalizedSearch) ||
-        toSearchableText(food.chef).includes(normalizedSearch) ||
-        toSearchableText(food.location).includes(normalizedSearch) ||
-        toSearchableText(food.description).includes(normalizedSearch) ||
-        toSearchableText(ingredientsText).includes(normalizedSearch)
+        food.title.toLowerCase().includes(normalizedSearch) ||
+        food.category.toLowerCase().includes(normalizedSearch) ||
+        food.chef.toLowerCase().includes(normalizedSearch) ||
+        food.location.toLowerCase().includes(normalizedSearch) ||
+        food.description.toLowerCase().includes(normalizedSearch) ||
+        ingredientsText.toLowerCase().includes(normalizedSearch)
       );
     });
   }, [foods, searchTerm]);
+
+  if (!category) {
+    return (
+      <main dir="rtl" className="min-h-screen bg-[#FFF9F4] px-4 py-6">
+        <section className="mx-auto max-w-6xl">
+          <PageHeader title="دسته‌بندی پیدا نشد" />
+
+          <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
+            <h2 className="text-xl font-bold text-gray-800">
+              این دسته‌بندی وجود ندارد
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-500">
+              لطفاً از صفحه اصلی یک دسته‌بندی معتبر انتخاب کنید.
+            </p>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main dir="rtl" className="min-h-screen bg-[#FFF9F4] px-4 py-6">
       <section className="mx-auto max-w-6xl">
         <PageHeader
-          title="غذاهای محلی"
-          description="غذاهای خانگی و محلی اطراف شما"
+          title={category.title}
+          description={`غذاهای مربوط به دسته‌بندی ${category.title}`}
         />
 
         <div className="mb-6 flex justify-center">
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder="جست‌وجوی غذا، آشپز، محله یا مواد اولیه..."
+            placeholder={`جست‌وجو در ${category.title}...`}
             className="max-w-md"
           />
         </div>
@@ -76,7 +105,7 @@ export default function LocalsScreen() {
             </h3>
 
             <p className="mt-2 text-sm text-gray-500">
-              نتیجه‌ای مطابق جست‌وجوی شما پیدا نشد.
+              فعلاً غذایی در دسته‌بندی {category.title} پیدا نشد.
             </p>
           </div>
         ) : (
