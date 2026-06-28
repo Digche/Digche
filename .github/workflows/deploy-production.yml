@@ -18,7 +18,7 @@ jobs:
           ARVAN_SSH_KEY: ${{ secrets.ARVAN_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "$ARVAN_SSH_KEY" > ~/.ssh/digche_deploy_key
+          printf '%s\n' "$ARVAN_SSH_KEY" > ~/.ssh/digche_deploy_key
           chmod 600 ~/.ssh/digche_deploy_key
           ssh-keyscan -H "$ARVAN_HOST" >> ~/.ssh/known_hosts
 
