@@ -1,22 +1,34 @@
-// src/features/food-details/components/FoodComments.tsx
-
 import Image from "next/image";
 import { Star } from "lucide-react";
-
-interface Comment {
-  id: number;
-  userName: string;
-  avatar: string;
-  rating: number;
-  text: string;
-  createdAt: string;
-}
+import type { FoodComment } from "../types/food-comment.types";
 
 interface FoodCommentsProps {
-  comments: Comment[];
+  comments: FoodComment[];
 }
 
-function RatingStars({ rating }: { rating: number }) {
+const DEFAULT_AVATAR = "/images/cake.webp";
+
+function getSafeAvatarSrc(src?: string | null) {
+  const value = src?.trim();
+
+  if (!value || value === "undefined" || value === "null") {
+    return DEFAULT_AVATAR;
+  }
+
+  if (
+    value.startsWith("/") ||
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("data:image/") ||
+    value.startsWith("blob:")
+  ) {
+    return value;
+  }
+
+  return `/images/${value}`;
+}
+
+function RatingStars({ rating = 0 }: { rating?: number }) {
   return (
     <div className="flex items-center gap-1">
       {Array.from({ length: 5 }).map((_, index) => {
@@ -61,45 +73,49 @@ export default function FoodComments({ comments }: FoodCommentsProps) {
       </div>
 
       <div className="space-y-5">
-        {comments.map((comment) => (
-          <article
-            key={comment.id}
-            className="rounded-3xl bg-white px-5 py-5 shadow-sm md:px-8 md:py-6"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#FDF7F2] md:h-16 md:w-16">
-                  <Image
-                    src={comment.avatar}
-                    alt={comment.userName}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
+        {comments.map((comment) => {
+          const avatarSrc = getSafeAvatarSrc(comment.userAvatar);
 
-                <div className="pt-1">
-                  <h3 className="text-base font-bold text-gray-900 md:text-lg">
-                    {comment.userName}
-                  </h3>
+          return (
+            <article
+              key={comment.id}
+              className="rounded-3xl bg-white px-5 py-5 shadow-sm md:px-8 md:py-6"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#FDF7F2] md:h-16 md:w-16">
+                    <Image
+                      src={avatarSrc}
+                      alt={comment.userName}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
 
-                  <div className="mt-2">
-                    <RatingStars rating={comment.rating} />
+                  <div className="pt-1">
+                    <h3 className="text-base font-bold text-gray-900 md:text-lg">
+                      {comment.userName}
+                    </h3>
+
+                    <div className="mt-2">
+                      <RatingStars rating={comment.rating} />
+                    </div>
                   </div>
                 </div>
+
+                <span className="pt-2 text-xs text-gray-500 md:text-sm">
+                  {comment.createdAt ?? ""}
+                </span>
               </div>
 
-              <span className="pt-2 text-xs text-gray-500 md:text-sm">
-                {comment.createdAt}
-              </span>
-            </div>
+              <div className="my-5 border-t border-gray-300" />
 
-            <div className="my-5 border-t border-gray-300" />
-
-            <p className="text-right text-sm leading-8 text-gray-700 md:text-base md:leading-9">
-              {comment.text}
-            </p>
-          </article>
-        ))}
+              <p className="text-right text-sm leading-8 text-gray-700 md:text-base md:leading-9">
+                {comment.text}
+              </p>
+            </article>
+          );
+        })}
       </div>
     </section>
   );

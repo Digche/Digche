@@ -41,6 +41,8 @@ export default function FoodCard({
   canAddToCart,
   isClickable = false,
 }: FoodCardProps) {
+  console.log("Food image:", item.image);
+
   const router = useRouter();
 
   const resolvedCanEditFood = canEditFood ?? variant === "chef";

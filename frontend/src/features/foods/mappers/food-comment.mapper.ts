@@ -12,8 +12,8 @@ export function mapFoodCommentDtoToFoodComment(
     userName: dto.userName,
     userAvatar: dto.userAvatar,
     text: dto.text,
-    rating: dto.rating,
-    createdAt: dto.createdAt,
+    rating: dto.rating ?? 0,
+    createdAt: dto.createdAt ?? "",
   };
 }
 
