@@ -37,7 +37,4 @@ public class OrderRepository : IOrderRepository
         _context.Orders.Update(order);
         return Task.CompletedTask;
     }
-
-    public async Task<bool> HasOrdersForDishAsync(Guid dishId, CancellationToken cancellation = default)
-        => await _context.OrderItems.AnyAsync(oi => oi.DishId == dishId, cancellation);
 }

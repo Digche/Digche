@@ -11,6 +11,4 @@ public interface IDishRepository
     Task AddAsync(Dish dish, CancellationToken cancellation = default);
     Task UpdateAsync(Dish dish, CancellationToken cancellation = default);
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellation = default);
-    Task DeleteAsync(Dish dish, CancellationToken cancellationToken = default);
-    Task<bool> HasDishInAnyCartAsync(Guid dishId, CancellationToken cancellation = default);
 }
