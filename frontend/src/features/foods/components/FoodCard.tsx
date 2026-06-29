@@ -10,13 +10,13 @@ import { Star, MapPin } from "lucide-react";
 import FoodCardActions from "./FoodCardActions";
 
 interface FoodItemProps {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   rating: number;
   remaining: string;
   chef: string;
-  chefId: number;
+  chefId: number | string;
   location: string;
   price: string;
   unit?: string;
@@ -41,6 +41,8 @@ export default function FoodCard({
   canAddToCart,
   isClickable = false,
 }: FoodCardProps) {
+  console.log("Food image:", item.image);
+
   const router = useRouter();
 
   const resolvedCanEditFood = canEditFood ?? variant === "chef";

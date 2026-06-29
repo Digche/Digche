@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: foodordering-postgres
+    environment:
+      POSTGRES_USER: fooduser
+      POSTGRES_PASSWORD: foodpass
+      POSTGRES_DB: foodorderingdb
+    ports:
+      - "5433:5432"   # نگاشت پورت 5433 روی هاست به 5432 داخل کانتینر (از تداخل جلوگیری می‌کند)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fooduser -d foodorderingdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - food-network
+
+  foodordering-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: foodordering-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=foodorderingdb;Username=fooduser;Password=foodpass
+      - Jwt__Secret=YourSuperSecretKeyForJwtWithAtLeast32Characters123
+      - Jwt__Issuer=FoodOrderingCoreAPI
+      - Jwt__Audience=FoodOrderingClients
+    ports:
+      - "5000:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - food-network
+    restart: always
+
+volumes:
+  postgres_data:
+
+networks:
+  food-network:
+    driver: bridge

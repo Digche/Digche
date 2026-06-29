@@ -6,13 +6,13 @@ import { useAuthStore } from "@/store/auth-store";
 import FoodCard from "./FoodCard";
 
 interface FoodItemProps {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   rating: number;
   remaining: string;
   chef: string;
-  chefId: number;
+  chefId: number | string;
   location: string;
   price: string;
   unit?: string;
@@ -38,7 +38,8 @@ export default function FoodCardClient({
   const canAddToCart = currentUser?.role === "customer";
 
   const canEditFood =
-    currentUser?.role === "chef" && item.chefId === currentUser.id;
+    currentUser?.role === "chef" &&
+    String(item.chefId) === String(currentUser.publicId ?? currentUser.id);
 
   return (
     <FoodCard

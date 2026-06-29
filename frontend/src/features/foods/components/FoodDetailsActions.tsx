@@ -1,27 +1,14 @@
-// src/features/food-details/components/FoodDetailsActions.tsx
-
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Edit3, ShoppingCart, Plus, Minus, Trash2 } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
-import { useFoodStore } from "@/store/food-store";
+import type { Food } from "../types/food.types";
+import { useDeleteChefFood } from "@/features/chef/hooks/use-delete-chef-food";
 
 interface FoodDetailsActionsProps {
-  food: {
-    id: number;
-    title: string;
-    category: string;
-    rating: number;
-    remaining: string;
-    chef: string;
-    chefId: number;
-    location: string;
-    price: string;
-    unit?: string;
-    image: string;
-  };
+  food: Food;
   canEditFood: boolean;
   canAddToCart: boolean;
 }
@@ -38,7 +25,7 @@ export default function FoodDetailsActions({
   const decreaseQuantity = useCartStore((state) => state.decreaseQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
 
-  const deleteFood = useFoodStore((state) => state.deleteFood);
+  const deleteFood = useDeleteChefFood();
 
   const cartItem = useCartStore((state) =>
     state.items.find((cartItem) => cartItem.id === food.id)
@@ -51,9 +38,15 @@ export default function FoodDetailsActions({
 
     if (!confirmed) return;
 
-    deleteFood(food.id);
-    removeFromCart(food.id);
-    router.push("/");
+    deleteFood.mutate(food.id, {
+      onSuccess: () => {
+        removeFromCart(food.id);
+        router.push("/");
+      },
+      onError: (error) => {
+        alert(error instanceof Error ? error.message : "حذف غذا ناموفق بود.");
+      },
+    });
   };
 
   if (canEditFood) {
@@ -70,10 +63,11 @@ export default function FoodDetailsActions({
         <button
           type="button"
           onClick={handleDeleteFood}
-          className="flex h-14 w-28 shrink-0 items-center justify-center gap-2 rounded-full bg-red-100 px-4 text-sm font-bold text-red-600 transition hover:bg-red-200 sm:w-40"
+          disabled={deleteFood.isPending}
+          className="flex h-14 w-28 shrink-0 items-center justify-center gap-2 rounded-full bg-red-100 px-4 text-sm font-bold text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-60 sm:w-40"
         >
           <Trash2 size={18} />
-          حذف غذا
+          {deleteFood.isPending ? "در حال حذف..." : "حذف غذا"}
         </button>
       </div>
     );
@@ -95,7 +89,6 @@ export default function FoodDetailsActions({
 
     return (
       <div className="mx-auto flex h-14 w-40 max-w-sm items-center justify-between rounded-full border border-gray-200 bg-white p-1 shadow-sm">
-
         <button
           type="button"
           onClick={() => increaseQuantity(food.id)}
@@ -104,7 +97,7 @@ export default function FoodDetailsActions({
         >
           <Plus size={18} />
         </button>
-        
+
         <span className="min-w-8 text-center text-lg font-bold text-gray-900">
           {quantity}
         </span>

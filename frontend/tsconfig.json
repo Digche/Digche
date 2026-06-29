@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@tanstack/react-query": ["./src/shared/react-query-lite.tsx"]
     }
   },
   "include": [

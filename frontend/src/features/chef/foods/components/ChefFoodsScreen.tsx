@@ -7,12 +7,11 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import SearchInput from "@/shared/components/SearchInput";import FoodCard from "@/features/foods/components/FoodCard";
 import { useAuthStore } from "@/store/auth-store";
-import { useFoodStore } from "@/store/food-store";
+import { useChefFoods } from "../../hooks/use-chef-foods";
 
 export default function ChefFoodsScreen() {
   const currentUser = useAuthStore((state) => state.currentUser);
-  const foods = useFoodStore((state) => state.foods);
-
+  const { data: foods = [] } = useChefFoods();
   const [searchTerm, setSearchTerm] = useState("");
 
   const chefFoods = useMemo(() => {
@@ -23,7 +22,10 @@ export default function ChefFoodsScreen() {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return foods
-      .filter((food) => food.chefId === currentUser.id)
+      .filter(
+        (food) =>
+          String(food.chefId) === String(currentUser.publicId ?? currentUser.id)
+      )
       .filter((food) => {
         if (!normalizedSearch) return true;
 

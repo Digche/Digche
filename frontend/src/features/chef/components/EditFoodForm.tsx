@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { Save, ImageIcon } from "lucide-react";
 import { useFoodStore } from "@/store/food-store";
 import { useAuthStore } from "@/store/auth-store";
+import { useChefFoodDetail } from "../hooks/use-chef-food-detail";
+import { useUpdateChefFood } from "../hooks/use-update-chef-food";
 
 type EditFoodFormProps = {
   foodID: string;
@@ -37,27 +39,14 @@ const categories = [
   "ماکارونی و پاستا",
 ];
 
-function ingredientsArrayToText(ingredients?: string[]) {
-  return ingredients?.join("، ") ?? "";
-}
-
-function ingredientsTextToArray(value: string) {
-  return value
-    .split(/[،,]/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
 
 export default function EditFoodForm({ foodID }: EditFoodFormProps) {
   const router = useRouter();
 
   const currentUser = useAuthStore((state) => state.currentUser);
 
-  const food = useFoodStore((state) =>
-    state.foods.find((food) => food.id === Number(foodID))
-  );
-
-  const updateFood = useFoodStore((state) => state.updateFood);
+  const { data: food, isLoading, isError } = useChefFoodDetail(foodID);
+  const updateFood = useUpdateChefFood();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,8 +72,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
       location: food.location,
       image: food.image,
       description: food.description ?? "",
-      ingredients: ingredientsArrayToText(food.ingredients),
-    });
+      ingredients: food.ingredients ?? "",    });
   }, [food]);
 
   if (!food) {
@@ -108,7 +96,8 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
   }
 
   const canEditFood =
-    currentUser?.role === "chef" && Number(food.chefId) === Number(currentUser.id);
+    currentUser?.role === "chef" &&
+    String(food.chefId) === String(currentUser.publicId ?? currentUser.id);
 
   if (!canEditFood) {
     return (
@@ -148,20 +137,31 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
 
     setIsSubmitting(true);
 
-    updateFood(food.id, {
-      title: form.title.trim(),
-      category: form.category,
-      price: form.price.trim(),
-      remaining: form.remaining.trim(),
-      location: form.location.trim(),
-      image: form.image,
-      description: form.description.trim(),
-      ingredients: ingredientsTextToArray(form.ingredients),
-    });
-
-    setIsSubmitting(false);
-
-    router.push(`/foods/${food.id}`);
+    updateFood.mutate(
+      {
+        foodId: food.id,
+        payload: {
+          title: form.title.trim(),
+          category: form.category,
+          price: form.price.trim(),
+          remaining: form.remaining.trim(),
+          location: form.location.trim(),
+          image: form.image,
+          description: form.description.trim(),
+          ingredients: form.ingredients.trim(),
+        },
+      },
+      {
+        onSuccess: () => {
+          setIsSubmitting(false);
+          router.push(`/foods/${food.id}`);
+        },
+        onError: (error) => {
+          setIsSubmitting(false);
+          alert(error instanceof Error ? error.message : "ویرایش غذا ناموفق بود.");
+        },
+      }
+    );
   };
 
   const isBase64Image = form.image.startsWith("data:");

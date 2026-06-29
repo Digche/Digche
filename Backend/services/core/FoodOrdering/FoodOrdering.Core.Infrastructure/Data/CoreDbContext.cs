@@ -12,27 +12,17 @@ public class CoreDbContext : DbContext
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
-    public DbSet<ChefProfile> ChefProfiles { get; set; }
     public DbSet<Dish> Dishes { get; set; }
-    public DbSet<User> Users { get; set; } // جدید
+    public DbSet<Comment> Comments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // ---- User (فقط برای روابط) ----
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(u => u.Id);
-            entity.ToTable("Users"); // فرض می‌کنیم جدول Users در دیتابیس وجود دارد (توسط سرویس Auth ایجاد شده)
-            // هیچ فیلد دیگری تعریف نمی‌کنیم
-        });
-
         // ---- Cart ----
         modelBuilder.Entity<Cart>(entity =>
         {
             entity.HasKey(c => c.Id);
             entity.Property(c => c.UserId).IsRequired();
             entity.HasIndex(c => c.UserId).IsUnique();
-            // رابطه با User (بدون navigation)
         });
 
         // ---- CartItem ----
@@ -61,14 +51,6 @@ public class CoreDbContext : DbContext
                 .HasMaxLength(20);
             entity.HasIndex(o => o.CustomerId);
             entity.HasIndex(o => o.ChefId);
-
-            // رابطه با ChefProfile
-            entity.HasOne(o => o.Chef)
-                .WithMany(c => c.Orders)
-                .HasForeignKey(o => o.ChefId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // رابطه با User (برای Customer) – بدون navigation
         });
 
         // ---- OrderItem ----
@@ -86,22 +68,6 @@ public class CoreDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // ---- ChefProfile ----
-        modelBuilder.Entity<ChefProfile>(entity =>
-        {
-            entity.HasKey(c => c.Id);
-            entity.Property(c => c.UserId).IsRequired();
-            entity.HasIndex(c => c.UserId).IsUnique();
-            entity.Property(c => c.Status)
-                .HasConversion<string>()
-                .HasMaxLength(20);
-            entity.Property(c => c.KitchenName).HasMaxLength(100);
-            entity.Property(c => c.Specialty).HasMaxLength(100);
-            entity.Property(c => c.Bio).HasMaxLength(500);
-
-            // رابطه با User (بدون navigation)
-        });
-
         // ---- Dish ----
         modelBuilder.Entity<Dish>(entity =>
         {
@@ -111,12 +77,28 @@ public class CoreDbContext : DbContext
             entity.Property(d => d.Price).HasPrecision(18, 2);
             entity.Property(d => d.Ingredients).HasMaxLength(500);
             entity.Property(d => d.ImageUrl).HasMaxLength(500);
+            entity.Property(d => d.Category)
+                  .HasMaxLength(100)
+                  .IsRequired()
+                  .HasDefaultValue("General");
             entity.HasIndex(d => d.ChefId);
             entity.HasIndex(d => d.IsAvailable);
+            entity.Property(d => d.StockQuantity)
+                .HasField("_stockQuantity")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+        });
 
-            entity.HasOne(d => d.Chef)
-                .WithMany(c => c.Dishes)
-                .HasForeignKey(d => d.ChefId)
+        // ---- Comment ----
+        modelBuilder.Entity<Comment>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Text).IsRequired().HasMaxLength(1000);
+            entity.Property(c => c.Rating);
+            entity.HasIndex(c => c.DishId);
+            entity.HasIndex(c => c.UserId);
+            entity.HasOne(c => c.Dish)
+                .WithMany(d => d.Comments)
+                .HasForeignKey(c => c.DishId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

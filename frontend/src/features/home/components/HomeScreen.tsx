@@ -1,9 +1,9 @@
-import CategorySection from "./CategorySection";
 import HomeFooter from "./HomeFooter";
 import HomeHeader from "./HomeHeader";
 import FoodScroll from "./FoodScroll";
 import ProvinceCityDropdown from "./ProvinceCityDropdown";
 import SearchBox from "./SearchBox";
+import CategorySection from "@/features/categories/components/CategorySection";
 
 export default function HomeScreen() {
     return (
@@ -16,11 +16,11 @@ export default function HomeScreen() {
           </div>
 
 
-          <div className="w-[90%] mx-auto h-[1px] mt-2.5 bg-[#D9D9D9]"></div>
+          <div className="w-[90%] mx-auto h-px mt-2.5 bg-[#D9D9D9]"></div>
 
           <CategorySection/>
           
-          <div className="w-[90%] mx-auto h-[1px] mt-2.5 bg-[#D9D9D9]"></div>
+          <div className="w-[90%] mx-auto h-px mt-2.5 bg-[#D9D9D9]"></div>
 
           <FoodScroll/>
 

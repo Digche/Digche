@@ -7,9 +7,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ImagePlus, Upload } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
-import { useFoodStore } from "@/store/food-store";
 import FormField from "./FormField";
 import ChefProfileBadge from "../../components/ChefProfileBadge";
+import { useCreateChefFood } from "../../hooks/use-create-chef-food";
 
 type AddFoodFormState = {
   title: string;
@@ -38,7 +38,8 @@ export default function AddFoodForm() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const currentUser = useAuthStore((state) => state.currentUser);
-  const addFood = useFoodStore((state) => state.addFood);
+  
+  const createFood = useCreateChefFood();
 
   const [form, setForm] = useState<AddFoodFormState>({
     title: "",
@@ -101,12 +102,6 @@ export default function AddFoodForm() {
       : `${trimmedValue} باقیمانده`;
   };
 
-  const normalizeIngredients = (value: string) => {
-    return value
-      .split(/[،,]/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -118,29 +113,36 @@ export default function AddFoodForm() {
 
     setIsSubmitting(true);
 
-    addFood({
-      title: form.title.trim(),
-      category: form.category,
-      remaining: normalizeRemaining(form.remaining),
-      price: form.price.trim(),
-      unit: "تومان",
-      image: form.image || defaultImage,
-      ingredients: normalizeIngredients(form.ingredients),
-      description: form.description.trim(),
-      chef: currentUser.name,
-      chefId: currentUser.id,
-      location: "تهران",
-    });
-
-    setIsSubmitting(false);
-    router.push("/chef/foods");
+    createFood.mutate(
+      {
+        title: form.title.trim(),
+        category: form.category,
+        remaining: normalizeRemaining(form.remaining),
+        price: form.price.trim(),
+        unit: "تومان",
+        image: form.image || defaultImage,
+        ingredients: form.ingredients.trim(),
+        description: form.description.trim(),
+        location: "تهران",
+      },
+      {
+        onSuccess: () => {
+          setIsSubmitting(false);
+          router.push("/chef/foods");
+        },
+        onError: (error) => {
+          setIsSubmitting(false);
+          alert(error instanceof Error ? error.message : "ثبت غذا ناموفق بود.");
+        },
+      }
+    );
   };
 
 
   return (
-    <section dir="rtl" className="relative overflow-hidden rounded-[2rem] border border-orange-100 bg-white shadow-sm">
+    <section dir="rtl" className="relative overflow-hidden rounded-4xl border border-orange-100 bg-white shadow-sm">
       
-      <div className="absolute inset-0 opacity-60  [background-size:76px_76px]" />
+      <div className="absolute inset-0 opacity-60  bg-size-[76px_76px]" />
 
       <div className="relative p-5 sm:p-8 lg:p-10">
 
@@ -241,7 +243,7 @@ export default function AddFoodForm() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="group flex min-h-[150px] w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dotted border-gray-800 bg-[#F2CDB5]/35 px-4 text-center transition hover:bg-[#F2CDB5]/50"
+                  className="group flex min-h-37.5 w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dotted border-gray-800 bg-[#F2CDB5]/35 px-4 text-center transition hover:bg-[#F2CDB5]/50"
                 >
                   {form.image ? (
                     <div className="relative h-36 w-full overflow-hidden rounded-xl">

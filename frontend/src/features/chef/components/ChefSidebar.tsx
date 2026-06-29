@@ -94,7 +94,7 @@ export default function ChefSidebar() {
       )}
 
       <aside
-        className={`fixed bottom-0 right-0 top-0 z-50 flex w-[82%] max-w-[340px] flex-col rounded-l-[2rem] bg-white px-6 py-6 shadow-xl transition-transform duration-300 md:right-6 md:top-6 md:bottom-6 md:w-[318px] md:max-w-none md:translate-x-0 md:rounded-[1.6rem] md:shadow-sm ${
+        className={`fixed bottom-0 right-0 top-0 z-50 flex w-[82%] max-w-85 flex-col rounded-l-4xl bg-white px-6 py-6 shadow-xl transition-transform duration-300 md:right-6 md:top-6 md:bottom-6 md:w-79.5 md:max-w-none md:translate-x-0 md:rounded-[1.6rem] md:shadow-sm ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

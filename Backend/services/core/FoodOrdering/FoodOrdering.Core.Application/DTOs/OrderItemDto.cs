@@ -1,0 +1,10 @@
+namespace FoodOrdering.Core.Application.DTOs;
+
+public class OrderItemDto
+{
+    public Guid DishId { get; set; }
+    public string DishName { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal TotalPrice => Quantity * UnitPrice;
+}
