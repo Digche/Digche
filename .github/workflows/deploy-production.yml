@@ -87,5 +87,24 @@ jobs:
             curl -f http://127.0.0.1:8080/health
             curl -f http://127.0.0.1:8080/auth/health
             curl -f http://127.0.0.1:8080/chat/health
-            curl -f http://127.0.0.1:3000/auth
+
+            FRONTEND_READY=0
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              if curl -fsS -o /dev/null http://127.0.0.1:3000/auth; then
+                FRONTEND_READY=1
+                break
+              fi
+
+              echo "Waiting for frontend on port 3000..."
+              sleep 3
+            done
+
+            if [ "$FRONTEND_READY" != "1" ]; then
+              echo "Frontend did not become ready on port 3000"
+              pm2 status
+              pm2 logs digche-frontend --lines 80 --nostream
+              exit 1
+            fi
+
+            curl -I http://127.0.0.1:3000/auth
           EOF
