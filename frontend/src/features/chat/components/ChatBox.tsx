@@ -18,6 +18,7 @@ import type {
   ChatConversation,
   ChatMessage,
   ChatParticipant,
+  ChatSearchUser,
   ChatUiMessage,
   StartChatConversationInput,
 } from "../types/chat.types";
@@ -77,6 +78,12 @@ function getPreview(message?: ChatMessage | null) {
   return message.body.length > 34 ? `${message.body.slice(0, 34)}...` : message.body;
 }
 
+
+function getSearchUserDisplayName(user: ChatSearchUser) {
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
+  return user.displayName || fullName || user.username || user.phone || "کاربر دیگچه";
+}
+
 function MessageStatus({ message }: { message: ChatUiMessage }) {
   if (message.deliveryStatus === "sending") {
     return <Clock3 size={12} className="text-gray-400" aria-label="در حال ارسال" />;
@@ -107,7 +114,12 @@ export function ChatBox({
   const [messageText, setMessageText] = useState("");
   const [isAwayFromBottom, setIsAwayFromBottom] = useState(false);
   const [isNearTop, setIsNearTop] = useState(false);
+  const [participantSearchText, setParticipantSearchText] = useState("");
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
+  const [participantSearchId, setParticipantSearchId] = useState("");
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const searchDebounceTimer = useRef<number | null>(null);
 
   const currentActorId = getCurrentActorId(currentUser);
   const currentActor = useMemo(
@@ -127,7 +139,7 @@ export function ChatBox({
     errorMessage,
     socketStatus,
     typingText,
-    typingConversationIds,
+    startDirectConversation,
     selectConversation,
     loadOlderMessages,
     sendTyping,
@@ -210,6 +222,76 @@ export function ChatBox({
     }
   }
 
+
+  async function handleStartConversation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const participantId = participantSearchId.trim();
+
+    if (!participantId) {
+      return;
+    }
+
+    setIsStartingConversation(true);
+
+    try {
+      const conversation = await startDirectConversation({
+        participantId,
+        participantType: "user",
+        participantDisplayName: participantId,
+        type: "direct",
+      });
+
+      if (conversation) {
+        setParticipantSearchId("");
+        window.setTimeout(() => scrollToBottom("auto"), 0);
+      }
+    } finally {
+      setIsStartingConversation(false);
+    }
+  }
+
+
+  function handleSearchUserChange(value: string) {
+    setParticipantSearchText(value);
+
+    if (searchDebounceTimer.current) {
+      window.clearTimeout(searchDebounceTimer.current);
+    }
+
+    const normalizedValue = value.trim();
+
+    if (normalizedValue.length < 2) {
+      clearUserSearch();
+      return;
+    }
+
+    searchDebounceTimer.current = window.setTimeout(() => {
+      void searchUsersByUsername(normalizedValue);
+    }, 350);
+  }
+
+  async function handleStartConversationWithUser(user: ChatSearchUser) {
+    setIsStartingConversation(true);
+
+    try {
+      const conversation = await startDirectConversation({
+        participantId: user.id,
+        participantType: "user",
+        participantDisplayName: getSearchUserDisplayName(user),
+        type: "direct",
+      });
+
+      if (conversation) {
+        setParticipantSearchText("");
+        clearUserSearch();
+        window.setTimeout(() => scrollToBottom("auto"), 0);
+      }
+    } finally {
+      setIsStartingConversation(false);
+    }
+  }
+
   if (!accessToken || !currentUser) {
     return (
       <section
@@ -229,13 +311,74 @@ export function ChatBox({
       dir="ltr"
       className="grid h-[calc(100vh-8rem)] min-h-[620px] w-full max-w-5xl overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md md:grid-cols-[285px_minmax(0,1fr)]"
     >
-      <aside dir="rtl" className="min-h-0 border-r border-gray-200 bg-white">
+      <aside dir="rtl" className="flex min-h-0 flex-col border-r border-gray-200 bg-white">
         <div className="flex h-[76px] items-center justify-between border-b border-gray-200 px-5">
 
           <h2 className="text-2xl font-bold text-gray-950">گفتگو ها</h2>
         </div>
 
-        <div className="h-[calc(100%-76px)] overflow-y-auto">
+        <div className="border-b border-gray-200 bg-white px-4 py-3">
+          <label className="mb-2 block text-xs font-bold text-gray-600">
+            جستجوی کاربر با نام کاربری
+          </label>
+
+          <input
+            dir="ltr"
+            value={participantSearchText}
+            onChange={(event) => handleSearchUserChange(event.target.value)}
+            placeholder="username"
+            className="h-10 w-full rounded-xl border border-gray-300 bg-white px-3 text-left text-xs text-gray-700 outline-none transition focus:border-[#FF6B1A] placeholder:text-gray-400"
+          />
+
+          {isSearchingUsers ? (
+            <p className="mt-2 text-xs text-gray-500">در حال جستجو...</p>
+          ) : null}
+
+          {userSearchError ? (
+            <p className="mt-2 rounded-lg bg-red-50 px-2 py-1.5 text-xs text-red-600">
+              {userSearchError}
+            </p>
+          ) : null}
+
+          {participantSearchText.trim().length >= 2 && !isSearchingUsers && searchedUsers.length === 0 && !userSearchError ? (
+            <p className="mt-2 text-xs text-gray-500">کاربری پیدا نشد.</p>
+          ) : null}
+
+          {searchedUsers.length > 0 ? (
+            <div className="mt-2 overflow-hidden rounded-xl border border-gray-200 bg-white">
+              {searchedUsers.map((user) => {
+                const title = getSearchUserDisplayName(user);
+
+                return (
+                  <button
+                    key={user.id}
+                    type="button"
+                    disabled={isStartingConversation}
+                    onClick={() => void handleStartConversationWithUser(user)}
+                    className="flex w-full items-center gap-3 border-b border-gray-100 px-3 py-2 text-right transition last:border-b-0 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <img
+                      src={user.photoUrl || "/images/chef.webp"}
+                      alt={title}
+                      className="h-9 w-9 rounded-full border border-gray-200 object-cover"
+                    />
+
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold text-gray-950">
+                        {title}
+                      </span>
+                      <span dir="ltr" className="mt-0.5 block truncate text-left text-[11px] text-gray-500">
+                        @{user.username || user.id}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {isLoading && conversations.length === 0 ? (
             <div className="p-5 text-center text-sm text-gray-500">
               در حال دریافت گفتگوها...

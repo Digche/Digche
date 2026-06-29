@@ -8,11 +8,13 @@ import {
   markChatConversationRead,
   sendChatMessage as sendChatMessageHttp,
   startChatConversation,
+  searchChatUsersByUsername,
 } from "../services/chat-api";
 import type {
   ChatActor,
   ChatConversation,
   ChatMessage,
+  ChatSearchUser,
   ChatSocketStatus,
   ChatUiMessage,
   StartChatConversationInput,
@@ -125,6 +127,9 @@ export function useChat({
   const [errorMessage, setErrorMessage] = useState("");
   const [socketStatus, setSocketStatus] = useState<ChatSocketStatus>("idle");
   const [typingText, setTypingText] = useState("");
+  const [searchedUsers, setSearchedUsers] = useState<ChatSearchUser[]>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+  const [userSearchError, setUserSearchError] = useState("");
   const [typingConversationIds, setTypingConversationIds] = useState<Record<string, boolean>>({});
 
   const bootedAccessTokenRef = useRef<string | null>(null);
@@ -702,6 +707,11 @@ export function useChat({
     currentActor,
     initialConversationId,
     loadMessages,
+    searchedUsers,
+    isSearchingUsers,
+    userSearchError,
+    searchUsersByUsername,
+    clearUserSearch,
     refreshConversations,
     startConversationInput,
     subscribeToConversation,
@@ -726,6 +736,42 @@ export function useChat({
       window.clearInterval(timer);
     };
   }, [accessToken, currentActor, loadMessages, refreshConversations, socketStatus]);
+
+
+  const searchUsersByUsername = useCallback(
+    async (username: string) => {
+      const normalizedUsername = username.trim();
+
+      if (!accessToken || normalizedUsername.length < 2) {
+        setSearchedUsers([]);
+        setUserSearchError("");
+        return [];
+      }
+
+      setIsSearchingUsers(true);
+      setUserSearchError("");
+
+      try {
+        const users = await searchChatUsersByUsername(accessToken, normalizedUsername);
+        setSearchedUsers(users);
+        return users;
+      } catch (error) {
+        setSearchedUsers([]);
+        setUserSearchError(
+          error instanceof Error ? error.message : "جستجوی کاربر ناموفق بود."
+        );
+        return [];
+      } finally {
+        setIsSearchingUsers(false);
+      }
+    },
+    [accessToken]
+  );
+
+  const clearUserSearch = useCallback(() => {
+    setSearchedUsers([]);
+    setUserSearchError("");
+  }, []);
 
   const sendTyping = useCallback(() => {
     const socket = socketRef.current;
@@ -888,9 +934,59 @@ export function useChat({
       clearOptimisticTimer,
       currentActor,
       markOptimisticFailedLater,
-      refreshConversations,
+      searchedUsers,
+    isSearchingUsers,
+    userSearchError,
+    searchUsersByUsername,
+    clearUserSearch,
+    refreshConversations,
       selectedConversationId,
     ]
+  );
+
+
+  const startDirectConversation = useCallback(
+    async (input: StartChatConversationInput) => {
+      if (!accessToken) {
+        return null;
+      }
+
+      const participantId = input.participantId.trim();
+
+      if (!participantId) {
+        setErrorMessage("شناسه کاربر را وارد کنید.");
+        return null;
+      }
+
+      setIsLoading(true);
+      setErrorMessage("");
+
+      try {
+        const response = await startChatConversation(accessToken, {
+          participantId,
+          participantType: input.participantType ?? "user",
+          participantDisplayName: input.participantDisplayName?.trim() || participantId,
+          title: input.title ?? null,
+          type: input.type ?? "direct",
+          orderId: input.orderId ?? null,
+        });
+
+        setConversations((prev) => upsertConversation(prev, response.conversation));
+        setSelectedConversationId(response.conversation.id);
+        selectedConversationIdRef.current = response.conversation.id;
+        markConversationReadLocal(response.conversation.id);
+        subscribeToConversation(response.conversation.id);
+        await loadMessages(response.conversation.id);
+
+        return response.conversation;
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "شروع گفتگو ناموفق بود.");
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [accessToken, loadMessages, markConversationReadLocal, subscribeToConversation]
   );
 
   const isMine = useCallback(
@@ -916,7 +1012,13 @@ export function useChat({
     socketStatus,
     typingText,
     typingConversationIds,
+    searchedUsers,
+    isSearchingUsers,
+    userSearchError,
+    searchUsersByUsername,
+    clearUserSearch,
     refreshConversations,
+    startDirectConversation,
     selectConversation,
     loadOlderMessages,
     sendTyping,

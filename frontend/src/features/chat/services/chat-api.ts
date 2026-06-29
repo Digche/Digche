@@ -2,6 +2,7 @@ import { API_BASE_URL } from "@/config/api";
 import type {
   ChatConversation,
   ChatMessage,
+  ChatSearchUser,
   StartChatConversationInput,
 } from "../types/chat.types";
 
@@ -224,4 +225,40 @@ export function buildChatWebSocketUrl(accessToken: string) {
     : baseUrl.replace("http://", "ws://");
 
   return `${wsBaseUrl}/chat/ws?token=${encodeURIComponent(accessToken)}`;
+}
+
+
+function normalizeSearchUsersResponse(response: unknown): ChatSearchUser[] {
+  if (!response || typeof response !== "object") {
+    return [];
+  }
+
+  const body = response as {
+    users?: ChatSearchUser[];
+    results?: ChatSearchUser[];
+    data?: ChatSearchUser[];
+  };
+
+  return body.users || body.results || body.data || [];
+}
+
+export async function searchChatUsersByUsername(
+  accessToken: string,
+  username: string
+) {
+  const normalizedUsername = username.trim();
+
+  if (normalizedUsername.length < 2) {
+    return [];
+  }
+
+  const response = await requestJson<unknown>(
+    `/auth/users/search${buildQuery({ username: normalizedUsername, limit: 8 })}`,
+    {
+      method: "GET",
+      accessToken,
+    }
+  );
+
+  return normalizeSearchUsersResponse(response);
 }

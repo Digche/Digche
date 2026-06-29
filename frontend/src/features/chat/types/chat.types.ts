@@ -62,3 +62,14 @@ export type ChatActor = {
   id: string;
   type: ChatParticipantType;
 };
+
+
+export type ChatSearchUser = {
+  id: string;
+  username: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName?: string | null;
+  phone?: string | null;
+  photoUrl?: string | null;
+};
