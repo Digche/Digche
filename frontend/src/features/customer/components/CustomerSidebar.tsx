@@ -79,13 +79,13 @@ export default function CustomerSidebar() {
       )}
 
       <aside
-        className={`fixed bottom-0 right-0 top-0 z-50 flex w-[82%] max-w-85 flex-col rounded-l-4xl bg-white px-6 py-6 shadow-xl transition-transform duration-300 md:right-6 md:top-6 md:bottom-6 md:w-79.5 md:max-w-none md:translate-x-0 md:rounded-[1.6rem] md:shadow-sm ${
+        className={`fixed bottom-0 right-0 top-0 z-50 flex w-[82%] max-w-[340px] flex-col overflow-hidden rounded-l-[2rem] bg-white px-5 py-5 shadow-xl transition-transform duration-300 md:bottom-6 md:right-6 md:top-6 md:w-[318px] md:max-w-none md:translate-x-0 md:rounded-[1.6rem] md:shadow-sm ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="mb-8 flex items-start justify-between">
+        <div className="mb-5 flex shrink-0 items-start justify-between">
           <div className="mx-auto flex flex-col items-center">
-            <Link href="/" className="relative h-28 w-32">
+            <Link href="/" className="relative h-[88px] w-28">
               <Image
                 src="/icons/Logo.svg"
                 alt="دیگچه"
@@ -95,7 +95,7 @@ export default function CustomerSidebar() {
               />
             </Link>
 
-            <p className="-mt-2 text-sm text-gray-800">بازار غذای خانگی</p>
+            <p className="-mt-1 text-xs text-gray-800">بازار غذای خانگی</p>
           </div>
 
           <button
@@ -108,7 +108,7 @@ export default function CustomerSidebar() {
           </button>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-3">
+        <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pl-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
 
@@ -121,14 +121,14 @@ export default function CustomerSidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center justify-between rounded-full px-5 py-4 text-sm font-medium transition ${
+                className={`flex items-center justify-between rounded-full px-4 py-3 text-sm font-medium transition ${
                   isActive
                     ? "bg-[#F5D8C6] text-gray-950"
                     : "text-gray-800 hover:bg-[#FFF9F4]"
                 }`}
               >
-                <span>{item.title}</span>
-                <Icon size={21} />
+                <span className="truncate">{item.title}</span>
+                <Icon size={20} className="shrink-0" />
               </Link>
             );
           })}
@@ -137,10 +137,10 @@ export default function CustomerSidebar() {
         <button
           type="button"
           onClick={handleLogout}
-          className="mt-6 flex items-center justify-between rounded-full bg-[#D97777] px-6 py-4 text-sm font-bold text-white transition hover:bg-[#cf6969]"
+          className="mt-4 flex shrink-0 items-center justify-between rounded-full bg-[#D97777] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#cf6969]"
         >
           <span>خروج از حساب</span>
-          <LogOut size={21} />
+          <LogOut size={20} className="shrink-0" />
         </button>
       </aside>
     </>
