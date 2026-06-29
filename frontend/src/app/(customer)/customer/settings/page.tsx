@@ -1,7 +1,5 @@
-// src/app/(chef)/chef/settings/page.tsx
+import CustomerSettingsScreen from "@/features/customer/settings/components/CustomerSettingScreen";
 
-import ChefSettingsScreen from "@/features/chef/settings/components/ChefSettingsScreen";
-
-export default function ChefSettingsPage() {
-  return <ChefSettingsScreen />;
+export default function CustomerSettingsPage() {
+  return <CustomerSettingsScreen />;
 }

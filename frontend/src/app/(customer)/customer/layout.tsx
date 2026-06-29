@@ -8,11 +8,11 @@ type CustomerLayoutProps = {
 export default function CustomerLayout({ children }: CustomerLayoutProps) {
   return (
     <AuthRouteGuard allowedRoles={["customer"]}>
-      <div dir="rtl" className="min-h-screen bg-[#FFF9F4]">
+      <div dir="rtl" className="h-screen overflow-hidden bg-[#FFF9F4]">
         <CustomerSidebar />
 
-        <main className="min-h-screen px-4 pb-8 pt-20 md:py-8 md:pr-92.5 md:pl-8">
-          <div className="mx-auto w-full lg:max-w-375">
+        <main className="h-screen overflow-hidden px-4 pb-8 pt-20 md:px-6 md:py-6 md:pr-[370px]">
+          <div className="h-full overflow-hidden rounded-[1.6rem] border border-orange-100 bg-white shadow-sm">
             {children}
           </div>
         </main>
