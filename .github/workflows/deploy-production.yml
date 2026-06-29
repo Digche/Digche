@@ -47,26 +47,26 @@ jobs:
             mkdir -p /tmp/digche-env/services/media
             mkdir -p /tmp/digche-env/services/ticket
 
-            cp /opt/digche/Backend/.env /tmp/digche-env/root.env
-            cp /opt/digche/Backend/services/auth/.env /tmp/digche-env/services/auth/.env
-            cp /opt/digche/Backend/services/chat/.env /tmp/digche-env/services/chat/.env
-            cp /opt/digche/Backend/services/media/.env /tmp/digche-env/services/media/.env
-            cp /opt/digche/Backend/services/ticket/.env /tmp/digche-env/services/ticket/.env
+            [ -f /opt/digche/Backend/.env ] && cp /opt/digche/Backend/.env /tmp/digche-env/root.env
+            [ -f /opt/digche/Backend/services/auth/.env ] && cp /opt/digche/Backend/services/auth/.env /tmp/digche-env/services/auth/.env
+            [ -f /opt/digche/Backend/services/chat/.env ] && cp /opt/digche/Backend/services/chat/.env /tmp/digche-env/services/chat/.env
+            [ -f /opt/digche/Backend/services/media/.env ] && cp /opt/digche/Backend/services/media/.env /tmp/digche-env/services/media/.env
+            [ -f /opt/digche/Backend/services/ticket/.env ] && cp /opt/digche/Backend/services/ticket/.env /tmp/digche-env/services/ticket/.env
 
-            rm -rf /opt/digche-new
-            mkdir -p /opt/digche-new
-            tar -xzf /tmp/digche-release.tgz -C /opt/digche-new
+            sudo rm -rf /opt/digche-new
+            sudo mkdir -p /opt/digche-new
+            sudo tar -xzf /tmp/digche-release.tgz -C /opt/digche-new
+            sudo chown -R ubuntu:ubuntu /opt/digche-new
 
-            rm -rf /opt/digche
-            mv /opt/digche-new /opt/digche
-
-            cp /tmp/digche-env/root.env /opt/digche/Backend/.env
-            cp /tmp/digche-env/services/auth/.env /opt/digche/Backend/services/auth/.env
-            cp /tmp/digche-env/services/chat/.env /opt/digche/Backend/services/chat/.env
-            cp /tmp/digche-env/services/media/.env /opt/digche/Backend/services/media/.env
-            cp /tmp/digche-env/services/ticket/.env /opt/digche/Backend/services/ticket/.env
-
+            sudo rm -rf /opt/digche
+            sudo mv /opt/digche-new /opt/digche
             sudo chown -R ubuntu:ubuntu /opt/digche
+
+            [ -f /tmp/digche-env/root.env ] && cp /tmp/digche-env/root.env /opt/digche/Backend/.env
+            [ -f /tmp/digche-env/services/auth/.env ] && cp /tmp/digche-env/services/auth/.env /opt/digche/Backend/services/auth/.env
+            [ -f /tmp/digche-env/services/chat/.env ] && cp /tmp/digche-env/services/chat/.env /opt/digche/Backend/services/chat/.env
+            [ -f /tmp/digche-env/services/media/.env ] && cp /tmp/digche-env/services/media/.env /opt/digche/Backend/services/media/.env
+            [ -f /tmp/digche-env/services/ticket/.env ] && cp /tmp/digche-env/services/ticket/.env /opt/digche/Backend/services/ticket/.env
 
             sudo cp /opt/digche/deploy/nginx/digche.conf /etc/nginx/sites-available/digche
             sudo ln -sf /etc/nginx/sites-available/digche /etc/nginx/sites-enabled/digche
