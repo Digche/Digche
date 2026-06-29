@@ -42,5 +42,10 @@ namespace FoodOrdering.Core.Infrastructure.Repositories
                 _context.Comments.Remove(comment);
             }
         }
+
+        public async Task<int> SaveChangesAsync(CancellationToken cancellation = default)
+        {
+            return await _context.SaveChangesAsync(cancellation);
+        }
     }
 }

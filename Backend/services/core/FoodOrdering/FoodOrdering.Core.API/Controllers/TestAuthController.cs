@@ -11,20 +11,15 @@ namespace FoodOrdering.Core.API.Controllers;
 public class TestAuthController : ControllerBase
 {
     private readonly IConfiguration _configuration;
-    private readonly IHostEnvironment _environment;
 
-    public TestAuthController(IConfiguration configuration, IHostEnvironment environment)
+    public TestAuthController(IConfiguration configuration)
     {
         _configuration = configuration;
-        _environment = environment;
     }
 
     [HttpGet("token")]
     public IActionResult GetTestToken([FromQuery] string role = "chef")
     {
-        if (!_environment.IsDevelopment())
-            return NotFound();
-
         // 1. دریافت تنظیمات JWT
         var secret = _configuration["Jwt:Secret"];
         if (string.IsNullOrEmpty(secret))
@@ -80,9 +75,6 @@ public class TestAuthController : ControllerBase
     [HttpGet("health")]
     public IActionResult Health()
     {
-        if (!_environment.IsDevelopment())
-            return NotFound();
-
         return Ok(new
         {
             status = "Healthy",

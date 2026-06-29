@@ -9,5 +9,6 @@ namespace FoodOrdering.Core.Domain.Interfaces
         Task AddAsync(Comment comment, CancellationToken cancellation = default);
         Task UpdateAsync(Comment comment, CancellationToken cancellation = default);
         Task DeleteAsync(Guid id, CancellationToken cancellation = default);
+        Task<int> SaveChangesAsync(CancellationToken cancellation = default);
     }
 }

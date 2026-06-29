@@ -24,10 +24,6 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy published output from build stage
 COPY --from=build /app/publish .
 

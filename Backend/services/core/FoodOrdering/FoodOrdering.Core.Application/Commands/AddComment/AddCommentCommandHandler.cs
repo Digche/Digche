@@ -48,6 +48,7 @@ namespace FoodOrdering.Core.Application.Commands.AddComment
             // 5. ذخیره
             await _commentRepository.AddAsync(comment, cancellationToken);
 
+            await _commentRepository.SaveChangesAsync(cancellationToken);
             // 6. تبدیل به DTO
             var commentDto = new CommentDto
             {

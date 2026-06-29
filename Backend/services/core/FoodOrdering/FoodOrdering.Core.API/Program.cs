@@ -3,7 +3,6 @@ using FoodOrdering.Core.Domain.Interfaces;
 using FoodOrdering.Core.Infrastructure.Data;
 using FoodOrdering.Core.Infrastructure.Repositories;
 using FoodOrdering.Core.Infrastructure.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -80,33 +79,25 @@ builder.Services.AddScoped<IUserContext, UserContext>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"]
-    ?? builder.Configuration["JWT_SECRET"]
     ?? throw new InvalidOperationException("JWT Secret is not configured in appsettings.json");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            NameClaimType = "sub",
-            RoleClaimType = "selectedRole",
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtSecret))
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
-        .RequireAuthenticatedUser()
-        .RequireClaim("scope", "public")
-        .Build();
-});
+builder.Services.AddAuthorization();
 
 // CORS (allow all for development)
 builder.Services.AddCors(options =>
@@ -140,10 +131,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FoodOrdering Core API v1"));
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
