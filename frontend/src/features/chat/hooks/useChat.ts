@@ -707,12 +707,7 @@ export function useChat({
     currentActor,
     initialConversationId,
     loadMessages,
-    searchedUsers,
-    isSearchingUsers,
-    userSearchError,
-    searchUsersByUsername,
-    clearUserSearch,
-    refreshConversations,
+        refreshConversations,
     startConversationInput,
     subscribeToConversation,
   ]);

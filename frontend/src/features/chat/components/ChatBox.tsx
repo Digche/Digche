@@ -116,8 +116,6 @@ export function ChatBox({
   const [isNearTop, setIsNearTop] = useState(false);
   const [participantSearchText, setParticipantSearchText] = useState("");
   const [isStartingConversation, setIsStartingConversation] = useState(false);
-  const [participantSearchId, setParticipantSearchId] = useState("");
-  const [isStartingConversation, setIsStartingConversation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const searchDebounceTimer = useRef<number | null>(null);
 
@@ -145,7 +143,12 @@ export function ChatBox({
     sendTyping,
     sendMessage,
     isMine,
-  } = useChat({
+      searchedUsers,
+    isSearchingUsers,
+    userSearchError,
+    searchUsersByUsername,
+    clearUserSearch,
+} = useChat({
     accessToken,
     currentActor,
     initialConversationId,
@@ -219,35 +222,6 @@ export function ChatBox({
     if (sentMessage) {
       setMessageText("");
       window.setTimeout(() => scrollToBottom("smooth"), 0);
-    }
-  }
-
-
-  async function handleStartConversation(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const participantId = participantSearchId.trim();
-
-    if (!participantId) {
-      return;
-    }
-
-    setIsStartingConversation(true);
-
-    try {
-      const conversation = await startDirectConversation({
-        participantId,
-        participantType: "user",
-        participantDisplayName: participantId,
-        type: "direct",
-      });
-
-      if (conversation) {
-        setParticipantSearchId("");
-        window.setTimeout(() => scrollToBottom("auto"), 0);
-      }
-    } finally {
-      setIsStartingConversation(false);
     }
   }
 
