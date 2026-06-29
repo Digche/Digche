@@ -210,6 +210,15 @@ export function markChatConversationRead(
 
 export function buildChatWebSocketUrl(accessToken: string) {
   const baseUrl = API_BASE_URL.replace(/\/$/, "");
+
+  if (!baseUrl && typeof window !== "undefined") {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+
+    return `${protocol}//${window.location.host}/chat/ws?token=${encodeURIComponent(
+      accessToken
+    )}`;
+  }
+
   const wsBaseUrl = baseUrl.startsWith("https://")
     ? baseUrl.replace("https://", "wss://")
     : baseUrl.replace("http://", "ws://");
