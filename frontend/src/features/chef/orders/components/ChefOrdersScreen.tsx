@@ -8,7 +8,6 @@ import { useAuthStore } from "@/store/auth-store";
 import { useOrderStore } from "@/store/order-store";
 import SearchInput from "@/shared/components/SearchInput";
 import ChefOrderCard from "./ChefOrderCard";
-import ChefProfileBadge from "../../components/ChefProfileBadge";
 
 function isValidDate(value: string | Date) {
   const date = new Date(value);
@@ -77,30 +76,26 @@ export default function ChefOrdersScreen() {
 
   if (!currentUser || currentUser.role !== "chef") {
     return (
-      <section className="rounded-3xl border border-orange-100 bg-white p-10 text-center shadow-sm">
-        <h1 className="text-xl font-bold text-gray-800">دسترسی غیرمجاز</h1>
+      <section className="flex h-full items-center justify-center p-6 text-center">
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">دسترسی غیرمجاز</h1>
 
-        <p className="mt-2 text-sm text-gray-500">
-          فقط آشپزها می‌توانند سفارش‌ها را ببینند.
-        </p>
+          <p className="mt-2 text-sm text-gray-500">
+            فقط آشپزها می‌توانند سفارش‌ها را ببینند.
+          </p>
+        </div>
       </section>
     );
   }
 
   return (
-    <section
-      dir="rtl"
-      className="relative overflow-hidden rounded-[1.7rem] border border-orange-100 bg-white shadow-sm"
-    >
-      <div className="relative px-5 py-7 sm:px-8 lg:px-10">
+    <section dir="rtl" className="relative h-full overflow-hidden">
+      <div className="flex h-full flex-col px-5 py-7 sm:px-8 lg:px-10">
         <div
           dir="ltr"
-          className="mb-16 grid gap-6 lg:grid-cols-[1fr_420px_1fr] lg:items-start"
-        >        
-          {/* <ChefProfileBadge/> */}
-
+          className="mb-12 grid shrink-0 gap-6 lg:grid-cols-[1fr_420px_1fr] lg:items-start"
+        >
           <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
-
             <SearchInput
               value={searchTerm}
               onChange={setSearchTerm}
@@ -110,7 +105,7 @@ export default function ChefOrdersScreen() {
           </div>
 
           <div className="order-1 text-center lg:order-3 lg:text-right">
-            <div className="flex flex-col items-center justify-center gap-3 lg:justify-end">
+            <div className="flex flex-col items-center justify-center gap-3 lg:items-end">
               <div className="flex flex-row items-center gap-2">
                 <h1 className="text-3xl font-extrabold text-gray-950">
                   سفارش ها
@@ -133,8 +128,8 @@ export default function ChefOrdersScreen() {
           <div className="hidden lg:block" />
         </div>
 
-        <div className="mx-auto max-w-[880px]">
-          <div className="mb-5 hidden h-14 items-center rounded-xl bg-[#F4D692] px-6 shadow-sm md:grid md:grid-cols-[1.35fr_1fr_1fr_90px] md:gap-4">
+        <div className="mx-auto flex min-h-0 w-full max-w-[880px] flex-1 flex-col overflow-hidden">
+          <div className="mb-5 hidden h-14 shrink-0 items-center rounded-xl bg-[#F4D692] px-6 shadow-sm md:grid md:grid-cols-[1.35fr_1fr_1fr_90px] md:gap-4">
             <p className="text-center text-xl font-bold text-gray-950">
               مشتری
             </p>
@@ -159,7 +154,7 @@ export default function ChefOrdersScreen() {
               </p>
             </div>
           ) : (
-            <div className="max-h-[610px] space-y-3 overflow-y-auto pb-2 pl-2">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-2 pl-2">
               {chefOrders.map((order) => (
                 <ChefOrderCard key={order.id} order={order} />
               ))}

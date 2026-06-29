@@ -2,13 +2,11 @@
 
 "use client";
 
-import { ChangeEvent, FormEvent, ReactNode, useRef, useState } from "react";
-import Image from "next/image";
+import { ChangeEvent, FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import FormField from "./FormField";
-import ChefProfileBadge from "../../components/ChefProfileBadge";
 import { useCreateChefFood } from "../../hooks/use-create-chef-food";
 
 type AddFoodFormState = {
@@ -33,12 +31,14 @@ const categories = [
 
 const defaultImage = "/images/food-placeholder.webp";
 
+const inputClassName =
+  "h-10 w-full rounded-lg border border-transparent bg-[#F2CDB5]/55 px-3 text-right text-xs text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70";
+
 export default function AddFoodForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const currentUser = useAuthStore((state) => state.currentUser);
-  
   const createFood = useCreateChefFood();
 
   const [form, setForm] = useState<AddFoodFormState>({
@@ -55,11 +55,14 @@ export default function AddFoodForm() {
 
   if (!currentUser || currentUser.role !== "chef") {
     return (
-      <section className="rounded-3xl border border-orange-100 bg-white p-10 text-center shadow-sm">
-        <h1 className="text-xl font-bold text-gray-800">دسترسی غیرمجاز</h1>
-        <p className="mt-2 text-sm text-gray-500">
-          فقط آشپزها می‌توانند غذا اضافه کنند.
-        </p>
+      <section className="flex h-full items-center justify-center p-6 text-center">
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">دسترسی غیرمجاز</h1>
+
+          <p className="mt-2 text-sm text-gray-500">
+            فقط آشپزها می‌توانند غذا اضافه کنند.
+          </p>
+        </div>
       </section>
     );
   }
@@ -102,7 +105,6 @@ export default function AddFoodForm() {
       : `${trimmedValue} باقیمانده`;
   };
 
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -138,61 +140,41 @@ export default function AddFoodForm() {
     );
   };
 
-
   return (
-    <section dir="rtl" className="relative overflow-hidden rounded-4xl border border-orange-100 bg-white shadow-sm">
-      
-      <div className="absolute inset-0 opacity-60  bg-size-[76px_76px]" />
-
-      <div className="relative p-5 sm:p-8 lg:p-10">
-
-        <div  dir="ltr" className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">    
-            <ChefProfileBadge/>
-
-          <div  className="order-2 text-center lg:order-1 lg:flex-1 my-auto">
-            <h1 className="text-2xl font-bold text-gray-950 sm:text-3xl">
+    <section dir="rtl" className="relative h-full overflow-hidden">
+      <div className="flex h-full flex-col px-8 py-5 lg:px-12">
+          <div className="mb-5 shrink-0 text-right">
+            <h1 className="text-xl py-5 font-extrabold text-gray-950">
               امروز چه غذای خوشمزه‌ای درست میکنی؟
             </h1>
-
           </div>
+        <form
+          onSubmit={handleSubmit}
+          className="mx-auto flex h-full w-full max-w-[770px] flex-col"
+        >
 
 
-        </div>
-
-        <form onSubmit={handleSubmit} className="mx-auto max-w-5xl">
-          <div className="grid gap-x-24 gap-y-6 lg:grid-cols-2">
-            <div className="space-y-6">
+          <div className="grid shrink-0 gap-x-18 gap-y-4 lg:grid-cols-2">
+            <div className="space-y-4">
               <FormField label="نام غذا">
                 <input
                   name="title"
                   value={form.title}
                   onChange={handleChange}
                   placeholder="مثلا: قورمه سبزی"
-                  className="h-14 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 text-right text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
+                  className={inputClassName}
                 />
               </FormField>
 
-              <FormField label="مقدار">
-                <input
-                  name="remaining"
-                  value={form.remaining}
-                  onChange={handleChange}
-                  placeholder="مثلا: یک کیلو"
-                  className="h-14 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 text-right text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
-                />
-              </FormField>
-
-            </div>
-
-            <div className="space-y-6">
               <FormField label="دسته بندی">
                 <select
                   name="category"
                   value={form.category}
                   onChange={handleChange}
-                  className="h-14 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 text-right text-sm text-gray-800 outline-none transition focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
+                  className={inputClassName}
                 >
                   <option value="">انتخاب کنید</option>
+
                   {categories.map((category) => (
                     <option key={category} value={category}>
                       {category}
@@ -201,52 +183,26 @@ export default function AddFoodForm() {
                 </select>
               </FormField>
 
-              <FormField label="قیمت (تومان)">
-                <input
-                  name="price"
-                  value={form.price}
-                  onChange={handleChange}
-                  placeholder="مثلا: 350000"
-                  inputMode="numeric"
-                  className="h-14 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 text-right text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
-                />
-              </FormField>
-            </div>
-            
-
-
-            <div className="lg:col-span-2">
-
-                            <FormField label="مواد اولیه">
+              <FormField label="مواد اولیه">
                 <input
                   name="ingredients"
                   value={form.ingredients}
                   onChange={handleChange}
                   placeholder="مثلا: گوشت، رب انار، گردو..."
-                  className="h-14 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 text-right text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
-                />
-              </FormField>
-              <FormField label="توضیحات اضافه">
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  rows={5}
-                  placeholder="درباره غذا اگر نکته‌ای هست که مشتری باید بداند بنویسید"
-                  className="w-full resize-none rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 py-4 text-right text-sm leading-8 text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
+                  className={inputClassName}
                 />
               </FormField>
             </div>
 
-            <div className="lg:col-span-2">
+            <div className="h-full">
               <FormField label="عکس غذا">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="group flex min-h-37.5 w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dotted border-gray-800 bg-[#F2CDB5]/35 px-4 text-center transition hover:bg-[#F2CDB5]/50"
+                  className="group flex h-[210px] w-[260px] mx-auto  flex-col items-center justify-center gap-2 rounded-lg border-2 border-dotted border-gray-800 bg-[#F2CDB5]/25 px-4 text-center transition hover:bg-[#F2CDB5]/40"
                 >
                   {form.image ? (
-                    <div className="relative h-36 w-full overflow-hidden rounded-xl">
+                    <div className="relative  h-[96px] w-[96px] overflow-hidden rounded-lg">
                       <img
                         src={form.image}
                         alt="پیش نمایش غذا"
@@ -255,11 +211,12 @@ export default function AddFoodForm() {
                     </div>
                   ) : (
                     <>
-                      <p className="text-base font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900">
                         برای آپلود عکس اینجا کلیک کنید
                       </p>
+
                       <Upload
-                        size={34}
+                        size={26}
                         strokeWidth={1.8}
                         className="text-gray-900 transition group-hover:-translate-y-1"
                       />
@@ -276,13 +233,49 @@ export default function AddFoodForm() {
                 />
               </FormField>
             </div>
+
+            <FormField label="مقدار">
+              <input
+                name="remaining"
+                value={form.remaining}
+                onChange={handleChange}
+                placeholder="مثلا: یک کیلو"
+                className={inputClassName}
+              />
+            </FormField>
+
+            <FormField label="قیمت (تومان)">
+              <input
+                name="price"
+                value={form.price}
+                onChange={handleChange}
+                placeholder="مثلا: 350000"
+                inputMode="numeric"
+                className={inputClassName}
+              />
+            </FormField>
+
+
+
+            <div className="lg:col-span-2">
+              <FormField label="توضیحات اضافه">
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="درباره غذا اگر نکته‌ای هست که مشتری باید بداند بنویسید"
+                  className="h-24 w-full resize-none rounded-lg border border-transparent bg-[#F2CDB5]/55 px-3 py-3 text-right text-xs leading-6 text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
+                />
+              </FormField>
+            </div>
           </div>
 
-          <div className="mt-9 flex justify-center">
+          <div className="mt-7 flex shrink-0 justify-center">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-11 w-full max-w-xs rounded-xl bg-[#EFC5A8] text-base font-bold text-gray-900 transition hover:bg-[#e9b892] disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-9 w-60 rounded-lg bg-[#EFC5A8] text-sm font-bold text-gray-900 transition hover:bg-[#e9b892] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? "در حال ثبت..." : "ثبت"}
             </button>

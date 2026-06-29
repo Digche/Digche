@@ -19,7 +19,7 @@ export default function ProfileField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-right text-lg font-bold text-gray-900">
+      <span className="mt-4 block text-right text-md font-bold text-gray-900">
         {label}
       </span>
 
@@ -30,7 +30,7 @@ export default function ProfileField({
           onChange={onChange}
           placeholder={placeholder}
           inputMode={inputMode}
-          className="h-14 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 pr-4 pl-12 text-right text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
+          className="h-10 w-full mt-1 rounded-xl border border-transparent bg-[#F2CDB5]/55 pr-4 pl-12 text-right text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
         />
 
         <Pencil

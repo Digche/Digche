@@ -12,7 +12,7 @@ export default function CustomerAddressesScreen() {
       </div>
 
       <div className="mx-auto flex w-full max-w-5xl flex-col items-center">
-        <h1 className="mb-12 mt-4 text-center text-2xl font-bold text-gray-950 md:text-3xl">
+        <h1 className="mb-12 mt-4 text-right text-2xl font-bold text-gray-950 md:text-3xl">
           👋 خوش اومدی!
         </h1>
 

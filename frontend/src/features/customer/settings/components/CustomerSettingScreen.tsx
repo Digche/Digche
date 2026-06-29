@@ -2,11 +2,12 @@
 
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { Camera, Info } from "lucide-react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";import Image from "next/image";
+import { Camera, Info, Pencil, UserRound } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import ProfileField from "@/shared/components/ProfileField";
+import ProfileTextarea from "@/shared/components/ProfileTextarea";
+import CustomerProfileBadge from "../../components/CustomerProfileBadge";
 
 type SettingsFormState = {
   name: string;
@@ -54,14 +55,12 @@ export default function ChefSettingsScreen() {
 
   if (!currentUser || currentUser.role !== "chef") {
     return (
-      <section className="flex min-h-[calc(100vh-48px)] items-center justify-center p-6 text-center">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">دسترسی غیرمجاز</h1>
+      <section className="rounded-3xl border border-orange-100 bg-white p-10 text-center shadow-sm">
+        <h1 className="text-xl font-bold text-gray-800">دسترسی غیرمجاز</h1>
 
-          <p className="mt-2 text-sm text-gray-500">
-            فقط آشپزها می‌توانند به تنظیمات این بخش دسترسی داشته باشند.
-          </p>
-        </div>
+        <p className="mt-2 text-sm text-gray-500">
+          فقط آشپزها می‌توانند به تنظیمات این بخش دسترسی داشته باشند.
+        </p>
       </section>
     );
   }
@@ -119,23 +118,27 @@ export default function ChefSettingsScreen() {
   const isBase64Avatar = avatarSrc.startsWith("data:");
 
   return (
-    <section dir="rtl" className="relative h-full overflow-hidden">
-      <div className="h-full overflow-y-auto px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
-        <div
-          dir="ltr"
-          className="mb-3 flex flex-col lg:flex-row lg:items-start lg:justify-between"
-        >
-          <div className="order-2 text-right lg:order-1 lg:flex-1">
-            <h1 dir="rtl" className="font-bold text-gray-950 sm:text-2xl">
+    <section
+      dir="rtl"
+      className="relative overflow-hidden rounded-[2rem] border border-orange-100 bg-white shadow-sm"
+    >
+      <div className="absolute inset-0 opacity-60 [background-size:76px_76px]" />
+
+      <div className="relative p-5 sm:p-8 lg:p-10">
+        <div dir="ltr" className="mb-8 flex flex-col gap-45 lg:flex-row lg:items-start lg:justify-between">
+          <CustomerProfileBadge/>
+          <div className="my-auto order-2 text-center lg:order-1 lg:flex-1 ">
+            <h1 dir="rtl" className=" text-2xl font-bold text-gray-950 sm:text-3xl ">
               اطلاعاتتو مدیریت و بروزرسانی کن!
             </h1>
           </div>
+
         </div>
 
-        <form onSubmit={handleSubmit} className="mx-auto max-w-4xl">
-          <div className="mb-3 flex justify-start">
+        <form onSubmit={handleSubmit} className="mx-auto max-w-5xl">
+          <div className="mb-8 flex justify-start">
             <div className="relative mx-auto">
-              <div className="relative mt-1 h-26 w-26 overflow-hidden rounded-full bg-[#F2CDB5]">
+              <div className="relative h-36 w-36 overflow-hidden rounded-full bg-[#F2CDB5]">
                 <Image
                   src={avatarSrc}
                   alt={form.chefDisplayName || form.name}
@@ -148,10 +151,10 @@ export default function ChefSettingsScreen() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#E8793E] text-white shadow-md transition hover:bg-[#d96f37]"
+                className="absolute bottom-0 right-0 flex h-12 w-12 items-center justify-center rounded-full bg-[#E8793E] text-white shadow-md transition hover:bg-[#d96f37]"
                 aria-label="تغییر عکس پروفایل"
               >
-                <Camera size={15} />
+                <Camera size={20} />
               </button>
 
               <input
@@ -164,7 +167,7 @@ export default function ChefSettingsScreen() {
             </div>
           </div>
 
-          <div className="grid px-8 gap-x-20 gap-y-3 lg:grid-cols-2 lg:px-20">
+          <div className="grid gap-x-24 gap-y-6 lg:grid-cols-2">
             <ProfileField
               label="نام"
               name="name"
@@ -207,28 +210,38 @@ export default function ChefSettingsScreen() {
                 placeholder="بابل"
               />
             </div>
+
+            <div className="lg:col-span-2 ">
+              <ProfileTextarea
+                label="درباره من"
+                name="bio"
+                value={form.bio}
+                onChange={handleChange}
+                placeholder="عاشق آشپزی سنتی با مواد تازه و سالم"
+              />
+            </div>
           </div>
 
-          <div className="mt-10 flex justify-center">
+          <div className="mt-9 flex justify-center">
             <button
               type="submit"
-              className="h-9 w-36 rounded-lg bg-[#EFC5A8] text-sm font-bold text-gray-900 transition hover:bg-[#e9b892]"
+              className="h-11 w-full max-w-xs rounded-xl bg-[#EFC5A8] text-base font-bold text-gray-900 transition hover:bg-[#e9b892]"
             >
               ذخیره تغییرات
             </button>
           </div>
 
           {isSaved && (
-            <p className="mt-3 text-center text-sm font-bold text-emerald-600">
+            <p className="mt-4 text-center text-sm font-bold text-emerald-600">
               تغییرات با موفقیت ذخیره شد.
             </p>
           )}
 
-          <div className="mx-auto mt-8 max-w-4xl rounded-lg border-2 border-dashed border-gray-900/80 bg-[#FFF6B8]/70 px-4 py-3">
+          <div className="mx-auto mt-12 max-w-5xl rounded-xl border-2 border-dashed border-gray-900/80 bg-[#FFF6B8]/70 px-5 py-5">
             <div className="flex items-center justify-center gap-2 text-center">
-              <Info size={17} className="shrink-0 text-gray-900" />
+              <Info size={20} className="shrink-0 text-gray-900" />
 
-              <p className="text-xs font-medium leading-6 text-gray-900 sm:text-sm">
+              <p className="text-sm font-medium leading-7 text-gray-900">
                 لطفا اطلاعاتتون رو به صورت کامل وارد کنید تا بهتر دیده بشین و از
                 تمام امکانات دیگچه استفاده کنین.
               </p>
@@ -239,3 +252,6 @@ export default function ChefSettingsScreen() {
     </section>
   );
 }
+
+
+

@@ -1,8 +1,10 @@
+"use client";
+
 import Image from "next/image";
+import type { ReactNode } from "react";
+import SearchInput from "@/shared/components/SearchInput";
 import type { OrderHistoryGroupData } from "../types/order-history.types";
 import OrderHistoryGroup from "./OrderHistoryGroup";
-import { ReactNode } from "react";
-import SearchInput from "@/shared/components/SearchInput";
 
 type OrderHistoryScreenProps<TOrder extends { id: number | string }> = {
   title: string;
@@ -34,14 +36,11 @@ export default function OrderHistoryScreen<
   gridClassName = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4",
 }: OrderHistoryScreenProps<TOrder>) {
   return (
-    <section
-      dir="rtl"
-      className="relative overflow-hidden rounded-[1.7rem] border border-orange-100 bg-white shadow-sm"
-    >
-      <div className="relative px-5 py-7 sm:px-8 lg:px-10">
+    <section dir="rtl" className="relative h-full overflow-hidden">
+      <div className="flex h-full flex-col px-5 py-7 sm:px-8 lg:px-10">
         <div
           dir="ltr"
-          className="mb-12 grid gap-6 lg:grid-cols-[1fr_420px_1fr] lg:items-start"
+          className=" grid shrink-0 gap-6 lg:grid-cols-[1fr_420px_1fr] lg:items-start"
         >
           <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
             <SearchInput
@@ -69,14 +68,16 @@ export default function OrderHistoryScreen<
                 </div>
               </div>
 
-              <p dir="rtl" className="text-sm text-gray-500">{dateLabel}</p>
+              <p dir="rtl" className="text-sm text-gray-500">
+                {dateLabel}
+              </p>
             </div>
           </div>
 
           <div className="hidden lg:block" />
         </div>
 
-        <div className="mx-auto max-w-245">
+        <div className="mx-auto flex min-h-0 w-full max-w-245 flex-1 flex-col">
           {groups.length === 0 ? (
             <div className="rounded-3xl border border-orange-100 bg-[#FFF9F4] p-10 text-center">
               <h2 className="text-xl font-bold text-gray-800">
@@ -88,7 +89,7 @@ export default function OrderHistoryScreen<
               </p>
             </div>
           ) : (
-            <div className="max-h-162.5 space-y-4 overflow-y-auto pb-2 pl-2">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-2 pl-2">
               {groups.map((group) => (
                 <OrderHistoryGroup
                   key={group.key}

@@ -103,7 +103,7 @@ export default function ChefOrdersHistoryScreen() {
       searchPlaceholder="جست و جو در سفارش ها..."
       emptyTitle="سفارشی برای نمایش وجود ندارد"
       emptyDescription="هنوز سفارشی ثبت نشده یا نتیجه‌ای برای جست‌وجوی شما پیدا نشد."
-      gridClassName="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+      gridClassName="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 "
     />
   );
 }
