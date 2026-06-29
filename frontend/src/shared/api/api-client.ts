@@ -61,6 +61,14 @@ export async function apiRequest<T>(
     }
   }
 
+  let requestBody: BodyInit | undefined;
+
+  if (options.body instanceof FormData) {
+    requestBody = options.body;
+  } else if (options.body !== undefined) {
+    requestBody = JSON.stringify(options.body);
+  }
+
   let response: Response;
 
   try {
@@ -68,12 +76,7 @@ export async function apiRequest<T>(
       method: options.method ?? "GET",
       cache: "no-store",
       headers,
-      body:
-        options.body === undefined
-          ? undefined
-          : isFormData
-            ? options.body
-            : JSON.stringify(options.body),
+      body: requestBody,
     });
   } catch {
     throw new ApiError(
