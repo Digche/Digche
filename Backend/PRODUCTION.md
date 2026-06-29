@@ -1,6 +1,6 @@
 # Digche Backend Production Notes
 
-Core service files are not part of this Node.js production compose.
+Production compose runs the Node.js services plus the C# core service.
 
 ## Local
 
@@ -35,9 +35,11 @@ cp services/ticket/.env.production.example services/ticket/.env
 Important:
 
 - `JWT_SECRET` must be identical in auth, chat, media, and ticket.
+- `core-service` reads the auth service `.env`, so auth `JWT_SECRET` must remain the shared token secret.
 - `AUTH_INTERNAL_API_KEY` must be identical in auth, chat, media, and ticket.
 - `AUTH_DB_PASSWORD`, `CHAT_DB_PASSWORD`, and `TICKET_DB_PASSWORD` in root `.env`
   must match the matching service `DB_PASSWORD` values.
+- `CORE_DB_PASSWORD` in root `.env` is required for the core Postgres database.
 - `OTP_PROVIDER=dev` is rejected in production.
 - `ENABLE_SWAGGER=false` is recommended in production.
 

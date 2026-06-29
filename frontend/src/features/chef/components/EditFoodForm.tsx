@@ -96,7 +96,8 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
   }
 
   const canEditFood =
-    currentUser?.role === "chef" && Number(food.chefId) === Number(currentUser.id);
+    currentUser?.role === "chef" &&
+    String(food.chefId) === String(currentUser.publicId ?? currentUser.id);
 
   if (!canEditFood) {
     return (
@@ -152,17 +153,15 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
       },
       {
         onSuccess: () => {
+          setIsSubmitting(false);
           router.push(`/foods/${food.id}`);
         },
         onError: (error) => {
+          setIsSubmitting(false);
           alert(error instanceof Error ? error.message : "ویرایش غذا ناموفق بود.");
         },
       }
     );
-
-    setIsSubmitting(false);
-
-    router.push(`/foods/${food.id}`);
   };
 
   const isBase64Image = form.image.startsWith("data:");

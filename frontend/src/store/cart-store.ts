@@ -4,13 +4,13 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 export interface CartFoodItem {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   rating: number;
   remaining: string;
   chef: string;
-  chefId: number;
+  chefId: number | string;
   location: string;
   price: string;
   unit?: string;
@@ -24,9 +24,9 @@ export interface CartItem extends CartFoodItem {
 interface CartStore {
   items: CartItem[];
   addToCart: (item: CartFoodItem) => void;
-  removeFromCart: (id: number) => void;
-  increaseQuantity: (id: number) => void;
-  decreaseQuantity: (id: number) => void;
+  removeFromCart: (id: number | string) => void;
+  increaseQuantity: (id: number | string) => void;
+  decreaseQuantity: (id: number | string) => void;
   clearCart: () => void;
   totalItems: () => number;
 }

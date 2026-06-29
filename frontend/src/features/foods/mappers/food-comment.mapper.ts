@@ -8,8 +8,8 @@ export function mapFoodCommentDtoToFoodComment(
 ): FoodComment {
   return {
     id: dto.id,
-    foodId: dto.foodId,
-    userName: dto.userName,
+    foodId: dto.foodId ?? "",
+    userName: dto.userName ?? "کاربر دیگچه",
     userAvatar: dto.userAvatar,
     text: dto.text,
     rating: dto.rating ?? 0,

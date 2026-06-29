@@ -1,11 +1,11 @@
 export type Food = {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   rating: number;
   remaining: string;
   chef: string;
-  chefId: number;
+  chefId: number | string;
   location: string;
   price: string;
   unit?: string;
@@ -15,15 +15,15 @@ export type Food = {
 };
 
 export type FoodDto = {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   rating?: number;
-  remaining: string;
+  remaining: number | string;
   chef: string;
-  chefId: number;
+  chefId: number | string;
   location: string;
-  price: string;
+  price: number | string;
   unit?: string;
   image: string;
   ingredients?: string;

@@ -7,7 +7,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ImagePlus, Upload } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
-import { useFoodStore } from "@/store/food-store";
 import FormField from "./FormField";
 import ChefProfileBadge from "../../components/ChefProfileBadge";
 import { useCreateChefFood } from "../../hooks/use-create-chef-food";
@@ -128,16 +127,15 @@ export default function AddFoodForm() {
       },
       {
         onSuccess: () => {
+          setIsSubmitting(false);
           router.push("/chef/foods");
         },
         onError: (error) => {
+          setIsSubmitting(false);
           alert(error instanceof Error ? error.message : "ثبت غذا ناموفق بود.");
         },
       }
-    );;
-
-    setIsSubmitting(false);
-    router.push("/chef/foods");
+    );
   };
 
 

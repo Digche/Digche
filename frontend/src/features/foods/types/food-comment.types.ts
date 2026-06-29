@@ -1,6 +1,6 @@
 export type FoodComment = {
-  id: number;
-  foodId: number;
+  id: number | string;
+  foodId: number | string;
   userName: string;
   userAvatar?: string;
   text: string;
@@ -9,9 +9,10 @@ export type FoodComment = {
 };
 
 export type FoodCommentDto = {
-  id: number;
-  foodId: number;
-  userName: string;
+  id: number | string;
+  foodId?: number | string;
+  userId?: number | string;
+  userName?: string;
   userAvatar?: string;
   text: string;
   rating?: number;

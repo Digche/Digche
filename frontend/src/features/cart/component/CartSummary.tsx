@@ -83,7 +83,7 @@ export default function CartSummary() {
     if (!confirmed) return;
 
     const hasInvalidItem = items.some(
-      (item) => typeof item.chefId !== "number"
+      (item) => !item.chefId
     );
 
     if (hasInvalidItem) {

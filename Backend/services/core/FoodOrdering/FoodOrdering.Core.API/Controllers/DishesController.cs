@@ -31,7 +31,12 @@ public class DishesController : ControllerBase
         if (!result.IsSuccess)
             return BadRequest(new { message = result.ErrorMessage });
 
-        return Ok(result); 
+        var dishResult = await _mediator.Send(new GetDishByIdQuery(result.Data));
+
+        if (!dishResult.IsSuccess)
+            return CreatedAtAction(nameof(GetDish), new { id = result.Data }, result);
+
+        return CreatedAtAction(nameof(GetDish), new { id = result.Data }, dishResult);
     }
 
     [HttpGet("{id:guid}")]
@@ -83,10 +88,16 @@ public class DishesController : ControllerBase
         if (!result.IsSuccess)
             return BadRequest(new { message = result.ErrorMessage });
 
-        return Ok(result);
+        var dishResult = await _mediator.Send(new GetDishByIdQuery(id));
+
+        if (!dishResult.IsSuccess)
+            return Ok(result);
+
+        return Ok(dishResult);
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "chef")]
     public async Task<IActionResult> DeleteDish(Guid id)
     {
         var command = new DeleteDishCommand { DishId = id };

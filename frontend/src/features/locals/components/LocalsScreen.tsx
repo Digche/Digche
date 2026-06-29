@@ -86,7 +86,7 @@ export default function LocalsScreen() {
 
               const canEditFood =
                 currentUser?.role === "chef" &&
-                String(food.chefId) === String(currentUser.id);
+                String(food.chefId) === String(currentUser.publicId ?? currentUser.id);
 
               return (
                 <FoodDetailsHero

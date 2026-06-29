@@ -51,7 +51,7 @@ export default function FoodDetailsClient({ foodID }: FoodDetailsClientProps) {
 
   const canEditFood =
     currentUser?.role === "chef" &&
-    String(food.chefId) === String(currentUser.id);
+    String(food.chefId) === String(currentUser.publicId ?? currentUser.id);
 
   return (
     <>

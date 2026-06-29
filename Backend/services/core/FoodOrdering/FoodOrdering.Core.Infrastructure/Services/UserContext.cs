@@ -19,10 +19,12 @@ public class UserContext : IUserContext
         userId = Guid.Empty;
         
         var user = _httpContextAccessor.HttpContext?.User;
-        if (user == null || !user.Identity?.IsAuthenticated == true)
+        if (user?.Identity?.IsAuthenticated != true)
             return false;
 
-        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdClaim =
+            user.FindFirst("sub")?.Value ??
+            user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim))
             return false;
 
@@ -39,7 +41,9 @@ public class UserContext : IUserContext
     public string? GetCurrentUserRole()
     {
         var user = _httpContextAccessor.HttpContext?.User;
-        return user?.FindFirst(ClaimTypes.Role)?.Value;
+        return
+            user?.FindFirst("selectedRole")?.Value ??
+            user?.FindFirst(ClaimTypes.Role)?.Value;
     }
 
     public bool IsAuthenticated()

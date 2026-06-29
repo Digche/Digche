@@ -5,13 +5,13 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { foods as initialFoods } from "@/data/foods";
 
 export type Food = {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   rating: number;
   remaining: string;
   chef: string;
-  chefId: number;
+  chefId: number | string;
   location: string;
   price: string;
   unit?: string;
@@ -30,7 +30,7 @@ type AddFoodPayload = {
   ingredients?: string;
   description: string;
   chef: string;
-  chefId: number;
+  chefId: number | string;
   location: string;
 };
 
@@ -64,14 +64,18 @@ export const useFoodStore = create<FoodStore>()(
       foods: initialFoods as Food[],
 
       getFoodById: (foodID) =>
-        get().foods.find((food) => food.id === Number(foodID)),
+        get().foods.find((food) => String(food.id) === String(foodID)),
 
       addFood: (foodData) => {
         set((state) => {
           const nextId =
             state.foods.length === 0
               ? 1
-              : Math.max(...state.foods.map((food) => food.id)) + 1;
+              : Math.max(
+                  ...state.foods.map((food) =>
+                    typeof food.id === "number" ? food.id : 0
+                  )
+                ) + 1;
 
           const newFood: Food = {
             id: nextId,
@@ -88,14 +92,14 @@ export const useFoodStore = create<FoodStore>()(
       updateFood: (foodID, updatedData) => {
         set((state) => ({
           foods: state.foods.map((food) =>
-            food.id === Number(foodID) ? { ...food, ...updatedData } : food
+            String(food.id) === String(foodID) ? { ...food, ...updatedData } : food
           ),
         }));
       },
 
       deleteFood: (foodID) => {
         set((state) => ({
-          foods: state.foods.filter((food) => food.id !== Number(foodID)),
+          foods: state.foods.filter((food) => String(food.id) !== String(foodID)),
         }));
       },
 

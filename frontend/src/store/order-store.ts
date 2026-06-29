@@ -13,11 +13,11 @@ export type OrderStatus =
 
 export type ChefOrder = {
   id: number;
-  chefId: number;
+  chefId: number | string;
   customerId?: number;
   customerName: string;
   customerPhone?: string;
-  foodId: number;
+  foodId: number | string;
   foodTitle: string;
   foodImage: string;
   quantity: number;
@@ -40,7 +40,7 @@ type OrderStore = {
   addOrders: (newOrders: CreateChefOrderPayload[]) => void;
   updateOrderStatus: (orderID: number | string, status: OrderStatus) => void;
   clearOrders: () => void;
-  seedFakeOrders: (chefId: number) => void;
+  seedFakeOrders: (chefId: number | string) => void;
 };
 
 const initialOrders: ChefOrder[] = [];
@@ -62,7 +62,7 @@ export const useOrderStore = create<OrderStore>()(
 
           const ordersToAdd: ChefOrder[] = newOrders.map((order, index) => ({
             id: createOrderId(index),
-            chefId: Number(order.chefId),
+            chefId: order.chefId,
             customerId: order.customerId,
             customerName: order.customerName,
             customerPhone: order.customerPhone,
@@ -96,7 +96,7 @@ export const useOrderStore = create<OrderStore>()(
 
       seedFakeOrders: (chefId) => {
         set({
-          orders: createFakeOrders(chefId),
+          orders: createFakeOrders(Number(chefId)),
         });
       },
     }),

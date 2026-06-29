@@ -10,13 +10,13 @@ import { Star, MapPin } from "lucide-react";
 import FoodCardActions from "./FoodCardActions";
 
 interface FoodItemProps {
-  id: number;
+  id: number | string;
   title: string;
   category: string;
   rating: number;
   remaining: string;
   chef: string;
-  chefId: number;
+  chefId: number | string;
   location: string;
   price: string;
   unit?: string;

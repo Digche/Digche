@@ -1,6 +1,7 @@
 import { apiRequest } from "@/shared/api/api-client";
 import { endpoints } from "@/shared/api/endpoints";
 import type { ApiResponse, ApiMutationResponse } from "@/shared/api/api-types";
+import { useAuthStore } from "@/store/auth-store";
 import {
   mapChefFoodDtoToChefFood,
   mapChefFoodDtosToChefFoods,
@@ -24,11 +25,54 @@ function unwrapData<T>(response: T | ApiResponse<T>): T {
   return response as T;
 }
 
+function getCurrentChefId() {
+  const currentUser = useAuthStore.getState().currentUser;
+  return currentUser?.publicId ?? currentUser?.id;
+}
+
+function toEnglishDigits(value: string) {
+  return value
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
+}
+
+function parsePositiveNumber(value: string | number | undefined) {
+  if (typeof value === "number") return value;
+
+  const normalizedValue = toEnglishDigits(String(value ?? ""))
+    .replace(/[^\d.]/g, "")
+    .trim();
+
+  const parsedValue = Number(normalizedValue);
+  return Number.isFinite(parsedValue) ? parsedValue : 0;
+}
+
+function toCoreDishPayload(
+  payload: CreateChefFoodPayload | UpdateChefFoodPayload
+) {
+  return {
+    title: payload.title ?? "",
+    category: payload.category ?? "",
+    remaining: parsePositiveNumber(payload.remaining),
+    price: parsePositiveNumber(payload.price),
+    unit: payload.unit ?? "تومان",
+    image: payload.image,
+    ingredients: payload.ingredients,
+    description: payload.description,
+  };
+}
+
 export const chefFoodsApi = {
   async getChefFoods(): Promise<ChefFood[]> {
+    const chefId = getCurrentChefId();
+
+    if (!chefId) {
+      return [];
+    }
+
     const response = await apiRequest<
       ChefFoodDto[] | ApiResponse<ChefFoodDto[]>
-    >(endpoints.chefFoods.list, {
+    >(endpoints.chefFoods.list(chefId), {
       auth: true,
     });
 
@@ -51,47 +95,49 @@ export const chefFoodsApi = {
   },
 
   async createChefFood(payload: CreateChefFoodPayload): Promise<ChefFood> {
-    const response = await apiRequest<ChefFoodDto | ApiResponse<ChefFoodDto>>(
+    const response = await apiRequest<string | ApiResponse<string>>(
       endpoints.chefFoods.create,
       {
         method: "POST",
-        body: payload,
+        body: toCoreDishPayload(payload),
         auth: true,
       }
     );
 
-    const data = unwrapData(response);
+    const foodId = unwrapData(response);
 
-    return mapChefFoodDtoToChefFood(data);
+    return chefFoodsApi.getChefFoodById(foodId);
   },
 
   async updateChefFood(
     foodId: number | string,
     payload: UpdateChefFoodPayload
   ): Promise<ChefFood> {
-    const response = await apiRequest<ChefFoodDto | ApiResponse<ChefFoodDto>>(
+    await apiRequest<boolean | ApiResponse<boolean>>(
       endpoints.chefFoods.update(foodId),
       {
-        method: "PATCH",
-        body: payload,
+        method: "PUT",
+        body: toCoreDishPayload(payload),
         auth: true,
       }
     );
 
-    const data = unwrapData(response);
-
-    return mapChefFoodDtoToChefFood(data);
+    return chefFoodsApi.getChefFoodById(foodId);
   },
 
   async deleteChefFood(
     foodId: number | string
   ): Promise<ApiMutationResponse> {
-    return apiRequest<ApiMutationResponse>(
+    await apiRequest<unknown>(
       endpoints.chefFoods.delete(foodId),
       {
         method: "DELETE",
         auth: true,
       }
     );
+
+    return {
+      message: "غذا با موفقیت حذف شد.",
+    } satisfies ApiMutationResponse;
   },
 };

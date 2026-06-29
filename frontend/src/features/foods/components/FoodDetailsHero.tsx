@@ -17,13 +17,13 @@ import FoodDetailsActions from "./FoodDetailsActions";
 
 interface FoodDetailsHeroProps {
   food: {
-    id: number;
+    id: number | string;
     title: string;
     category: string;
     rating: number;
     remaining: string;
     chef: string;
-    chefId: number;
+    chefId: number | string;
     location: string;
     price: string;
     unit?: string;

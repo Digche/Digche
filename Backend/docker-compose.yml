@@ -16,6 +16,8 @@ services:
         condition: service_healthy
       ticket-service:
         condition: service_healthy
+      core-service:
+        condition: service_healthy
     networks:
       - food_network
     healthcheck:
@@ -120,6 +122,32 @@ services:
       retries: 5
       start_period: 30s
 
+  core-service:
+    build:
+      context: ./services/core/FoodOrdering
+      dockerfile: Dockerfile
+    container_name: core_service
+    restart: unless-stopped
+    env_file:
+      - ./services/auth/.env
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: Host=core-db;Database=core_db;Username=core_user;Password=${CORE_DB_PASSWORD:-core_password}
+    expose:
+      - "80"
+    depends_on:
+      core-db:
+        condition: service_healthy
+    networks:
+      - food_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
   auth-db:
     image: postgres:16-alpine
     container_name: auth_db
@@ -196,11 +224,32 @@ services:
       timeout: 5s
       retries: 10
 
+  core-db:
+    image: postgres:16-alpine
+    container_name: core_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: core_db
+      POSTGRES_USER: core_user
+      POSTGRES_PASSWORD: ${CORE_DB_PASSWORD:-core_password}
+    expose:
+      - "5432"
+    volumes:
+      - core_db_data:/var/lib/postgresql/data
+    networks:
+      - food_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U core_user -d core_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 volumes:
   auth_db_data:
   auth_redis_data:
   chat_db_data:
   ticket_db_data:
+  core_db_data:
 
 networks:
   food_network:

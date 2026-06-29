@@ -7,10 +7,10 @@ export const endpoints = {
   },
 
   chefFoods: {
-    list: "/chef/foods",
-    detail: (foodId: number | string) => `/chef/foods/${foodId}`,
-    create: "/chef/foods",
-    update: (foodId: number | string) => `/chef/foods/${foodId}`,
-    delete: (foodId: number | string) => `/chef/foods/${foodId}`,
+    list: (chefId: number | string) => `/core/Dishes/chef/${chefId}`,
+    detail: (foodId: number | string) => `/core/Dishes/${foodId}`,
+    create: "/core/Dishes",
+    update: (foodId: number | string) => `/core/Dishes/${foodId}`,
+    delete: (foodId: number | string) => `/core/Dishes/${foodId}`,
   },
 };

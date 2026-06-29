@@ -22,7 +22,10 @@ export default function ChefFoodsScreen() {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return foods
-      .filter((food) => food.chefId === currentUser.id)
+      .filter(
+        (food) =>
+          String(food.chefId) === String(currentUser.publicId ?? currentUser.id)
+      )
       .filter((food) => {
         if (!normalizedSearch) return true;
 
