@@ -82,6 +82,31 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /tickets/me:
+    get:
+      tags:
+        - Tickets
+      summary: List my tickets
+      description: Authenticated public users can list only their own tickets, across their public roles.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Authenticated user's ticket list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ticket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   /tickets/{ticketId}:
     get:
       tags:
@@ -146,6 +171,50 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /tickets/{ticketId}/reply:
+    post:
+      tags:
+        - Tickets
+      summary: Reply to a ticket
+      description: Admin and manager access tokens can add or replace the admin reply text for a ticket. Replying also marks the ticket as reviewed.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyTicketInput"
+            examples:
+              reply:
+                value:
+                  replyText: "Thanks for your message. We checked this ticket and will follow up shortly."
+      responses:
+        "200":
+          description: Ticket reply saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -175,6 +244,16 @@ components:
           minLength: 1
           maxLength: 2000
 
+    ReplyTicketInput:
+      type: object
+      required:
+        - replyText
+      properties:
+        replyText:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
     Ticket:
       type: object
       properties:
@@ -196,6 +275,23 @@ components:
         status:
           $ref: "#/components/schemas/TicketStatus"
         reviewedAt:
+          type: string
+          format: date-time
+          nullable: true
+        adminReplyText:
+          type: string
+          nullable: true
+        repliedByAdminId:
+          type: string
+          format: uuid
+          nullable: true
+        repliedByAdminRole:
+          type: string
+          enum:
+            - admin
+            - manager
+          nullable: true
+        repliedAt:
           type: string
           format: date-time
           nullable: true

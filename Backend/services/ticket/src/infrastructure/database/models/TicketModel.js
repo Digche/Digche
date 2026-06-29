@@ -37,6 +37,26 @@ export const TicketModel = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
       field: "reviewed_at"
+    },
+    adminReplyText: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "admin_reply_text"
+    },
+    repliedByAdminId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: "replied_by_admin_id"
+    },
+    repliedByAdminRole: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: "replied_by_admin_role"
+    },
+    repliedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: "replied_at"
     }
   },
   {

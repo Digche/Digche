@@ -10,6 +10,7 @@ export function createTicketRoutes({
   router.get("/health", controller.health);
 
   router.post("/", publicAuthMiddleware, controller.create);
+  router.get("/me", publicAuthMiddleware, controller.listMine);
 
   router.get("/", adminAuthMiddleware, controller.list);
   router.get("/:ticketId", adminAuthMiddleware, controller.get);
@@ -18,6 +19,12 @@ export function createTicketRoutes({
     "/:ticketId/review",
     adminAuthMiddleware,
     controller.markReviewed
+  );
+
+  router.post(
+    "/:ticketId/reply",
+    adminAuthMiddleware,
+    controller.reply
   );
 
   return router;

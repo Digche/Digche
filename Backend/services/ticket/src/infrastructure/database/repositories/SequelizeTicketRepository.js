@@ -10,7 +10,11 @@ export class SequelizeTicketRepository {
       subject: ticket.subject,
       description: ticket.description,
       status: ticket.status,
-      reviewedAt: ticket.reviewedAt
+      reviewedAt: ticket.reviewedAt,
+      adminReplyText: ticket.adminReplyText,
+      repliedByAdminId: ticket.repliedByAdminId,
+      repliedByAdminRole: ticket.repliedByAdminRole,
+      repliedAt: ticket.repliedAt
     });
 
     return this.toDomain(createdTicket);
@@ -18,6 +22,17 @@ export class SequelizeTicketRepository {
 
   async list() {
     const tickets = await TicketModel.findAll({
+      order: [["createdAt", "DESC"]]
+    });
+
+    return tickets.map((ticket) => this.toDomain(ticket));
+  }
+
+  async listByCreatorId(creatorId) {
+    const tickets = await TicketModel.findAll({
+      where: {
+        creatorId
+      },
       order: [["createdAt", "DESC"]]
     });
 
@@ -50,6 +65,31 @@ export class SequelizeTicketRepository {
     return this.toDomain(ticket);
   }
 
+  async replyToTicket(id, { replyText, adminId, adminRole }) {
+    const ticket = await TicketModel.findByPk(id);
+
+    if (!ticket) {
+      return null;
+    }
+
+    const repliedAt = new Date();
+
+    ticket.adminReplyText = replyText;
+    ticket.repliedByAdminId = adminId;
+    ticket.repliedByAdminRole = adminRole;
+    ticket.repliedAt = repliedAt;
+
+    if (ticket.status !== TICKET_STATUSES.REVIEWED) {
+      ticket.status = TICKET_STATUSES.REVIEWED;
+    }
+
+    ticket.reviewedAt = ticket.reviewedAt || repliedAt;
+
+    await ticket.save();
+
+    return this.toDomain(ticket);
+  }
+
   toDomain(ticketModel) {
     return new Ticket({
       id: ticketModel.id,
@@ -59,6 +99,10 @@ export class SequelizeTicketRepository {
       description: ticketModel.description,
       status: ticketModel.status,
       reviewedAt: ticketModel.reviewedAt,
+      adminReplyText: ticketModel.adminReplyText,
+      repliedByAdminId: ticketModel.repliedByAdminId,
+      repliedByAdminRole: ticketModel.repliedByAdminRole,
+      repliedAt: ticketModel.repliedAt,
       createdAt: ticketModel.createdAt,
       updatedAt: ticketModel.updatedAt
     });
