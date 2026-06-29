@@ -2,8 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { createFakeOrders } from "@/data/orders";
-
+import { createFakeOrders, createFakeCustomerOrders } from "@/data/orders";
 export type OrderStatus =
   | "pending"
   | "preparing"
@@ -14,6 +13,7 @@ export type OrderStatus =
 export type ChefOrder = {
   id: number;
   chefId: number | string;
+  chefName?: string;
   customerId?: number;
   customerName: string;
   customerPhone?: string;
@@ -41,6 +41,7 @@ type OrderStore = {
   updateOrderStatus: (orderID: number | string, status: OrderStatus) => void;
   clearOrders: () => void;
   seedFakeOrders: (chefId: number | string) => void;
+  seedFakeCustomerOrders: (customerId: number | string) => void;
 };
 
 const initialOrders: ChefOrder[] = [];
@@ -63,6 +64,7 @@ export const useOrderStore = create<OrderStore>()(
           const ordersToAdd: ChefOrder[] = newOrders.map((order, index) => ({
             id: createOrderId(index),
             chefId: order.chefId,
+            chefName: order.chefName,
             customerId: order.customerId,
             customerName: order.customerName,
             customerPhone: order.customerPhone,
@@ -97,6 +99,12 @@ export const useOrderStore = create<OrderStore>()(
       seedFakeOrders: (chefId) => {
         set({
           orders: createFakeOrders(Number(chefId)),
+        });
+      },
+      
+      seedFakeCustomerOrders: (customerId) => {
+        set({
+          orders: createFakeCustomerOrders(Number(customerId)),
         });
       },
     }),

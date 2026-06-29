@@ -13,4 +13,8 @@ export const endpoints = {
     update: (foodId: number | string) => `/core/Dishes/${foodId}`,
     delete: (foodId: number | string) => `/core/Dishes/${foodId}`,
   },
+
+  customerOrders: {
+  history: "/customer/orders/history",
+},
 };
