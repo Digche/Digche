@@ -8,24 +8,10 @@ import type { MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Star, MapPin } from "lucide-react";
 import FoodCardActions from "./FoodCardActions";
-
-interface FoodItemProps {
-  id: number | string;
-  title: string;
-  category: string;
-  rating: number;
-  remaining: string;
-  chef: string;
-  chefId: number | string;
-  location: string;
-  price: string;
-  unit?: string;
-  image: string;
-  description?: string;
-}
+import type { Food } from "../types/food.types";
 
 interface FoodCardProps {
-  item: FoodItemProps;
+  item: Food;
   variant?: "customer" | "chef";
   display?: "scroll" | "grid" | "compact";
   canEditFood?: boolean;
