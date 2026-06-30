@@ -14,6 +14,9 @@ export type CreateChefFoodPayload = {
   ingredients?: string;
   description: string;
   location?: string;
+
+  chefId?: string;
+  isAvailable?: boolean;
 };
 
 export type UpdateChefFoodPayload = Partial<CreateChefFoodPayload>;

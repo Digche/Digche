@@ -14,11 +14,7 @@ import type {
 } from "../types/chef-food.types";
 
 function unwrapData<T>(response: T | ApiResponse<T>): T {
-  if (
-    response &&
-    typeof response === "object" &&
-    "data" in response
-  ) {
+  if (response && typeof response === "object" && "data" in response) {
     return (response as ApiResponse<T>).data;
   }
 
@@ -27,7 +23,14 @@ function unwrapData<T>(response: T | ApiResponse<T>): T {
 
 function getCurrentChefId() {
   const currentUser = useAuthStore.getState().currentUser;
+
   return currentUser?.publicId ?? currentUser?.id;
+}
+
+function getCurrentChefPublicId() {
+  const currentUser = useAuthStore.getState().currentUser;
+
+  return currentUser?.publicId;
 }
 
 function toEnglishDigits(value: string) {
@@ -44,21 +47,40 @@ function parsePositiveNumber(value: string | number | undefined) {
     .trim();
 
   const parsedValue = Number(normalizedValue);
+
   return Number.isFinite(parsedValue) ? parsedValue : 0;
 }
 
-function toCoreDishPayload(
-  payload: CreateChefFoodPayload | UpdateChefFoodPayload
-) {
+function toCoreCreateDishPayload(payload: CreateChefFoodPayload) {
+  const chefId = payload.chefId ?? getCurrentChefPublicId();
+
+  if (!chefId) {
+    throw new Error("شناسه عمومی آشپز پیدا نشد. لطفاً دوباره وارد حساب شوید.");
+  }
+
   return {
     title: payload.title ?? "",
-    category: payload.category ?? "",
     remaining: parsePositiveNumber(payload.remaining),
+    chefId: String(chefId),
     price: parsePositiveNumber(payload.price),
     unit: payload.unit ?? "تومان",
     image: payload.image,
-    ingredients: payload.ingredients,
-    description: payload.description,
+    ingredients: payload.ingredients ?? "",
+    description: payload.description ?? "",
+    isAvailable: payload.isAvailable ?? true,
+    category: payload.category ?? "",
+  };
+}
+
+function toCoreUpdateDishPayload(payload: UpdateChefFoodPayload) {
+  return {
+    title: payload.title ?? "",
+    price: parsePositiveNumber(payload.price),
+    description: payload.description ?? "",
+    ingredients: payload.ingredients ?? "",
+    image: payload.image ?? "",
+    remaining: parsePositiveNumber(payload.remaining),
+    category: payload.category ?? "",
   };
 }
 
@@ -99,7 +121,7 @@ export const chefFoodsApi = {
       endpoints.chefFoods.create,
       {
         method: "POST",
-        body: toCoreDishPayload(payload),
+        body: toCoreCreateDishPayload(payload),
         auth: true,
       }
     );
@@ -117,7 +139,7 @@ export const chefFoodsApi = {
       endpoints.chefFoods.update(foodId),
       {
         method: "PUT",
-        body: toCoreDishPayload(payload),
+        body: toCoreUpdateDishPayload(payload),
         auth: true,
       }
     );
@@ -125,16 +147,11 @@ export const chefFoodsApi = {
     return chefFoodsApi.getChefFoodById(foodId);
   },
 
-  async deleteChefFood(
-    foodId: number | string
-  ): Promise<ApiMutationResponse> {
-    await apiRequest<unknown>(
-      endpoints.chefFoods.delete(foodId),
-      {
-        method: "DELETE",
-        auth: true,
-      }
-    );
+  async deleteChefFood(foodId: number | string): Promise<ApiMutationResponse> {
+    await apiRequest<unknown>(endpoints.chefFoods.delete(foodId), {
+      method: "DELETE",
+      auth: true,
+    });
 
     return {
       message: "غذا با موفقیت حذف شد.",

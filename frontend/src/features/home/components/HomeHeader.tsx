@@ -13,7 +13,7 @@ export default function HomeHeader() {
       ? "/chef"
       : currentUser?.role === "customer"
         ? "/customer"
-        : "/login";
+        : "/auth";
 
   return (
     <header className="mx-auto w-[90%] bg-[#FFF9F4] px-6 py-3 md:px-12">
