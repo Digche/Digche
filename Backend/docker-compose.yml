@@ -152,6 +152,9 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:80
       ConnectionStrings__DefaultConnection: Host=core-db;Database=core_db;Username=core_user;Password=${CORE_DB_PASSWORD:-core_password}
+      Jwt__Secret: ${JWT_SECRET}
+      Jwt__Issuer: FoodOrdering.Auth
+      Jwt__Audience: FoodOrdering.Clients
     expose:
       - "80"
     depends_on:
