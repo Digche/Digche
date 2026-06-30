@@ -6,8 +6,12 @@ import {
   mapChefFoodDtoToChefFood,
   mapChefFoodDtosToChefFoods,
 } from "../mappers/chef-food.mapper";
-import { ChefFood, ChefFoodDto, CreateChefFoodPayload, UpdateChefFoodPayload } from "../types/chef-order.types";
-
+import type {
+  ChefFood,
+  ChefFoodDto,
+  CreateChefFoodPayload,
+  UpdateChefFoodPayload,
+} from "../types/chef-food.types";
 
 function unwrapData<T>(response: T | ApiResponse<T>): T {
   if (
