@@ -11,6 +11,8 @@ import ProfileField from "@/shared/components/ProfileField";
 import ProvinceCityDropdown, {
   type ProvinceCityValue,
 } from "@/shared/location/ProvinceCityDropdown";
+import { uploadProfilePhoto } from "@/features/media/api/media-upload.api";
+import { updatePublicPhotoUrl } from "@/features/auth/services/auth-api";
 
 type SettingsRole = "chef" | "customer";
 
@@ -93,10 +95,13 @@ export default function UserSettingsScreen({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const currentUser = useAuthStore((state) => state.currentUser);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const setSession = useAuthStore((state) => state.setSession);
   const updateCurrentUser = useAuthStore((state) => state.updateCurrentUser);
-
   const [isSaved, setIsSaved] = useState(false);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [form, setForm] = useState<SettingsFormState>(() =>
     getSettingsFormFromUser(currentUser, defaultAvatar)
   );
@@ -142,10 +147,13 @@ export default function UserSettingsScreen({
 
     if (!file) return;
 
+    setSelectedAvatarFile(file);
+
     const reader = new FileReader();
 
     reader.onloadend = () => {
       setIsSaved(false);
+      setErrorMessage("");
 
       setForm((prev) => ({
         ...prev,
@@ -156,30 +164,62 @@ export default function UserSettingsScreen({
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    updateCurrentUser({
-      name: form.name.trim(),
-      lastName: form.lastName.trim(),
-      username: form.username.trim(),
-      phone: form.phone.trim(),
-      bio: form.bio.trim(),
-      avatar: form.avatar,
+    setIsSaved(false);
+    setErrorMessage("");
+    setIsSubmitting(true);
 
-      ...(role === "chef"
-        ? {
-            location: form.location.trim(),
-            chefDisplayName: form.chefDisplayName.trim(),
-          }
-        : {}),
-    });
+    try {
+      const uploadedAvatarUrl = selectedAvatarFile
+        ? await uploadProfilePhoto(selectedAvatarFile)
+        : form.avatar;
 
-    setIsSaved(true);
+      if (accessToken && selectedAvatarFile) {
+        const session = await updatePublicPhotoUrl({
+          accessToken,
+          photoUrl: uploadedAvatarUrl || null,
+        });
+
+        setSession(session);
+      }
+
+      updateCurrentUser({
+        name: form.name.trim(),
+        lastName: form.lastName.trim(),
+        username: form.username.trim(),
+        phone: form.phone.trim(),
+        bio: form.bio.trim(),
+        avatar: uploadedAvatarUrl,
+        photoUrl: uploadedAvatarUrl || null,
+
+        ...(role === "chef"
+          ? {
+              location: form.location.trim(),
+              chefDisplayName: form.chefDisplayName.trim(),
+            }
+          : {}),
+      });
+
+      setForm((prev) => ({
+        ...prev,
+        avatar: uploadedAvatarUrl,
+      }));
+
+      setSelectedAvatarFile(null);
+      setIsSaved(true);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "آپلود یا ذخیره تصویر ناموفق بود."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const avatarSrc = form.avatar || defaultAvatar;
-  const isBase64Avatar = avatarSrc.startsWith("data:");
+  const isLocalAvatar = avatarSrc.startsWith("data:") || avatarSrc.startsWith("blob:");
 
   const avatarAlt =
     form.chefDisplayName || form.name || form.username || "تصویر پروفایل";
@@ -209,7 +249,7 @@ export default function UserSettingsScreen({
                   alt={avatarAlt}
                   fill
                   className="object-cover"
-                  unoptimized={isBase64Avatar}
+                  unoptimized={isLocalAvatar}
                 />
               </div>
 
@@ -225,7 +265,7 @@ export default function UserSettingsScreen({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/webp"
                 onChange={handleAvatarChange}
                 className="hidden"
               />
@@ -317,15 +357,21 @@ export default function UserSettingsScreen({
           <div className="mt-10 flex justify-center">
             <button
               type="submit"
-              className="mt-8 h-9 w-36 rounded-lg bg-[#EFC5A8] text-sm font-bold text-gray-900 transition hover:bg-[#e9b892]"
+              disabled={isSubmitting}
+              className="mt-8 h-9 w-36 rounded-lg bg-[#EFC5A8] text-sm font-bold text-gray-900 transition hover:bg-[#e9b892] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              ذخیره تغییرات
+              {isSubmitting ? "در حال ذخیره..." : "ذخیره تغییرات"}
             </button>
           </div>
 
           {isSaved && (
             <p className="mt-3 text-center text-sm font-bold text-emerald-600">
               {successMessage}
+            </p>
+          )}
+          {errorMessage && (
+            <p className="mt-3 text-center text-sm font-bold text-red-500">
+              {errorMessage}
             </p>
           )}
 

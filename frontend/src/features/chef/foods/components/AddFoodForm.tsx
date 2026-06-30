@@ -8,6 +8,7 @@ import { Upload } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import FormField from "./FormField";
 import { useCreateChefFood } from "../../hooks/use-create-chef-food";
+import { uploadDishImage } from "@/features/media/api/media-upload.api";
 
 type AddFoodFormState = {
   title: string;
@@ -50,6 +51,7 @@ export default function AddFoodForm() {
     description: "",
     image: "",
   });
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,6 +85,8 @@ export default function AddFoodForm() {
 
     if (!file) return;
 
+    setSelectedImageFile(file);
+
     const reader = new FileReader();
 
     reader.onloadend = () => {
@@ -105,7 +109,7 @@ export default function AddFoodForm() {
       : `${trimmedValue} باقیمانده`;
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!form.title || !form.category || !form.remaining || !form.price) {
@@ -115,29 +119,29 @@ export default function AddFoodForm() {
 
     setIsSubmitting(true);
 
-    createFood.mutate(
-      {
+    try {
+      const uploadedImageUrl = selectedImageFile
+        ? await uploadDishImage(selectedImageFile, "draft")
+        : form.image || defaultImage;
+
+      await createFood.mutateAsync({
         title: form.title.trim(),
         category: form.category,
         remaining: normalizeRemaining(form.remaining),
         price: form.price.trim(),
         unit: "تومان",
-        image: form.image || defaultImage,
+        image: uploadedImageUrl,
         ingredients: form.ingredients.trim(),
         description: form.description.trim(),
         location: "تهران",
-      },
-      {
-        onSuccess: () => {
-          setIsSubmitting(false);
-          router.push("/chef/foods");
-        },
-        onError: (error) => {
-          setIsSubmitting(false);
-          alert(error instanceof Error ? error.message : "ثبت غذا ناموفق بود.");
-        },
-      }
-    );
+      });
+
+      router.push("/chef/foods");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "ثبت غذا ناموفق بود.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -227,7 +231,7 @@ export default function AddFoodForm() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp"
                   onChange={handleImageChange}
                   className="hidden"
                 />

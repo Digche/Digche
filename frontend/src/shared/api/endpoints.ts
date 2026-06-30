@@ -28,4 +28,9 @@ export const endpoints = {
     setDefault: (addressId: number | string) =>
       `/customer/addresses/${addressId}/default`,
   },
+
+  media: {
+  profilePhotoPresign: "/media/profile-photo/presign",
+  dishImagePresign: "/media/dish-images/presign",
+},
 };

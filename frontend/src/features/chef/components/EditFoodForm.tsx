@@ -2,14 +2,14 @@
 
 "use client";
 
-import { ChangeEvent, FormEvent, ReactNode, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, ReactNode,useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Save, ImageIcon } from "lucide-react";
-import { useFoodStore } from "@/store/food-store";
+import { Save, ImageIcon, Upload } from "lucide-react";import { useFoodStore } from "@/store/food-store";
 import { useAuthStore } from "@/store/auth-store";
 import { useChefFoodDetail } from "../hooks/use-chef-food-detail";
 import { useUpdateChefFood } from "../hooks/use-update-chef-food";
+import { uploadDishImage } from "@/features/media/api/media-upload.api";
 
 type EditFoodFormProps = {
   foodID: string;
@@ -42,14 +42,16 @@ const categories = [
 
 export default function EditFoodForm({ foodID }: EditFoodFormProps) {
   const router = useRouter();
-
+  
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  
   const currentUser = useAuthStore((state) => state.currentUser);
 
   const { data: food, isLoading, isError } = useChefFoodDetail(foodID);
   const updateFood = useUpdateChefFood();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [form, setForm] = useState<FoodFormState>({
     title: "",
     category: "",
@@ -63,6 +65,8 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
 
   useEffect(() => {
     if (!food) return;
+
+    setSelectedImageFile(null);
 
     setForm({
       title: food.title,
@@ -120,25 +124,49 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
   }
 
   const handleChange = (
-    event: ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = event.target;
+      event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => {
+      const { name, value } = event.target;
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+      if (name === "image") {
+        setSelectedImageFile(null);
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    };
+    const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    setSelectedImageFile(file);
+
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setForm((prev) => ({
+        ...prev,
+        image: String(reader.result),
+      }));
+    };
+
+    reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setIsSubmitting(true);
 
-    updateFood.mutate(
-      {
+    try {
+      const uploadedImageUrl = selectedImageFile
+        ? await uploadDishImage(selectedImageFile, food.id)
+        : form.image;
+
+      await updateFood.mutateAsync({
         foodId: food.id,
         payload: {
           title: form.title.trim(),
@@ -146,26 +174,21 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
           price: form.price.trim(),
           remaining: form.remaining.trim(),
           location: form.location.trim(),
-          image: form.image,
+          image: uploadedImageUrl,
           description: form.description.trim(),
           ingredients: form.ingredients.trim(),
         },
-      },
-      {
-        onSuccess: () => {
-          setIsSubmitting(false);
-          router.push(`/foods/${food.id}`);
-        },
-        onError: (error) => {
-          setIsSubmitting(false);
-          alert(error instanceof Error ? error.message : "ویرایش غذا ناموفق بود.");
-        },
-      }
-    );
+      });
+
+      router.push(`/foods/${food.id}`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "ویرایش غذا ناموفق بود.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const isBase64Image = form.image.startsWith("data:");
-
+  const isLocalImage = form.image.startsWith("data:") || form.image.startsWith("blob:");
   return (
     <form
       onSubmit={handleSubmit}
@@ -252,7 +275,7 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
                 alt={form.title || "تصویر غذا"}
                 fill
                 className="object-cover"
-                unoptimized={isBase64Image}
+                unoptimized={isLocalImage}
               />
             ) : (
               <div className="flex h-full items-center justify-center text-gray-400">
@@ -260,6 +283,23 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
               </div>
             )}
           </div>
+          
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#F2CDB5] px-4 py-3 text-sm font-bold text-gray-900 transition hover:bg-[#e9b892]"
+          >
+            <Upload size={17} />
+            انتخاب عکس جدید
+          </button>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={handleImageFileChange}
+            className="hidden"
+          />
 
           <FormField label="آدرس تصویر غذا">
             <input

@@ -209,31 +209,48 @@ export function useMutation<TData, TVariables>(
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
-  const mutate = useCallback(
-    (variables: TVariables, callbacks?: Partial<MutationOptions<TData, TVariables>>) => {
+  const mutateAsync = useCallback(
+    async (
+      variables: TVariables,
+      callbacks?: Partial<MutationOptions<TData, TVariables>>
+    ) => {
       setIsPending(true);
       setError(null);
 
-      void options
-        .mutationFn(variables)
-        .then((data) => {
-          options.onSuccess?.(data, variables);
-          callbacks?.onSuccess?.(data, variables);
-        })
-        .catch((caughtError) => {
-          setError(caughtError);
-          options.onError?.(caughtError, variables);
-          callbacks?.onError?.(caughtError, variables);
-        })
-        .finally(() => {
-          setIsPending(false);
-        });
+      try {
+        const data = await options.mutationFn(variables);
+
+        options.onSuccess?.(data, variables);
+        callbacks?.onSuccess?.(data, variables);
+
+        return data;
+      } catch (caughtError) {
+        setError(caughtError);
+
+        options.onError?.(caughtError, variables);
+        callbacks?.onError?.(caughtError, variables);
+
+        throw caughtError;
+      } finally {
+        setIsPending(false);
+      }
     },
     [options]
   );
 
+  const mutate = useCallback(
+    (
+      variables: TVariables,
+      callbacks?: Partial<MutationOptions<TData, TVariables>>
+    ) => {
+      void mutateAsync(variables, callbacks).catch(() => undefined);
+    },
+    [mutateAsync]
+  );
+
   return {
     mutate,
+    mutateAsync,
     isPending,
     isError: Boolean(error),
     error,
