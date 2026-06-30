@@ -1,4 +1,4 @@
-import type {
+import {
   CreateChefFoodPayload,
   UpdateChefFoodPayload,
 } from "../types/chef-food.types";
@@ -7,28 +7,32 @@ export type ChefFoodFormErrors = Partial<
   Record<keyof CreateChefFoodPayload, string>
 >;
 
+function isBlank(value: string | number | undefined | null) {
+  return String(value ?? "").trim().length === 0;
+}
+
 export function validateCreateChefFoodPayload(
   payload: CreateChefFoodPayload
 ): ChefFoodFormErrors {
   const errors: ChefFoodFormErrors = {};
 
-  if (!payload.title.trim()) {
+  if (isBlank(payload.title)) {
     errors.title = "نام غذا الزامی است.";
   }
 
-  if (!payload.category.trim()) {
+  if (isBlank(payload.category)) {
     errors.category = "دسته‌بندی الزامی است.";
   }
 
-  if (!payload.remaining.trim()) {
+  if (isBlank(payload.remaining)) {
     errors.remaining = "مقدار غذا الزامی است.";
   }
 
-  if (!payload.price.trim()) {
+  if (isBlank(payload.price)) {
     errors.price = "قیمت غذا الزامی است.";
   }
 
-  if (!payload.description.trim()) {
+  if (isBlank(payload.description)) {
     errors.description = "توضیحات غذا الزامی است.";
   }
 
@@ -40,16 +44,24 @@ export function validateUpdateChefFoodPayload(
 ): ChefFoodFormErrors {
   const errors: ChefFoodFormErrors = {};
 
-  if (payload.title !== undefined && !payload.title.trim()) {
+  if (payload.title !== undefined && isBlank(payload.title)) {
     errors.title = "نام غذا نمی‌تواند خالی باشد.";
   }
 
-  if (payload.category !== undefined && !payload.category.trim()) {
+  if (payload.category !== undefined && isBlank(payload.category)) {
     errors.category = "دسته‌بندی نمی‌تواند خالی باشد.";
   }
 
-  if (payload.price !== undefined && !payload.price.trim()) {
+  if (payload.remaining !== undefined && isBlank(payload.remaining)) {
+    errors.remaining = "مقدار غذا نمی‌تواند خالی باشد.";
+  }
+
+  if (payload.price !== undefined && isBlank(payload.price)) {
     errors.price = "قیمت نمی‌تواند خالی باشد.";
+  }
+
+  if (payload.description !== undefined && isBlank(payload.description)) {
+    errors.description = "توضیحات غذا نمی‌تواند خالی باشد.";
   }
 
   return errors;
