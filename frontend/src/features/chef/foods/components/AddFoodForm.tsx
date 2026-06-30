@@ -57,10 +57,10 @@ export default function AddFoodForm() {
   ) => {
     const chefLocation = currentUser.location?.trim() ?? "";
 
-    if (!chefLocation) {
-      alert("لطفاً ابتدا موقعیت فعالیت خود را از بخش تنظیمات آشپز انتخاب کنید.");
-      return;
-    }
+    // if (!chefLocation) {
+    //   alert("لطفاً ابتدا موقعیت فعالیت خود را از بخش تنظیمات آشپز انتخاب کنید.");
+    //   return;
+    // }
 
     setIsSubmitting(true);
 

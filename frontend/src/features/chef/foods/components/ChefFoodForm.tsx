@@ -169,14 +169,14 @@ export default function ChefFoodForm({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="group mx-auto flex h-[210px] w-[260px] flex-col items-center justify-center gap-2 rounded-lg border-2 border-dotted border-gray-800 bg-[#F2CDB5]/25 px-4 text-center transition hover:bg-[#F2CDB5]/40"
+                    className="group mx-auto flex h-[210px] w-[240px] flex-col items-center justify-center gap-2 rounded-lg border-2 border-dotted border-gray-800 bg-[#F2CDB5]/25 text-center transition hover:bg-[#F2CDB5]/40"
                   >
                     {form.image ? (
-                      <div className="relative h-[96px] w-[96px] overflow-hidden rounded-lg">
+                      <div className="relative overflow-hidden rounded-lg">
                         <img
                           src={form.image}
                           alt="پیش نمایش غذا"
-                          className="h-full w-full object-cover"
+                          className=" object-cover"
                         />
                       </div>
                     ) : (

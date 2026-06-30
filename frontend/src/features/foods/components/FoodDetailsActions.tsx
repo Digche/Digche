@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Edit3, ShoppingCart, Plus, Minus, Trash2 } from "lucide-react";
+import { Edit3, ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import type { Food } from "../types/food.types";
 import { useDeleteChefFood } from "@/features/chef/hooks/use-delete-chef-food";
@@ -27,49 +28,101 @@ export default function FoodDetailsActions({
 
   const deleteFood = useDeleteChefFood();
 
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const cartItem = useCartStore((state) =>
     state.items.find((cartItem) => cartItem.id === food.id)
   );
 
   const quantity = cartItem?.quantity ?? 0;
 
-  const handleDeleteFood = () => {
-    const confirmed = window.confirm("آیا از حذف این غذا مطمئن هستید؟");
+  const handleConfirmDeleteFood = async () => {
+    try {
+      await deleteFood.mutateAsync(food.id);
 
-    if (!confirmed) return;
+      removeFromCart(food.id);
+      setIsDeleteDialogOpen(false);
 
-    deleteFood.mutate(food.id, {
-      onSuccess: () => {
-        removeFromCart(food.id);
-        router.push("/");
-      },
-      onError: (error) => {
-        alert(error instanceof Error ? error.message : "حذف غذا ناموفق بود.");
-      },
-    });
+      router.push("/chef/foods");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "حذف غذا ناموفق بود.");
+    }
   };
 
   if (canEditFood) {
     return (
-      <div className="flex w-full items-center justify-center gap-4">
-        <Link
-          href={`/chef/foods/${food.id}/edit`}
-          className="flex h-14 flex-1 items-center justify-center gap-3 rounded-full bg-[#111322] px-5 text-sm font-bold text-white transition hover:bg-gray-800 sm:text-base"
-        >
-          <Edit3 size={21} />
-          ویرایش اطلاعات غذا
-        </Link>
+      <>
+        <div className="flex w-full items-center justify-center gap-4">
+          <Link
+            href={`/chef/foods/${food.id}/edit`}
+            className="flex h-14 flex-1 items-center justify-center gap-3 rounded-full bg-[#111322] px-5 text-sm font-bold text-white transition hover:bg-gray-800 sm:text-base"
+          >
+            <Edit3 size={21} />
+            ویرایش اطلاعات غذا
+          </Link>
 
-        <button
-          type="button"
-          onClick={handleDeleteFood}
-          disabled={deleteFood.isPending}
-          className="flex h-14 w-28 shrink-0 items-center justify-center gap-2 rounded-full bg-red-100 px-4 text-sm font-bold text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-60 sm:w-40"
-        >
-          <Trash2 size={18} />
-          {deleteFood.isPending ? "در حال حذف..." : "حذف غذا"}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            disabled={deleteFood.isPending}
+            className="flex h-14 w-28 shrink-0 items-center justify-center gap-2 rounded-full bg-red-100 px-4 text-sm font-bold text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-60 sm:w-40"
+          >
+            <Trash2 size={18} />
+            حذف غذا
+          </button>
+        </div>
+
+        {isDeleteDialogOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
+            <div
+              dir="rtl"
+              className="relative w-full max-w-sm rounded-3xl bg-white p-6 text-right shadow-2xl"
+            >
+              <div className="flex flex-row">
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteDialogOpen(false)}
+                    disabled={deleteFood.isPending}
+                    className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+                    aria-label="بستن"
+                  >
+                    <X size={17} />
+                  </button>
+
+                  <h2 className="text-lg font-extrabold text-gray-900">
+                    حذف غذا
+                  </h2>
+
+              </div>
+
+              <p className="mt-3 text-sm leading-6 text-gray-600">
+                مطمئنی می‌خوای «{food.title}» رو حذف کنی؟ این عملیات قابل برگشت
+                نیست.
+              </p>
+
+              <div dir="ltr" className="mt-6 flex items-center justify-center gap-5">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                  disabled={deleteFood.isPending}
+                  className="rounded-xl bg-gray-100 px-4 py-2 text-sm font-bold text-gray-700 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  انصراف
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteFood}
+                  disabled={deleteFood.isPending}
+                  className="rounded-xl bg-red-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {deleteFood.isPending ? "در حال حذف..." : "بله، حذف کن"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
