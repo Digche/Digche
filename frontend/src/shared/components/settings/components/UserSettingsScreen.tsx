@@ -4,9 +4,13 @@
 
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Camera, Info } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import ProfileField from "@/shared/components/ProfileField";
+import ProvinceCityDropdown, {
+  type ProvinceCityValue,
+} from "@/shared/location/ProvinceCityDropdown";
 
 type SettingsRole = "chef" | "customer";
 
@@ -49,6 +53,33 @@ function getSettingsFormFromUser(
     avatar: user?.avatar ?? defaultAvatar,
     chefDisplayName: user?.chefDisplayName ?? user?.name ?? "",
   };
+}
+
+function getProvinceCityFromLocation(
+  location?: string | null
+): ProvinceCityValue {
+  if (!location) {
+    return {
+      province: "",
+      city: "",
+    };
+  }
+
+  const parts = location
+    .split("،")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return {
+    province: parts[0] ?? "",
+    city: parts[1] ?? "",
+  };
+}
+
+function buildLocationText(value: ProvinceCityValue) {
+  if (!value.province || !value.city) return "";
+
+  return `${value.province}، ${value.city}`;
 }
 
 export default function UserSettingsScreen({
@@ -97,6 +128,15 @@ export default function UserSettingsScreen({
     }));
   };
 
+  const handleProvinceCityChange = (value: ProvinceCityValue) => {
+    setIsSaved(false);
+
+    setForm((prev) => ({
+      ...prev,
+      location: buildLocationText(value),
+    }));
+  };
+
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -124,11 +164,12 @@ export default function UserSettingsScreen({
       lastName: form.lastName.trim(),
       username: form.username.trim(),
       phone: form.phone.trim(),
-      location: form.location.trim(),
       bio: form.bio.trim(),
       avatar: form.avatar,
+
       ...(role === "chef"
         ? {
+            location: form.location.trim(),
             chefDisplayName: form.chefDisplayName.trim(),
           }
         : {}),
@@ -142,6 +183,8 @@ export default function UserSettingsScreen({
 
   const avatarAlt =
     form.chefDisplayName || form.name || form.username || "تصویر پروفایل";
+
+  const selectedProvinceCity = getProvinceCityFromLocation(form.location);
 
   return (
     <section dir="rtl" className="relative h-full overflow-hidden">
@@ -224,20 +267,57 @@ export default function UserSettingsScreen({
             />
 
             <div className="lg:col-span-2">
-              <ProfileField
-                label="موقعیت مکانی"
-                name="location"
-                value={form.location}
-                onChange={handleChange}
-                placeholder="بابل"
-              />
+              {role === "customer" ? (
+                <div className="block">
+                  <span className="mt-4 block text-right text-md font-bold text-gray-900">
+                    موقعیت مکانی
+                  </span>
+
+                  <div dir="ltr" className="mt-1 flex min-h-10 items-center justify-between gap-3 rounded-xl bg-[#F2CDB5]/55 px-4 text-right text-sm text-gray-800">
+                    <Link
+                      href="/customer/addresses"
+                      className="shrink-0 rounded-full bg-[#EFC5A8] px-4 py-1.5 text-xs font-bold text-gray-900 transition hover:bg-[#e9b892]"
+                    >
+                      مدیریت آدرس
+                    </Link>
+
+                    <span className="truncate">
+                      {form.location || "هنوز موقعیتی انتخاب نشده است"}
+                    </span>
+                  </div>
+
+                  <p className="mt-2 text-right text-xs text-gray-500">
+                    موقعیت مشتری از بخش آدرس‌های من یا انتخاب استان و شهر تعیین
+                    می‌شود.
+                  </p>
+                </div>
+              ) : (
+                <div className="block">
+                  <span className="mt-4 block text-right text-md font-bold text-gray-900">
+                    موقعیت مکانی
+                  </span>
+
+                  <div className="mt-1">
+                    <ProvinceCityDropdown
+                      value={selectedProvinceCity}
+                      onChange={handleProvinceCityChange}
+                      placeholder="انتخاب محل فعالیت آشپز"
+                    />
+                  </div>
+
+                  <p className="mt-2 text-right text-xs text-gray-500">
+                    این موقعیت برای نمایش غذاهای شما در صفحه غذاهای محلی استفاده
+                    می‌شود.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="mt-10 flex justify-center">
             <button
               type="submit"
-              className="h-9 w-36 mt-8 rounded-lg bg-[#EFC5A8] text-sm font-bold text-gray-900 transition hover:bg-[#e9b892]"
+              className="mt-8 h-9 w-36 rounded-lg bg-[#EFC5A8] text-sm font-bold text-gray-900 transition hover:bg-[#e9b892]"
             >
               ذخیره تغییرات
             </button>

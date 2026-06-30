@@ -1,31 +1,98 @@
+"use client";
+
+import { useEffect } from "react";
 import HomeFooter from "./HomeFooter";
 import HomeHeader from "./HomeHeader";
 import FoodScroll from "./FoodScroll";
-import ProvinceCityDropdown from "./ProvinceCityDropdown";
-import SearchBox from "./SearchBox";
+import ProvinceCityDropdown, {
+  type ProvinceCityValue,
+} from "@/shared/location/ProvinceCityDropdown";
 import CategorySection from "@/features/categories/components/CategorySection";
+import { useAuthStore } from "@/store/auth-store";
+import { useLocationStore } from "@/store/location-store";
+
+function getProvinceCityFromLocation(
+  location?: string | null
+): ProvinceCityValue {
+  if (!location) {
+    return {
+      province: "",
+      city: "",
+    };
+  }
+
+  const parts = location
+    .split("،")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return {
+    province: parts[0] ?? "",
+    city: parts[1] ?? "",
+  };
+}
+
+function buildLocationText(value: ProvinceCityValue) {
+  if (!value.province || !value.city) return "";
+
+  return `${value.province}، ${value.city}`;
+}
 
 export default function HomeScreen() {
-    return (
-      <div className="bg-[#FFF9F4]">
-          <HomeHeader/>
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const updateCurrentUser = useAuthStore((state) => state.updateCurrentUser);
 
-          <div className="flex flex-col gap-8 items-center py-5">
-            <ProvinceCityDropdown />
-            {/* <SearchBox /> */}
-          </div>
+  const selectedLocation = useLocationStore((state) => state.selectedLocation);
+  const setSelectedLocation = useLocationStore(
+    (state) => state.setSelectedLocation
+  );
 
+  useEffect(() => {
+    if (!currentUser?.location) return;
 
-          <div className="w-[90%] mx-auto h-px mt-2.5 bg-[#D9D9D9]"></div>
+    const locationFromUser = getProvinceCityFromLocation(currentUser.location);
 
-          <CategorySection/>
-          
-          <div className="w-[90%] mx-auto h-px mt-2.5 bg-[#D9D9D9]"></div>
+    if (!locationFromUser.province || !locationFromUser.city) return;
 
-          <FoodScroll/>
+    setSelectedLocation(locationFromUser);
+  }, [currentUser?.location, setSelectedLocation]);
 
-          <HomeFooter/>
+  const handleLocationChange = (value: ProvinceCityValue) => {
+    setSelectedLocation(value);
+
+    const locationText = buildLocationText(value);
+
+    if (!locationText) return;
+
+    if (currentUser?.role === "customer") {
+      updateCurrentUser({
+        location: locationText,
+      });
+    }
+  };
+
+  return (
+    <div className="bg-[#FFF9F4]">
+      <HomeHeader />
+
+      <div className="flex flex-col items-center gap-8 py-5">
+        <ProvinceCityDropdown
+          value={selectedLocation}
+          onChange={handleLocationChange}
+          placeholder="انتخاب محل سکونت"
+          className="max-w-xs"
+        />
       </div>
-    )
 
+      <div className="mx-auto mt-2.5 h-px w-[90%] bg-[#D9D9D9]" />
+
+      <CategorySection />
+
+      <div className="mx-auto mt-2.5 h-px w-[90%] bg-[#D9D9D9]" />
+
+      <FoodScroll />
+
+      <HomeFooter />
+    </div>
+  );
 }

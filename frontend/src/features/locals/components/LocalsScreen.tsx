@@ -1,28 +1,117 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "@/store/auth-store";
+import { useLocationStore } from "@/store/location-store";
 import SearchInput from "@/shared/components/SearchInput";
 import PageHeader from "@/shared/components/SharedHeader";
+import ProvinceCityDropdown, {
+  type ProvinceCityValue,
+} from "@/shared/location/ProvinceCityDropdown";
 import FoodDetailsHero from "@/features/foods/components/FoodDetailsHero";
 import { useFoods } from "@/features/foods/hooks/use-foods";
 
-function toSearchableText(value?: string | number | null) {
+function toSearchableText(value?: unknown) {
+  if (Array.isArray(value)) {
+    return value.join(" ").toLowerCase();
+  }
+
   return String(value ?? "").toLowerCase();
+}
+
+function getProvinceCityFromLocation(
+  location?: string | null
+): ProvinceCityValue {
+  if (!location) {
+    return {
+      province: "",
+      city: "",
+    };
+  }
+
+  const parts = location
+    .split("،")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return {
+    province: parts[0] ?? "",
+    city: parts[1] ?? "",
+  };
+}
+
+function buildLocationText(value: ProvinceCityValue) {
+  if (!value.province || !value.city) return "";
+
+  return `${value.province}، ${value.city}`;
+}
+
+function isFoodInSelectedLocation(
+  foodLocation?: string | null,
+  selectedLocation?: ProvinceCityValue
+) {
+  if (!selectedLocation?.province || !selectedLocation?.city) {
+    return true;
+  }
+
+  const normalizedFoodLocation = toSearchableText(foodLocation);
+
+  const normalizedProvince = selectedLocation.province.toLowerCase();
+  const normalizedCity = selectedLocation.city.toLowerCase();
+
+  return (
+    normalizedFoodLocation.includes(normalizedProvince) ||
+    normalizedFoodLocation.includes(normalizedCity)
+  );
 }
 
 export default function LocalsScreen() {
   const currentUser = useAuthStore((state) => state.currentUser);
+  const updateCurrentUser = useAuthStore((state) => state.updateCurrentUser);
+
+  const selectedLocation = useLocationStore((state) => state.selectedLocation);
+  const setSelectedLocation = useLocationStore(
+    (state) => state.setSelectedLocation
+  );
+
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: foods = [], isLoading, isError } = useFoods();
 
+  useEffect(() => {
+    if (!currentUser?.location) return;
+
+    const locationFromUser = getProvinceCityFromLocation(currentUser.location);
+
+    if (!locationFromUser.province || !locationFromUser.city) return;
+
+    setSelectedLocation(locationFromUser);
+  }, [currentUser?.location, setSelectedLocation]);
+
+  const handleLocationChange = (value: ProvinceCityValue) => {
+    setSelectedLocation(value);
+
+    const locationText = buildLocationText(value);
+
+    if (!locationText) return;
+
+    if (currentUser?.role === "customer") {
+      updateCurrentUser({
+        location: locationText,
+      });
+    }
+  };
+
   const filteredFoods = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    if (!normalizedSearch) return foods;
+    const locationFilteredFoods = foods.filter((food) =>
+      isFoodInSelectedLocation(food.location, selectedLocation)
+    );
 
-    return foods.filter((food) => {
+    if (!normalizedSearch) return locationFilteredFoods;
+
+    return locationFilteredFoods.filter((food) => {
       const ingredientsText = food.ingredients ?? "";
 
       return (
@@ -34,7 +123,7 @@ export default function LocalsScreen() {
         toSearchableText(ingredientsText).includes(normalizedSearch)
       );
     });
-  }, [foods, searchTerm]);
+  }, [foods, searchTerm, selectedLocation]);
 
   return (
     <main dir="rtl" className="min-h-screen bg-[#FFF9F4] px-4 py-6">
@@ -44,7 +133,14 @@ export default function LocalsScreen() {
           description="غذاهای خانگی و محلی اطراف شما"
         />
 
-        <div className="mb-6 flex justify-center">
+        <div className="mb-6 flex flex-col items-center gap-4">
+          <ProvinceCityDropdown
+            value={selectedLocation}
+            onChange={handleLocationChange}
+            placeholder="انتخاب محل سکونت"
+            className="max-w-xs"
+          />
+
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
@@ -76,7 +172,9 @@ export default function LocalsScreen() {
             </h3>
 
             <p className="mt-2 text-sm text-gray-500">
-              نتیجه‌ای مطابق جست‌وجوی شما پیدا نشد.
+              {selectedLocation.province && selectedLocation.city
+                ? "در موقعیت انتخاب‌شده غذایی پیدا نشد یا نتیجه‌ای مطابق جست‌وجوی شما وجود ندارد."
+                : "نتیجه‌ای مطابق جست‌وجوی شما پیدا نشد."}
             </p>
           </div>
         ) : (
@@ -86,7 +184,8 @@ export default function LocalsScreen() {
 
               const canEditFood =
                 currentUser?.role === "chef" &&
-                String(food.chefId) === String(currentUser.publicId ?? currentUser.id);
+                String(food.chefId) ===
+                  String(currentUser.publicId ?? currentUser.id);
 
               return (
                 <FoodDetailsHero

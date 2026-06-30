@@ -16,5 +16,16 @@ export const endpoints = {
 
   customerOrders: {
   history: "/customer/orders/history",
-},
+  },
+
+  customerAddresses: {
+    list: "/customer/addresses",
+    create: "/customer/addresses",
+    update: (addressId: number | string) =>
+      `/customer/addresses/${addressId}`,
+    delete: (addressId: number | string) =>
+      `/customer/addresses/${addressId}`,
+    setDefault: (addressId: number | string) =>
+      `/customer/addresses/${addressId}/default`,
+  },
 };
