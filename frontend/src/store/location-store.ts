@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { ProvinceCityValue } from "@/shared/components/ProvinceCityDropdown";
+import type { ProvinceCityValue } from "@/shared/location/types/location.types";
 
 type LocationStoreState = {
   selectedLocation: ProvinceCityValue;

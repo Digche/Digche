@@ -3,11 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, MapPin } from "lucide-react";
 import { iranLocations } from "./data/iran-locations";
+import type { ProvinceCityValue } from "@/shared/location/types/location.types";
 
-export type ProvinceCityValue = {
-  province: string;
-  city: string;
-};
+export type { ProvinceCityValue };
+
 
 type ProvinceCityDropdownProps = {
   value: ProvinceCityValue;
