@@ -4,6 +4,7 @@ export const endpoints = {
     nearby: "/core/Dishes/available",
     detail: (foodId: number | string) => `/core/Dishes/${foodId}`,
     comments: (foodId: number | string) => `/core/Comments/dish/${foodId}`,
+    createComment: "/core/Comments",
   },
 
   chefFoods: {

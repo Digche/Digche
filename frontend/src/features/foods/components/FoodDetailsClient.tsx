@@ -80,7 +80,12 @@ export default function FoodDetailsClient({ foodID }: FoodDetailsClientProps) {
           </div>
         </section>
       ) : (
-        <FoodComments comments={comments} />
+
+        <FoodComments
+          foodId={foodID}
+          comments={comments}
+          canComment={currentUser?.role === "customer"}
+        />     
       )}
     </>
   );

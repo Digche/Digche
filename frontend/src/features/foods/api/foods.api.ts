@@ -5,11 +5,15 @@ import {
   mapFoodDtoToFood,
   mapFoodDtosToFoods,
 } from "../mappers/food.mapper";
-import { mapFoodCommentDtosToFoodComments } from "../mappers/food-comment.mapper";
-import type { Food, FoodDto } from "../types/food.types";
+import {
+  mapFoodCommentDtoToFoodComment,
+  mapFoodCommentDtosToFoodComments,
+} from "../mappers/food-comment.mapper";import type { Food, FoodDto } from "../types/food.types";
 import type {
   FoodComment,
   FoodCommentDto,
+  CreateFoodCommentPayload,
+
 } from "../types/food-comment.types";
 
 function unwrapData<T>(response: T | ApiResponse<T>): T {
@@ -64,4 +68,25 @@ export const foodsApi = {
 
     return mapFoodCommentDtosToFoodComments(data);
   },
+
+  async createFoodComment(
+  payload: CreateFoodCommentPayload
+): Promise<FoodComment> {
+  const response = await apiRequest<FoodCommentDto | ApiResponse<FoodCommentDto>>(
+    endpoints.foods.createComment,
+    {
+      method: "POST",
+      auth: true,
+      body: {
+        dishId: payload.dishId,
+        text: payload.text,
+        rating: payload.rating,
+      },
+    }
+  );
+
+  const data = unwrapData(response);
+
+  return mapFoodCommentDtoToFoodComment(data);
+},
 };

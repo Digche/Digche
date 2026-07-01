@@ -18,3 +18,9 @@ export type FoodCommentDto = {
   rating?: number;
   createdAt?: string;
 };
+
+export type CreateFoodCommentPayload = {
+  dishId: number | string;
+  text: string;
+  rating: number;
+};
