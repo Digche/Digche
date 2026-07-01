@@ -26,6 +26,7 @@ public class DishRepository : IDishRepository
     public async Task<IEnumerable<Dish>> GetAvailableDishesAsync(CancellationToken cancellation = default)
         => await _context.Dishes
             .Where(d => d.IsAvailable)
+            .Include(d => d.Comments)
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync(cancellation);
 

@@ -21,6 +21,14 @@ public class GetDishByIdQueryHandler : IRequestHandler<GetDishByIdQuery, Result<
         if (dish is null)
             return Result<DishDto>.Failure("غذا یافت نشد.");
 
+        double? averageRating = null;
+        if (dish.Comments.Any(c => c.Rating.HasValue))
+        {
+            averageRating = dish.Comments
+                .Where(c => c.Rating.HasValue)
+                .Average(c => c.Rating.Value);
+        }
+
         var dto = new DishDto
         {
             Id = dish.Id,
@@ -32,7 +40,8 @@ public class GetDishByIdQueryHandler : IRequestHandler<GetDishByIdQuery, Result<
             Ingredients = dish.Ingredients,
             IsAvailable = dish.IsAvailable,
             Remaining = dish.StockQuantity,
-            Category = dish.Category
+            Category = dish.Category,
+            Rating = averageRating
         };
 
         return Result<DishDto>.Success(dto);

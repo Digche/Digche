@@ -16,25 +16,35 @@ public class GetAvailableDishesQueryHandler : IRequestHandler<GetAvailableDishes
 
     public async Task<Result<IEnumerable<DishDto>>> Handle(GetAvailableDishesQuery request, CancellationToken cancellationToken)
     {
-        // دریافت غذاهای موجود
         var dishes = await _dishRepository.GetAvailableDishesAsync(cancellationToken);
         
         if (dishes == null || !dishes.Any())
             return Result<IEnumerable<DishDto>>.Success(Enumerable.Empty<DishDto>());
 
-        // نگاشت دستی به DTO
-        var dtos = dishes.Select(d => new DishDto
+        var dtos = dishes.Select(d =>
         {
-            Id = d.Id,
-            ChefId = d.ChefId,
-            Title = d.Name,
-            Description = d.Description,
-            Price = d.Price,
-            Image = d.ImageUrl,
-            Ingredients = d.Ingredients,
-            IsAvailable = d.IsAvailable,
-            Remaining = d.StockQuantity,
-            Category = d.Category
+            double? avg = null;
+            if (d.Comments.Any(c => c.Rating.HasValue))
+            {
+                avg = d.Comments
+                    .Where(c => c.Rating.HasValue)
+                    .Average(c => c.Rating.Value);
+            }
+
+            return new DishDto
+            {
+                Id = d.Id,
+                ChefId = d.ChefId,
+                Title = d.Name,
+                Description = d.Description,
+                Price = d.Price,
+                Image = d.ImageUrl,
+                Ingredients = d.Ingredients,
+                IsAvailable = d.IsAvailable,
+                Remaining = d.StockQuantity,
+                Category = d.Category,
+                Rating = avg
+            };
         });
 
         return Result<IEnumerable<DishDto>>.Success(dtos);
