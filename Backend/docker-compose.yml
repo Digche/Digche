@@ -155,6 +155,9 @@ services:
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: FoodOrdering.Auth
       Jwt__Audience: FoodOrdering.Clients
+
+      AuthService__BaseUrl: "http://auth-service:3001"
+      AuthService__ApiKey: ${AUTH_INTERNAL_API_KEY}
     expose:
       - "80"
     depends_on:
