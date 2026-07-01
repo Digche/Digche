@@ -152,12 +152,12 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:80
       ConnectionStrings__DefaultConnection: Host=core-db;Database=core_db;Username=core_user;Password=${CORE_DB_PASSWORD:-core_password}
-      Jwt__Secret: ${JWT_SECRET}
+      Jwt__Secret: ${JWT_SECRET:-change_me_in_real_envthis_is_test}
       Jwt__Issuer: FoodOrdering.Auth
       Jwt__Audience: FoodOrdering.Clients
 
       AuthService__BaseUrl: "http://auth-service:3001"
-      AuthService__ApiKey: ${AUTH_INTERNAL_API_KEY}
+      AuthService__ApiKey: ${AUTH_INTERNAL_API_KEY:-change_me_internal_auth_key}
     expose:
       - "80"
     depends_on:
