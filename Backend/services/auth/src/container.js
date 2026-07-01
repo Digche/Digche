@@ -11,6 +11,8 @@ import { LogoutSession } from "./application/use-cases/LogoutSession.js";
 import { UpdatePublicProfileField } from "./application/use-cases/UpdatePublicProfileField.js";
 import { UpdateAdminProfileField } from "./application/use-cases/UpdateAdminProfileField.js";
 import { AddAdminUser } from "./application/use-cases/AddAdminUser.js";
+import { RequestAdminUserPhoneOtp } from "./application/use-cases/RequestAdminUserPhoneOtp.js";
+import { VerifyAdminUserPhoneOtp } from "./application/use-cases/VerifyAdminUserPhoneOtp.js";
 import { ListAdminUsers } from "./application/use-cases/ListAdminUsers.js";
 import { DisableAdminUser } from "./application/use-cases/DisableAdminUser.js";
 import { EnableAdminUser } from "./application/use-cases/EnableAdminUser.js";
@@ -223,6 +225,24 @@ export function createContainer() {
     adminUserRepository
   });
 
+  const requestAdminUserPhoneOtp = new RequestAdminUserPhoneOtp({
+    adminUserRepository,
+    otpRepository,
+    otpCodeGenerator,
+    otpHasher,
+    otpSender,
+    otpRateLimiter,
+    otpExpiresMinutes: env.otp.expiresMinutes,
+    otpRateLimitPerHour: env.otp.rateLimitPerHour,
+    otpCooldownSeconds: env.otp.cooldownSeconds
+  });
+
+  const verifyAdminUserPhoneOtp = new VerifyAdminUserPhoneOtp({
+    adminUserRepository,
+    otpRepository,
+    otpHasher
+  });
+
   const listAdminUsers = new ListAdminUsers({
     adminUserRepository
   });
@@ -286,7 +306,9 @@ export function createContainer() {
     listAdminUsers,
     disableAdminUser,
     enableAdminUser,
-    changeAdminUserPhone
+    changeAdminUserPhone,
+    requestAdminUserPhoneOtp,
+    verifyAdminUserPhoneOtp
   });
 
   const internalAuthController = new InternalAuthController({

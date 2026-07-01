@@ -5,6 +5,20 @@ export function createAdminUserRoutes(controller, adminAuthMiddleware) {
   const router = Router();
 
   router.post(
+    "/phone-verification/request-otp",
+    adminAuthMiddleware,
+    requireAdminRole("manager"),
+    controller.requestPhoneOtp
+  );
+
+  router.post(
+    "/phone-verification/verify",
+    adminAuthMiddleware,
+    requireAdminRole("manager"),
+    controller.verifyPhoneOtp
+  );
+
+  router.post(
     "/",
     adminAuthMiddleware,
     requireAdminRole("manager"),

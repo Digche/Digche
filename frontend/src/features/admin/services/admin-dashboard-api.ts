@@ -23,12 +23,59 @@ type AdminUserResponse = {
   admin: BackendAdminUser;
 };
 
+export type CreateAdminInput = {
+  firstName: string;
+  lastName: string;
+  username: string;
+  phone: string;
+};
+
 export async function fetchAdminUsers(): Promise<AdminUser[]> {
   const response = await adminApiRequest<AdminUsersResponse>(
     "/admin/admin-users"
   );
 
   return response.admins.map(toAdminUser);
+}
+
+export async function createAdminUser(
+  input: CreateAdminInput
+): Promise<AdminUser> {
+  const response = await adminApiRequest<AdminUserResponse>(
+    "/admin/admin-users",
+    {
+      method: "POST",
+      body: input,
+    }
+  );
+
+  return toAdminUser(response.admin);
+}
+
+export function requestNewAdminPhoneCode(phone: string) {
+  return adminApiRequest<{
+    message: string;
+    phone: string;
+    expiresAt: string;
+  }>("/admin/admin-users/phone-verification/request-otp", {
+    method: "POST",
+    body: { phone },
+  });
+}
+
+export async function verifyNewAdminPhoneCode(phone: string, code: string) {
+  const response = await adminApiRequest<{
+    verified: boolean;
+    phone: string;
+  }>("/admin/admin-users/phone-verification/verify", {
+    method: "POST",
+    body: { phone, code },
+  });
+
+  return {
+    ...response,
+    phone: toLocalIranMobileNumber(response.phone),
+  };
 }
 
 export async function updateAdminStatus(
@@ -60,6 +107,30 @@ export async function updateAdminPhone(
   );
 
   return toAdminUser(response.admin);
+}
+
+export function requestOwnAdminPhoneChangeCode(newPhone: string) {
+  return adminApiRequest<{
+    message: string;
+    newPhone: string;
+    expiresAt: string;
+  }>("/admin/auth/change-phone/request-otp", {
+    method: "POST",
+    body: { newPhone },
+  });
+}
+
+export function verifyOwnAdminPhoneChange(
+  newPhone: string,
+  code: string
+): Promise<AdminSessionResponse> {
+  return adminApiRequest<AdminSessionResponse>(
+    "/admin/auth/change-phone/verify",
+    {
+      method: "POST",
+      body: { newPhone, code },
+    }
+  );
 }
 
 function toAdminUser(admin: BackendAdminUser): AdminUser {
@@ -96,26 +167,20 @@ function getSafeAvatar(photoUrl: string | null | undefined) {
 }
 
 
-export function requestOwnAdminPhoneChangeCode(newPhone: string) {
-  return adminApiRequest<{
-    message: string;
-    newPhone: string;
-    expiresAt: string;
-  }>("/admin/auth/change-phone/request-otp", {
-    method: "POST",
-    body: { newPhone },
-  });
-}
+function toLocalIranMobileNumber(value: string) {
+  const digits = String(value || "").replace(/\D/g, "");
 
-export function verifyOwnAdminPhoneChange(
-  newPhone: string,
-  code: string
-): Promise<AdminSessionResponse> {
-  return adminApiRequest<AdminSessionResponse>(
-    "/admin/auth/change-phone/verify",
-    {
-      method: "POST",
-      body: { newPhone, code },
-    }
-  );
+  if (digits.startsWith("0098") && digits.length === 14) {
+    return `0${digits.slice(4)}`;
+  }
+
+  if (digits.startsWith("98") && digits.length === 12) {
+    return `0${digits.slice(2)}`;
+  }
+
+  if (digits.startsWith("9") && digits.length === 10) {
+    return `0${digits}`;
+  }
+
+  return digits;
 }
