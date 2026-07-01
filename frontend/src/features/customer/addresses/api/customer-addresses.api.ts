@@ -1,134 +1,137 @@
-import { apiRequest } from "@/shared/api/api-client";
-import { endpoints } from "@/shared/api/endpoints";
-import type { ApiMutationResponse, ApiResponse } from "@/shared/api/api-types";
+import {
+  getCurrentPublicUser,
+  updatePublicAddress,
+} from "@/features/auth/services/auth-api";
+import { useAuthStore } from "@/store/auth-store";
 import {
   mapCustomerAddressDtoToAddress,
-  mapCustomerAddressDtosToAddresses,
 } from "../mappers/customer-address.mapper";
 import type {
   CustomerAddress,
-  CustomerAddressDto,
   CustomerAddressPayload,
 } from "../types/customer-address.types";
+import type { ApiMutationResponse } from "@/shared/api/api-types";
+import {
+  buildFullAddress,
+  getAddressDetailsFromAddress,
+  getProvinceCityFromAddress,
+} from "@/shared/location/location-text";
 
-function unwrapData<T>(response: T | ApiResponse<T>): T {
-  if (response && typeof response === "object" && "data" in response) {
-    return (response as ApiResponse<T>).data;
+function getAccessTokenOrThrow() {
+  const accessToken = useAuthStore.getState().accessToken;
+
+  if (!accessToken) {
+    throw new Error("نشست کاربری پیدا نشد. لطفاً دوباره وارد شوید.");
   }
 
-  return response as T;
+  return accessToken;
 }
 
 function buildAddressLineFromPayload(payload: CustomerAddressPayload) {
   return (
     payload.addressLine ||
-    [payload.province, payload.city, payload.details].filter(Boolean).join("، ")
+    buildFullAddress({
+      province: payload.province,
+      city: payload.city,
+      details: payload.details,
+    })
   );
 }
 
 function buildAddressFromPayload(
-  id: number | string,
   payload: CustomerAddressPayload
 ): CustomerAddress {
   return {
-    id,
-    title: payload.title,
+    id: "current",
+    title: payload.title || "آدرس فعلی",
     province: payload.province,
     city: payload.city,
     details: payload.details,
     addressLine: buildAddressLineFromPayload(payload),
-    isDefault: false,
+    isDefault: true,
   };
 }
 
-function mergeAddressWithPayload(
-  address: CustomerAddress,
-  payload: CustomerAddressPayload
-): CustomerAddress {
-  return {
-    ...address,
-    title: address.title || payload.title,
-    province: address.province || payload.province,
-    city: address.city || payload.city,
-    details: address.details || payload.details,
-    addressLine: address.addressLine || buildAddressLineFromPayload(payload),
-  };
+function buildAddressFromAuthAddress(address: string | null | undefined) {
+  const addressLine = address?.trim();
+
+  if (!addressLine) return null;
+
+  const provinceCity = getProvinceCityFromAddress(addressLine);
+  const details = getAddressDetailsFromAddress(addressLine);
+
+  return mapCustomerAddressDtoToAddress({
+    id: "current",
+    title: "آدرس فعلی",
+    province: provinceCity.province,
+    city: provinceCity.city,
+    details,
+    addressLine,
+    isDefault: true,
+  });
 }
 
 export const customerAddressesApi = {
   async getCustomerAddresses(): Promise<CustomerAddress[]> {
-    const response = await apiRequest<
-      CustomerAddressDto[] | ApiResponse<CustomerAddressDto[]>
-    >(endpoints.customerAddresses.list, {
-      auth: true,
-    });
+    const accessToken = getAccessTokenOrThrow();
 
-    const data = unwrapData(response);
+    const response = await getCurrentPublicUser(accessToken);
 
-    return mapCustomerAddressDtosToAddresses(data);
+    const currentAddress = buildAddressFromAuthAddress(response.user.address);
+
+    return currentAddress ? [currentAddress] : [];
   },
 
   async createCustomerAddress(
     payload: CustomerAddressPayload
   ): Promise<CustomerAddress> {
-    const response = await apiRequest<
-      | CustomerAddressDto
-      | string
-      | number
-      | ApiResponse<CustomerAddressDto | string | number>
-    >(endpoints.customerAddresses.create, {
-      method: "POST",
-      body: payload,
-      auth: true,
+    const accessToken = getAccessTokenOrThrow();
+    const addressLine = buildAddressLineFromPayload(payload);
+
+    const session = await updatePublicAddress({
+      accessToken,
+      address: addressLine,
     });
 
-    const data = unwrapData(response);
+    useAuthStore.getState().setSession(session);
 
-    if (typeof data === "string" || typeof data === "number") {
-      return buildAddressFromPayload(data, payload);
-    }
-
-    const mappedAddress = mapCustomerAddressDtoToAddress(data);
-
-    return mergeAddressWithPayload(mappedAddress, payload);
+    return buildAddressFromPayload({
+      ...payload,
+      addressLine,
+    });
   },
 
   async updateCustomerAddress(
-    addressId: number | string,
+    _addressId: number | string,
     payload: CustomerAddressPayload
   ): Promise<CustomerAddress> {
-    const response = await apiRequest<
-      | CustomerAddressDto
-      | string
-      | number
-      | ApiResponse<CustomerAddressDto | string | number>
-    >(endpoints.customerAddresses.update(addressId), {
-      method: "PUT",
-      body: payload,
-      auth: true,
+    const accessToken = getAccessTokenOrThrow();
+    const addressLine = buildAddressLineFromPayload(payload);
+
+    const session = await updatePublicAddress({
+      accessToken,
+      address: addressLine,
     });
 
-    const data = unwrapData(response);
+    useAuthStore.getState().setSession(session);
 
-    if (typeof data === "string" || typeof data === "number") {
-      return buildAddressFromPayload(data, payload);
-    }
-
-    const mappedAddress = mapCustomerAddressDtoToAddress({
-      ...data,
-      id: data.id ?? addressId,
+    return buildAddressFromPayload({
+      ...payload,
+      addressLine,
     });
-
-    return mergeAddressWithPayload(mappedAddress, payload);
   },
 
   async deleteCustomerAddress(
-    addressId: number | string
+    _addressId: number | string
   ): Promise<ApiMutationResponse> {
-    await apiRequest<unknown>(endpoints.customerAddresses.delete(addressId), {
-      method: "DELETE",
-      auth: true,
+    const accessToken = getAccessTokenOrThrow();
+
+    const session = await updatePublicAddress({
+      accessToken,
+      address: null,
     });
+
+    useAuthStore.getState().setSession(session);
 
     return {
       message: "آدرس با موفقیت حذف شد.",
@@ -136,18 +139,10 @@ export const customerAddressesApi = {
   },
 
   async setDefaultCustomerAddress(
-    addressId: number | string
+    _addressId: number | string
   ): Promise<ApiMutationResponse> {
-    await apiRequest<unknown>(
-      endpoints.customerAddresses.setDefault(addressId),
-      {
-        method: "PATCH",
-        auth: true,
-      }
-    );
-
     return {
-      message: "آدرس فعلی با موفقیت تغییر کرد.",
+      message: "آدرس فعلی با موفقیت انتخاب شد.",
     };
   },
 };

@@ -2,32 +2,41 @@ import type {
   CustomerAddress,
   CustomerAddressDto,
 } from "../types/customer-address.types";
-
-function buildAddressLine(province?: string, city?: string, details?: string) {
-  return [province, city, details].filter(Boolean).join("، ");
-}
+import {
+  buildFullAddress,
+  getAddressDetailsFromAddress,
+  getProvinceCityFromAddress,
+} from "@/shared/location/location-text";
 
 export function mapCustomerAddressDtoToAddress(
   dto: CustomerAddressDto
 ): CustomerAddress {
-  const province = dto.province ?? "";
-  const city = dto.city ?? "";
-  const details = dto.details ?? "";
+  const rawAddressLine =
+    dto.addressLine ?? dto.address ?? dto.fullAddress ?? "";
 
-  const fallbackAddressLine =
-    dto.addressLine ??
-    dto.address ??
-    dto.fullAddress ??
-    buildAddressLine(province, city, details);
+  const parsedProvinceCity = getProvinceCityFromAddress(rawAddressLine);
+
+  const province = dto.province ?? parsedProvinceCity.province ?? "";
+  const city = dto.city ?? parsedProvinceCity.city ?? "";
+  const details =
+    dto.details ?? getAddressDetailsFromAddress(rawAddressLine) ?? "";
+
+  const addressLine =
+    rawAddressLine ||
+    buildFullAddress({
+      province,
+      city,
+      details,
+    });
 
   return {
-    id: dto.id ?? crypto.randomUUID(),
-    title: dto.title ?? dto.name ?? "آدرس",
+    id: dto.id ?? "current",
+    title: dto.title ?? dto.name ?? "آدرس فعلی",
     province,
     city,
     details,
-    addressLine: fallbackAddressLine,
-    isDefault: Boolean(dto.isDefault ?? dto.is_default),
+    addressLine,
+    isDefault: Boolean(dto.isDefault ?? dto.is_default ?? true),
   };
 }
 

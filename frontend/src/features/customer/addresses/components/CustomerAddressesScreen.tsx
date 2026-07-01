@@ -10,55 +10,37 @@ import AddressForm from "./AddressForm";
 import CustomerAddressCard from "./AddressCard";
 import { useCustomerAddresses } from "../hooks/use-customer-addresses";
 import { useCreateCustomerAddress } from "../hooks/use-create-customer-address";
-import { useSetDefaultCustomerAddress } from "../hooks/use-set-default-customer-address";
 import { useDeleteCustomerAddress } from "../hooks/use-delete-customer-address";
 import type {
   CustomerAddress,
   CustomerAddressPayload,
 } from "../types/customer-address.types";
-
-function getAddressLocation(address: CustomerAddress) {
-  if (address.province && address.city) {
-    return `${address.province}، ${address.city}`;
-  }
-
-  const parts = address.addressLine
-    ?.split("،")
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  if (parts?.[0] && parts?.[1]) {
-    return `${parts[0]}، ${parts[1]}`;
-  }
-
-  return address.addressLine;
-}
+import {
+  buildFullAddress,
+  emptyProvinceCity,
+  getProvinceCityFromAddress,
+} from "@/shared/location/location-text";
 
 function getAddressFullLine(address: CustomerAddress) {
-  if (address.addressLine) return address.addressLine;
-
-  return [address.province, address.city, address.details]
-    .filter(Boolean)
-    .join("، ");
-}
-
-function getAddressProvinceCity(address: CustomerAddress) {
-  if (address.province && address.city) {
-    return {
+  return (
+    address.addressLine ||
+    buildFullAddress({
       province: address.province,
       city: address.city,
-    };
+      details: address.details,
+    })
+  );
+}
+
+function getAddressLocation(address: CustomerAddress) {
+  const fullAddress = getAddressFullLine(address);
+  const provinceCity = getProvinceCityFromAddress(fullAddress);
+
+  if (!provinceCity.province || !provinceCity.city) {
+    return fullAddress;
   }
 
-  const parts = address.addressLine
-    ?.split("،")
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  return {
-    province: parts?.[0] ?? "",
-    city: parts?.[1] ?? "",
-  };
+  return `${provinceCity.province}، ${provinceCity.city}`;
 }
 
 export default function CustomerAddressesScreen() {
@@ -80,7 +62,6 @@ export default function CustomerAddressesScreen() {
   });
 
   const createAddress = useCreateCustomerAddress();
-  const setDefaultAddress = useSetDefaultCustomerAddress();
   const deleteAddress = useDeleteCustomerAddress();
 
   const selectedAddress = useMemo(() => {
@@ -90,15 +71,16 @@ export default function CustomerAddressesScreen() {
   useEffect(() => {
     if (!selectedAddress) return;
 
-    const provinceCity = getAddressProvinceCity(selectedAddress);
+    const fullAddress = getAddressFullLine(selectedAddress);
+    const provinceCity = getProvinceCityFromAddress(fullAddress);
 
     if (provinceCity.province && provinceCity.city) {
       setSelectedLocation(provinceCity);
     }
 
     updateCurrentUser({
-      location: getAddressLocation(selectedAddress),
-      address: getAddressFullLine(selectedAddress),
+      address: fullAddress,
+      location: fullAddress,
     });
   }, [selectedAddress, setSelectedLocation, updateCurrentUser]);
 
@@ -116,51 +98,70 @@ export default function CustomerAddressesScreen() {
     );
   }
 
-  const handleCreateAddress = (payload: CustomerAddressPayload) => {
-    createAddress.mutate(payload, {
-      onSuccess: (createdAddress) => {
-        setIsFormOpen(false);
+  const handleCreateAddress = async (payload: CustomerAddressPayload) => {
+    try {
+      const createdAddress = await createAddress.mutateAsync(payload);
 
-        const completedAddress: CustomerAddress = {
-          ...createdAddress,
-          title: createdAddress.title || payload.title,
-          province: createdAddress.province || payload.province,
-          city: createdAddress.city || payload.city,
-          details: createdAddress.details || payload.details,
-          addressLine: createdAddress.addressLine || payload.addressLine,
-        };
+      const completedAddress: CustomerAddress = {
+        ...createdAddress,
+        title: createdAddress.title || payload.title || "آدرس فعلی",
+        province: createdAddress.province || payload.province,
+        city: createdAddress.city || payload.city,
+        details: createdAddress.details || payload.details,
+        addressLine:
+          createdAddress.addressLine ||
+          buildFullAddress({
+            province: payload.province,
+            city: payload.city,
+            details: payload.details,
+          }),
+        isDefault: true,
+      };
 
-        setDefaultAddress.mutate(completedAddress.id, {
-          onSuccess: () => {
-            const provinceCity = getAddressProvinceCity(completedAddress);
+      const fullAddress = getAddressFullLine(completedAddress);
+      const provinceCity = getProvinceCityFromAddress(fullAddress);
 
-            if (provinceCity.province && provinceCity.city) {
-              setSelectedLocation(provinceCity);
-            }
+      if (provinceCity.province && provinceCity.city) {
+        setSelectedLocation(provinceCity);
+      }
 
-            updateCurrentUser({
-              location: getAddressLocation(completedAddress),
-              address: getAddressFullLine(completedAddress),
-            });
-          },
-        });
-      },
-    });
+      updateCurrentUser({
+        address: fullAddress,
+        location: fullAddress,
+      });
+
+      setIsFormOpen(false);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "ثبت آدرس ناموفق بود.");
+    }
   };
 
   const handleSelectAddress = (address: CustomerAddress) => {
-    setDefaultAddress.mutate(address.id, {
+    const fullAddress = getAddressFullLine(address);
+    const provinceCity = getProvinceCityFromAddress(fullAddress);
+
+    if (provinceCity.province && provinceCity.city) {
+      setSelectedLocation(provinceCity);
+    }
+
+    updateCurrentUser({
+      address: fullAddress,
+      location: fullAddress,
+    });
+  };
+
+  const handleDeleteAddress = (addressId: number | string) => {
+    deleteAddress.mutate(addressId, {
       onSuccess: () => {
-        const provinceCity = getAddressProvinceCity(address);
-
-        if (provinceCity.province && provinceCity.city) {
-          setSelectedLocation(provinceCity);
-        }
-
         updateCurrentUser({
-          location: getAddressLocation(address),
-          address: getAddressFullLine(address),
+          address: null,
+          location: null,
         });
+
+        setSelectedLocation(emptyProvinceCity);
+      },
+      onError: (error) => {
+        alert(error instanceof Error ? error.message : "حذف آدرس ناموفق بود.");
       },
     });
   };
@@ -183,7 +184,8 @@ export default function CustomerAddressesScreen() {
             <button
               type="button"
               onClick={() => setIsFormOpen((prev) => !prev)}
-              className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#EFC5A8] px-6 text-sm font-bold text-gray-900 transition hover:bg-[#e9b892]"
+              disabled={createAddress.isPending || deleteAddress.isPending}
+              className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#EFC5A8] px-6 text-sm font-bold text-gray-900 transition hover:bg-[#e9b892] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Plus size={18} />
               افزودن آدرس جدید
@@ -233,7 +235,7 @@ export default function CustomerAddressesScreen() {
               </h2>
 
               <p className="mt-2 text-sm text-red-500">
-                وضعیت بک‌اند یا endpoint آدرس‌ها را بررسی کن.
+                وضعیت بک‌اند یا endpoint آدرس را بررسی کن.
               </p>
             </div>
           ) : addresses.length === 0 ? (
@@ -253,10 +255,10 @@ export default function CustomerAddressesScreen() {
                   key={address.id}
                   address={address}
                   isSelected={address.id === selectedAddress?.id}
-                  isSelecting={setDefaultAddress.isPending}
+                  isSelecting={false}
                   isDeleting={deleteAddress.isPending}
                   onSelect={handleSelectAddress}
-                  onDelete={(addressId) => deleteAddress.mutate(addressId)}
+                  onDelete={handleDeleteAddress}
                 />
               ))}
             </div>

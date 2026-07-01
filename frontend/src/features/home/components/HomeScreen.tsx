@@ -10,37 +10,10 @@ import ProvinceCityDropdown, {
 import CategorySection from "@/features/categories/components/CategorySection";
 import { useAuthStore } from "@/store/auth-store";
 import { useLocationStore } from "@/store/location-store";
-
-function getProvinceCityFromLocation(
-  location?: string | null
-): ProvinceCityValue {
-  if (!location) {
-    return {
-      province: "",
-      city: "",
-    };
-  }
-
-  const parts = location
-    .split("،")
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  return {
-    province: parts[0] ?? "",
-    city: parts[1] ?? "",
-  };
-}
-
-function buildLocationText(value: ProvinceCityValue) {
-  if (!value.province || !value.city) return "";
-
-  return `${value.province}، ${value.city}`;
-}
+import { getProvinceCityFromAddress } from "@/shared/location/location-text";
 
 export default function HomeScreen() {
   const currentUser = useAuthStore((state) => state.currentUser);
-  const updateCurrentUser = useAuthStore((state) => state.updateCurrentUser);
 
   const selectedLocation = useLocationStore((state) => state.selectedLocation);
   const setSelectedLocation = useLocationStore(
@@ -48,27 +21,19 @@ export default function HomeScreen() {
   );
 
   useEffect(() => {
-    if (!currentUser?.location) return;
+    const userAddress = currentUser?.address ?? currentUser?.location;
 
-    const locationFromUser = getProvinceCityFromLocation(currentUser.location);
+    if (!userAddress) return;
+
+    const locationFromUser = getProvinceCityFromAddress(userAddress);
 
     if (!locationFromUser.province || !locationFromUser.city) return;
 
     setSelectedLocation(locationFromUser);
-  }, [currentUser?.location, setSelectedLocation]);
+  }, [currentUser?.address, currentUser?.location, setSelectedLocation]);
 
   const handleLocationChange = (value: ProvinceCityValue) => {
     setSelectedLocation(value);
-
-    const locationText = buildLocationText(value);
-
-    if (!locationText) return;
-
-    if (currentUser?.role === "customer") {
-      updateCurrentUser({
-        location: locationText,
-      });
-    }
   };
 
   return (
@@ -79,9 +44,13 @@ export default function HomeScreen() {
         <ProvinceCityDropdown
           value={selectedLocation}
           onChange={handleLocationChange}
-          placeholder="انتخاب محل سکونت"
+          placeholder="انتخاب شهر برای نمایش غذاها"
           className="max-w-xs"
         />
+
+        <p className="-mt-5 text-xs text-gray-500">
+          این انتخاب فقط برای نمایش غذاهاست. آدرس تحویل از بخش آدرس‌های من تغییر می‌کند.
+        </p>
       </div>
 
       <div className="mx-auto mt-2.5 h-px w-[90%] bg-[#D9D9D9]" />

@@ -10,6 +10,7 @@ import ProvinceCityDropdown, {
 } from "@/shared/location/ProvinceCityDropdown";
 import FoodDetailsHero from "@/features/foods/components/FoodDetailsHero";
 import { useFoods } from "@/features/foods/hooks/use-foods";
+import { getProvinceCityFromAddress } from "@/shared/location/location-text";
 
 function toSearchableText(value?: unknown) {
   if (Array.isArray(value)) {
@@ -17,33 +18,6 @@ function toSearchableText(value?: unknown) {
   }
 
   return String(value ?? "").toLowerCase();
-}
-
-function getProvinceCityFromLocation(
-  location?: string | null
-): ProvinceCityValue {
-  if (!location) {
-    return {
-      province: "",
-      city: "",
-    };
-  }
-
-  const parts = location
-    .split("،")
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  return {
-    province: parts[0] ?? "",
-    city: parts[1] ?? "",
-  };
-}
-
-function buildLocationText(value: ProvinceCityValue) {
-  if (!value.province || !value.city) return "";
-
-  return `${value.province}، ${value.city}`;
 }
 
 function isFoodInSelectedLocation(
@@ -67,7 +41,6 @@ function isFoodInSelectedLocation(
 
 export default function LocalsScreen() {
   const currentUser = useAuthStore((state) => state.currentUser);
-  const updateCurrentUser = useAuthStore((state) => state.updateCurrentUser);
 
   const selectedLocation = useLocationStore((state) => state.selectedLocation);
   const setSelectedLocation = useLocationStore(
@@ -79,27 +52,19 @@ export default function LocalsScreen() {
   const { data: foods = [], isLoading, isError } = useFoods();
 
   useEffect(() => {
-    if (!currentUser?.location) return;
+    const userAddress = currentUser?.address ?? currentUser?.location;
 
-    const locationFromUser = getProvinceCityFromLocation(currentUser.location);
+    if (!userAddress) return;
+
+    const locationFromUser = getProvinceCityFromAddress(userAddress);
 
     if (!locationFromUser.province || !locationFromUser.city) return;
 
     setSelectedLocation(locationFromUser);
-  }, [currentUser?.location, setSelectedLocation]);
+  }, [currentUser?.address, currentUser?.location, setSelectedLocation]);
 
   const handleLocationChange = (value: ProvinceCityValue) => {
     setSelectedLocation(value);
-
-    const locationText = buildLocationText(value);
-
-    if (!locationText) return;
-
-    if (currentUser?.role === "customer") {
-      updateCurrentUser({
-        location: locationText,
-      });
-    }
   };
 
   const filteredFoods = useMemo(() => {
@@ -134,12 +99,18 @@ export default function LocalsScreen() {
         />
 
         <div className="mb-6 flex flex-col items-center gap-4">
-          <ProvinceCityDropdown
-            value={selectedLocation}
-            onChange={handleLocationChange}
-            placeholder="انتخاب محل سکونت"
-            className="max-w-xs"
-          />
+          <div className="flex flex-col items-center gap-2">
+            <ProvinceCityDropdown
+              value={selectedLocation}
+              onChange={handleLocationChange}
+              placeholder="انتخاب شهر برای نمایش غذاها"
+              className="max-w-xs"
+            />
+
+            <p className="text-xs text-gray-500">
+              این انتخاب فقط برای فیلتر غذاهاست و آدرس تحویل را تغییر نمی‌دهد.
+            </p>
+          </div>
 
           <SearchInput
             value={searchTerm}
