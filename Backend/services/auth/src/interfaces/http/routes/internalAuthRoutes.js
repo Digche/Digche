@@ -15,5 +15,11 @@ export function createInternalAuthRoutes(controller, internalAuthMiddleware) {
     controller.resolveProfiles
   );
 
+  router.get(
+    "/users/:userId",
+    internalAuthMiddleware,
+    controller.getUserProfile
+  );
+
   return router;
 }

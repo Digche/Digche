@@ -20,6 +20,7 @@ import { ChangeAdminUserPhone } from "./application/use-cases/ChangeAdminUserPho
 import { RequestAdminPhoneChangeOtp } from "./application/use-cases/RequestAdminPhoneChangeOtp.js";
 import { VerifyAdminPhoneChangeOtp } from "./application/use-cases/VerifyAdminPhoneChangeOtp.js";
 import { ResolveActorProfiles } from "./application/use-cases/ResolveActorProfiles.js";
+import { GetInternalUserProfile } from "./application/use-cases/GetInternalUserProfile.js";
 import { VerifyAccessToken } from "./application/use-cases/VerifyAccessToken.js";
 import { ListChefs } from "./application/use-cases/ListChefs.js";
 import { SuspendChef } from "./application/use-cases/SuspendChef.js";
@@ -248,6 +249,11 @@ export function createContainer() {
     adminUserRepository
   });
 
+  const getInternalUserProfile = new GetInternalUserProfile({
+    userRepository,
+    chefAccountRepository
+  });
+
   const verifyAccessToken = new VerifyAccessToken({
     tokenService,
     userRepository,
@@ -300,6 +306,7 @@ export function createContainer() {
 
   const internalAuthController = new InternalAuthController({
     resolveActorProfiles,
+    getInternalUserProfile,
     verifyAccessToken
   });
 

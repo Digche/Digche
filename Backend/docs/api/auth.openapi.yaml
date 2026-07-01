@@ -1108,6 +1108,42 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /internal/auth/users/{userId}:
+    get:
+      tags:
+        - Internal
+      summary: Get full user profile for internal services
+      description: Internal endpoint used by backend services to fetch a user's full auth profile. Requires x-internal-api-key and is not exposed through the public gateway.
+      parameters:
+        - in: header
+          name: x-internal-api-key
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          description: User id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Full user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/InternalUserProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1449,6 +1485,81 @@ components:
           properties:
             status:
               $ref: "#/components/schemas/ChefAccountStatus"
+
+    InternalUserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phone:
+          type: string
+          example: "+989121234567"
+        firstName:
+          type: string
+          nullable: true
+          example: "Ali"
+        lastName:
+          type: string
+          nullable: true
+          example: "Ahmadi"
+        username:
+          type: string
+          nullable: true
+          example: "ali_ahmadi"
+        displayName:
+          type: string
+          nullable: true
+          example: "Ali Ahmadi"
+        photoUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/users/user-1/profile.jpg"
+        address:
+          type: string
+          nullable: true
+          example: "Tehran, Vanak Square"
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+              - client
+              - chef
+        hasCompletedProfile:
+          type: boolean
+          example: true
+        tokenVersion:
+          type: integer
+          example: 2
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        chef:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            userId:
+              type: string
+              format: uuid
+            status:
+              $ref: "#/components/schemas/ChefAccountStatus"
+            createdAt:
+              type: string
+              format: date-time
+              nullable: true
+            updatedAt:
+              type: string
+              format: date-time
+              nullable: true
 
     ChefAccountStatus:
       type: string

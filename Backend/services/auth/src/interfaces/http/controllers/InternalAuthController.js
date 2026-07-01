@@ -1,6 +1,11 @@
 export class InternalAuthController {
-  constructor({ resolveActorProfiles, verifyAccessToken }) {
+  constructor({
+    resolveActorProfiles,
+    getInternalUserProfile,
+    verifyAccessToken
+  }) {
     this.resolveActorProfiles = resolveActorProfiles;
+    this.getInternalUserProfile = getInternalUserProfile;
     this.verifyAccessToken = verifyAccessToken;
   }
 
@@ -20,6 +25,18 @@ export class InternalAuthController {
     try {
       const result = await this.resolveActorProfiles.execute({
         participants: req.body.participants
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getUserProfile = async (req, res, next) => {
+    try {
+      const result = await this.getInternalUserProfile.execute({
+        userId: req.params.userId
       });
 
       res.json(result);
