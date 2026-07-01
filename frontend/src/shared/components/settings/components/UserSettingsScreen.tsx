@@ -12,7 +12,14 @@ import ProvinceCityDropdown, {
   type ProvinceCityValue,
 } from "@/shared/location/ProvinceCityDropdown";
 import { uploadProfilePhoto } from "@/features/media/api/media-upload.api";
-import { updatePublicPhotoUrl } from "@/features/auth/services/auth-api";
+import {
+  updatePublicAddress,
+  updatePublicFirstName,
+  updatePublicLastName,
+  updatePublicPhotoUrl,
+  updatePublicUsername,
+  type PublicProfileUpdateResponse,
+} from "@/features/auth/services/auth-api";
 
 type SettingsRole = "chef" | "customer";
 
@@ -46,15 +53,14 @@ function getSettingsFormFromUser(
   defaultAvatar: string
 ): SettingsFormState {
   return {
-    name: user?.name ?? "",
+    name: user?.firstName ?? user?.name ?? "", 
     lastName: user?.lastName ?? "",
     username: user?.username ?? "",
     phone: user?.phone ?? "",
     location: user?.location ?? "",
     bio: user?.bio ?? "",
     avatar: user?.avatar ?? defaultAvatar,
-    chefDisplayName: user?.chefDisplayName ?? user?.name ?? "",
-  };
+    chefDisplayName: user?.username ?? user?.chefDisplayName ?? user?.name ?? "",  };
 }
 
 function getProvinceCityFromLocation(
@@ -167,51 +173,140 @@ export default function UserSettingsScreen({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (!accessToken) {
+      setErrorMessage("نشست کاربری پیدا نشد. لطفاً دوباره وارد شوید.");
+      return;
+    }
+
+    const nextFirstName = form.name.trim();
+    const nextLastName = form.lastName.trim();
+    const nextUsername = form.username.trim();
+    const nextLocation = form.location.trim();
+
+    if (!nextFirstName) {
+      setErrorMessage("نام را وارد کنید.");
+      return;
+    }
+
+    if (!nextLastName) {
+      setErrorMessage("نام خانوادگی را وارد کنید.");
+      return;
+    }
+
+    if (!nextUsername) {
+      setErrorMessage("نام کاربری را وارد کنید.");
+      return;
+    }
+
     setIsSaved(false);
     setErrorMessage("");
     setIsSubmitting(true);
 
     try {
+      let workingAccessToken = accessToken;
+      let latestSession: PublicProfileUpdateResponse | null = null;
+
+      const applyProfileUpdate = async (
+        update: (token: string) => Promise<PublicProfileUpdateResponse>
+      ) => {
+        const session = await update(workingAccessToken);
+
+        latestSession = session;
+        workingAccessToken = session.accessToken;
+
+        return session;
+      };
+
       const uploadedAvatarUrl = selectedAvatarFile
         ? await uploadProfilePhoto(selectedAvatarFile)
         : form.avatar;
 
-      if (accessToken && selectedAvatarFile) {
-        const session = await updatePublicPhotoUrl({
-          accessToken,
-          photoUrl: uploadedAvatarUrl || null,
-        });
+      if (nextFirstName !== (currentUser.firstName ?? "")) {
+        await applyProfileUpdate((token) =>
+          updatePublicFirstName({
+            accessToken: token,
+            firstName: nextFirstName,
+          })
+        );
+      }
 
-        setSession(session);
+      if (nextLastName !== (currentUser.lastName ?? "")) {
+        await applyProfileUpdate((token) =>
+          updatePublicLastName({
+            accessToken: token,
+            lastName: nextLastName,
+          })
+        );
+      }
+
+      if (nextUsername !== (currentUser.username ?? "")) {
+        await applyProfileUpdate((token) =>
+          updatePublicUsername({
+            accessToken: token,
+            username: nextUsername,
+          })
+        );
+      }
+
+      if (selectedAvatarFile) {
+        await applyProfileUpdate((token) =>
+          updatePublicPhotoUrl({
+            accessToken: token,
+            photoUrl: uploadedAvatarUrl || null,
+          })
+        );
+      }
+
+      if (
+        role === "chef" &&
+        nextLocation !== (currentUser.address ?? currentUser.location ?? "")
+      ) {
+        await applyProfileUpdate((token) =>
+          updatePublicAddress({
+            accessToken: token,
+            address: nextLocation || null,
+          })
+        );
+      }
+
+      if (latestSession) {
+        setSession(latestSession);
       }
 
       updateCurrentUser({
-        name: form.name.trim(),
-        lastName: form.lastName.trim(),
-        username: form.username.trim(),
-        phone: form.phone.trim(),
-        bio: form.bio.trim(),
+        firstName: nextFirstName,
+        lastName: nextLastName,
+        username: nextUsername,
+        name: [nextFirstName, nextLastName].filter(Boolean).join(" ").trim(),
         avatar: uploadedAvatarUrl,
         photoUrl: uploadedAvatarUrl || null,
 
+        // این دو تا فعلاً فقط local هستند مگر اینکه برایشان API جدا داشته باشی
+        bio: form.bio.trim(),
+
         ...(role === "chef"
           ? {
-              location: form.location.trim(),
-              chefDisplayName: form.chefDisplayName.trim(),
+              location: nextLocation,
+              address: nextLocation,
+              chefDisplayName: nextUsername,
             }
           : {}),
       });
 
       setForm((prev) => ({
         ...prev,
+        name: nextFirstName,
+        lastName: nextLastName,
+        username: nextUsername,
         avatar: uploadedAvatarUrl,
+        location: nextLocation,
       }));
 
       setSelectedAvatarFile(null);
       setIsSaved(true);
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "آپلود یا ذخیره تصویر ناموفق بود."
+        error instanceof Error ? error.message : "ذخیره اطلاعات کاربر ناموفق بود."
       );
     } finally {
       setIsSubmitting(false);

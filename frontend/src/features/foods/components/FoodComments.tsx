@@ -34,6 +34,13 @@ function getSafeAvatarSrc(src?: string | null) {
   return `/images/${value}`;
 }
 
+  function getSafeCommentUserName(comment: FoodComment) {
+    const username = comment.username?.trim();
+    const userName = comment.userName?.trim();
+
+    return username || userName || "کاربر دیگچه";
+  }
+
 function RatingStars({ rating = 0 }: { rating?: number }) {
   return (
     <div className="flex items-center gap-1">
@@ -212,7 +219,8 @@ export default function FoodComments({
         <div className="space-y-5">
           {comments.map((comment) => {
             const avatarSrc = getSafeAvatarSrc(comment.userAvatar);
-
+            const displayUserName = getSafeCommentUserName(comment);
+            
             return (
               <article
                 key={comment.id}
@@ -223,7 +231,7 @@ export default function FoodComments({
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#FDF7F2] md:h-16 md:w-16">
                       <Image
                         src={avatarSrc}
-                        alt={comment.userName}
+                        alt={displayUserName}
                         fill
                         className="object-cover"
                       />
@@ -231,7 +239,7 @@ export default function FoodComments({
 
                     <div className="pt-1">
                       <h3 className="text-base font-bold text-gray-900 md:text-lg">
-                        {comment.userName}
+                        {displayUserName}
                       </h3>
 
                       <div className="mt-2">
