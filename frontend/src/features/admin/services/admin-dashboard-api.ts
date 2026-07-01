@@ -184,3 +184,87 @@ function toLocalIranMobileNumber(value: string) {
 
   return digits;
 }
+
+
+type BackendChefAccount = {
+  id: string;
+  userId: string;
+  status: "active" | "suspended" | string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  user?: {
+    id: string;
+    phone: string;
+    firstName: string | null;
+    lastName: string | null;
+    username: string | null;
+    photoUrl?: string | null;
+    address?: string | null;
+  } | null;
+};
+
+type AdminChefsResponse = {
+  chefs: BackendChefAccount[];
+};
+
+type AdminChefResponse = {
+  chef: BackendChefAccount;
+};
+
+export async function fetchAdminChefs() {
+  const response = await adminApiRequest<AdminChefsResponse>("/admin/chefs");
+
+  return response.chefs.map(toAdminChef);
+}
+
+export async function updateChefStatus(userId: string, isActive: boolean) {
+  const action = isActive ? "activate" : "suspend";
+
+  const response = await adminApiRequest<AdminChefResponse>(
+    `/admin/chefs/${userId}/${action}`,
+    {
+      method: "PATCH",
+    }
+  );
+
+  return toAdminChef(response.chef);
+}
+
+function toAdminChef(chef: BackendChefAccount) {
+  const user = chef.user;
+
+  return {
+    id: chef.userId,
+    fullName: user ? getChefFullName(user) : "آشپز دیگچه",
+    avatar: getSafeChefAvatar(user?.photoUrl),
+    isActive: chef.status === "active",
+  };
+}
+
+function getChefFullName(user: {
+  firstName: string | null;
+  lastName: string | null;
+  username: string | null;
+  phone: string;
+}) {
+  return (
+    [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+    user.username ||
+    user.phone ||
+    "آشپز دیگچه"
+  );
+}
+
+function getSafeChefAvatar(photoUrl: string | null | undefined) {
+  const value = String(photoUrl || "").trim();
+
+  if (
+    value.startsWith("/") ||
+    value.startsWith("data:") ||
+    value.startsWith("blob:")
+  ) {
+    return value;
+  }
+
+  return "/images/avatars/user-1.webp";
+}
