@@ -35,7 +35,9 @@ export async function fetchAdminUsers(): Promise<AdminUser[]> {
     "/admin/admin-users"
   );
 
-  return response.admins.map(toAdminUser);
+  return response.admins
+    .filter((admin) => admin.role !== "manager")
+    .map(toAdminUser);
 }
 
 export async function createAdminUser(
