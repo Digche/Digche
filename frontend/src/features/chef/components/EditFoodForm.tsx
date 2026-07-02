@@ -2,7 +2,7 @@
 
 "use client";
 
-import { ChangeEvent, FormEvent, ReactNode, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, ReactNode, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Save, ImageIcon } from "lucide-react";
@@ -48,6 +48,45 @@ function ingredientsTextToArray(value: string) {
     .filter(Boolean);
 }
 
+function getFoodFormInitialState(
+  food:
+    | {
+        title: string;
+        category: string;
+        price: string;
+        remaining: string;
+        location: string;
+        image: string;
+        description?: string;
+        ingredients?: string[];
+      }
+    | undefined
+): FoodFormState {
+  if (!food) {
+    return {
+      title: "",
+      category: "",
+      price: "",
+      remaining: "",
+      location: "",
+      image: "",
+      description: "",
+      ingredients: "",
+    };
+  }
+
+  return {
+    title: food.title,
+    category: food.category,
+    price: food.price,
+    remaining: food.remaining,
+    location: food.location,
+    image: food.image,
+    description: food.description ?? "",
+    ingredients: ingredientsArrayToText(food.ingredients),
+  };
+}
+
 export default function EditFoodForm({ foodID }: EditFoodFormProps) {
   const router = useRouter();
 
@@ -61,31 +100,9 @@ export default function EditFoodForm({ foodID }: EditFoodFormProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [form, setForm] = useState<FoodFormState>({
-    title: "",
-    category: "",
-    price: "",
-    remaining: "",
-    location: "",
-    image: "",
-    description: "",
-    ingredients: "",
-  });
-
-  useEffect(() => {
-    if (!food) return;
-
-    setForm({
-      title: food.title,
-      category: food.category,
-      price: food.price,
-      remaining: food.remaining,
-      location: food.location,
-      image: food.image,
-      description: food.description ?? "",
-      ingredients: ingredientsArrayToText(food.ingredients),
-    });
-  }, [food]);
+  const [form, setForm] = useState<FoodFormState>(() =>
+    getFoodFormInitialState(food)
+  );
 
   if (!food) {
     return (

@@ -40,3 +40,9 @@ export type AdminSessionResponse = {
 export type AdminMeResponse = {
   admin: AdminApiUser;
 };
+
+
+export type AdminProfileUpdateResponse = {
+  accessToken: string;
+  admin: AdminApiUser;
+};

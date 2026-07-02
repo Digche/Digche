@@ -2,8 +2,9 @@
 
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";import Image from "next/image";
-import { Camera, Info, Pencil, UserRound } from "lucide-react";
+import { ChangeEvent, FormEvent, useRef, useState } from "react";
+import Image from "next/image";
+import { Camera } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import ProfileField from "./ProfileField";
 import ProfileTextarea from "./ProfileTextarea";
@@ -48,10 +49,6 @@ export default function ChefSettingsScreen() {
   const [form, setForm] = useState<SettingsFormState>(() =>
     getSettingsFormFromUser(currentUser)
   );
-
-  useEffect(() => {
-    setForm(getSettingsFormFromUser(currentUser));
-  }, [currentUser]);
 
   if (!currentUser || currentUser.role !== "chef") {
     return (

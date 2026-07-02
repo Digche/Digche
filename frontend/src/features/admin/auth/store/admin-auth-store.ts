@@ -10,6 +10,7 @@ import {
 import type {
   AdminApiUser,
   AdminAuthStatus,
+  AdminProfileUpdateResponse,
   AdminSessionResponse,
   CurrentAdmin,
 } from "../types/admin-auth.types";
@@ -25,6 +26,8 @@ type AdminAuthStore = {
 
   setHasHydrated: (value: boolean) => void;
   setSession: (session: AdminSessionResponse) => void;
+  applyProfileUpdate: (profileUpdate: AdminProfileUpdateResponse) => void;
+  applyProfileUpdate: (profileUpdate: AdminProfileUpdateResponse) => void;
   clearSession: () => void;
   fetchCurrentAdmin: () => Promise<CurrentAdmin | null>;
   refreshSession: () => Promise<AdminSessionResponse | null>;
@@ -82,6 +85,16 @@ export const useAdminAuthStore = create<AdminAuthStore>()(
           currentAdmin: toCurrentAdmin(session.admin),
           accessToken: session.accessToken,
           refreshToken: session.refreshToken,
+          authStatus: "authenticated",
+          authError: null,
+          lastSessionCheckAt: Date.now(),
+        });
+      },
+
+      applyProfileUpdate: (profileUpdate) => {
+        set({
+          currentAdmin: toCurrentAdmin(profileUpdate.admin),
+          accessToken: profileUpdate.accessToken,
           authStatus: "authenticated",
           authError: null,
           lastSessionCheckAt: Date.now(),

@@ -1,6 +1,7 @@
 "use client";
 
 import { MOBILE_NUMBER_MAX_LENGTH } from "@/shared/validation/phone-number";
+import PhoneVerificationGlassBox from "@/shared/ui/PhoneVerificationGlassBox";
 import AdminPanel from "../../components/AdminPanel";
 import AdminProfileBadge from "../../components/AdminProfileBadge";
 import AdminTextInput from "../../components/AdminTextInput";
@@ -16,14 +17,27 @@ export default function AdminSettingsScreen() {
     savedFullName,
     visibleErrors,
     canSubmit,
+    isLoadingProfile,
     isSubmitting,
+    loadError,
+    submitError,
     successMessage,
+    isPhoneModalOpen,
+    phoneVerificationStep,
+    phoneVerificationCode,
+    isPhoneVerificationSubmitting,
+    phoneVerificationError,
+    phoneVerificationResultStatus,
+    phoneVerificationResultMessage,
     updateFirstName,
     updateLastName,
     updatePhone,
     updateUsername,
     updateAvatarFromGallery,
     updateAvatarFromFile,
+    updatePhoneVerificationCode,
+    closePhoneVerification,
+    verifyPhoneVerificationCode,
     markFieldAsTouched,
     handleNameKeyDown,
     handlePhoneKeyDown,
@@ -60,6 +74,12 @@ export default function AdminSettingsScreen() {
           <h1 className="mb-7 mt-5 text-center text-xl font-medium text-gray-950">
             تنظیمات حساب کاربری
           </h1>
+
+          {isLoadingProfile && (
+            <p className="mb-5 rounded-md bg-[#FFF1EA] px-4 py-2 text-center text-sm font-medium text-gray-600">
+              در حال دریافت اطلاعات حساب...
+            </p>
+          )}
 
           <div className="grid grid-cols-1 gap-x-20 gap-y-5 md:grid-cols-2">
             <AdminTextInput
@@ -103,7 +123,7 @@ export default function AdminSettingsScreen() {
               onBlur={() => markFieldAsTouched("phone")}
               onKeyDown={handlePhoneKeyDown}
               error={visibleErrors.phone}
-              helperText="شماره باید با 09 شروع شود و ۱۱ رقم باشد."
+              helperText="برای ذخیره شماره جدید، بعد از زدن ذخیره تغییرات کد تایید می‌گیری."
               placeholder="09123456789"
             />
 
@@ -145,9 +165,39 @@ export default function AdminSettingsScreen() {
                 {successMessage}
               </p>
             )}
+
+            {(loadError || submitError) && (
+              <p className="max-w-[520px] rounded-md bg-red-50 px-4 py-2 text-center text-sm font-medium text-red-500">
+                {loadError || submitError}
+              </p>
+            )}
           </div>
         </form>
       </div>
+
+      <PhoneVerificationGlassBox
+        isOpen={isPhoneModalOpen}
+        step={phoneVerificationStep}
+        title="تایید شماره جدید"
+        description="کد تایید ارسال‌شده به شماره جدید را وارد کن تا شماره ادمین تغییر کند."
+        phone={form.phone}
+        code={phoneVerificationCode}
+        isSubmitting={isPhoneVerificationSubmitting}
+        errorMessage={phoneVerificationError}
+        resultStatus={phoneVerificationResultStatus}
+        resultMessage={phoneVerificationResultMessage}
+        resultAutoCloseMs={2500}
+        phoneLabel="شماره تماس"
+        codeLabel="کد تایید"
+        requestCodeText="دریافت دوباره کد"
+        verifyCodeText="ثبت شماره"
+        onPhoneChange={updatePhone}
+        onCodeChange={updatePhoneVerificationCode}
+        onRequestCode={() => undefined}
+        onVerifyCode={verifyPhoneVerificationCode}
+        onBackToPhone={() => undefined}
+        onClose={closePhoneVerification}
+      />
     </AdminPanel>
   );
 }
