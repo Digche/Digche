@@ -51,6 +51,10 @@ export default function AdminSettingsScreen() {
     handleSubmit,
   } = useAdminSettingsForm();
 
+  const getFieldTextClassName = (
+    field: "firstName" | "lastName" | "phone" | "username"
+  ) => (form[field] === savedProfile[field] ? "text-gray-500" : "text-gray-950");
+
   return (
     <AdminPanel
       className="relative"
@@ -92,6 +96,7 @@ export default function AdminSettingsScreen() {
               label="نام"
               name="firstName"
               value={form.firstName}
+              inputClassName={getFieldTextClassName("firstName")}
               onChange={updateFirstName}
               onBlur={() => markFieldAsTouched("firstName")}
               onKeyDown={handleNameKeyDown}
@@ -104,6 +109,7 @@ export default function AdminSettingsScreen() {
               label="نام خانوادگی"
               name="lastName"
               value={form.lastName}
+              inputClassName={getFieldTextClassName("lastName")}
               onChange={updateLastName}
               onBlur={() => markFieldAsTouched("lastName")}
               onKeyDown={handleNameKeyDown}
@@ -126,6 +132,7 @@ export default function AdminSettingsScreen() {
               pattern="09[0-9]{9}"
               title="برای تغییر شماره موبایل روی این فیلد کلیک کنید."
               value={form.phone}
+              inputClassName={getFieldTextClassName("phone")}
               onChange={() => undefined}
               onFocus={canEditPhone ? openPhoneVerification : showPhoneEditRestriction}
               onClick={canEditPhone ? openPhoneVerification : showPhoneEditRestriction}
@@ -146,6 +153,7 @@ export default function AdminSettingsScreen() {
               pattern="[A-Za-z0-9_]{3,50}"
               title="فقط حروف انگلیسی، اعداد انگلیسی و آندرلاین مجاز هستند."
               value={form.username}
+              inputClassName={getFieldTextClassName("username")}
               onChange={updateUsername}
               onBlur={() => markFieldAsTouched("username")}
               onKeyDown={handleUsernameKeyDown}
