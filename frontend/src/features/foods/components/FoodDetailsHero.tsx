@@ -14,6 +14,7 @@ import {
   CookingPot,
 } from "lucide-react";
 import FoodDetailsActions from "./FoodDetailsActions";
+import { toPersianDigits } from "@/shared/utils/persian-number";
 
 interface FoodDetailsHeroProps {
   food: {
@@ -160,7 +161,7 @@ export default function FoodDetailsHero({
 
             <div className="mt-3 flex items-center justify-start gap-3">
               <span className="text-base font-bold text-gray-600">
-                {food.rating}
+                {toPersianDigits(food.rating)}
               </span>
 
               <RatingStars rating={food.rating} />
@@ -174,24 +175,27 @@ export default function FoodDetailsHero({
 
             <div className="mt-7 grid grid-cols-2 gap-4">
               <InfoPill
-                icon={<ChefHat size={21} className="text-[#D48B8B]" />}
+                icon={<ChefHat size={21} className="text-[#D48B8B]" />}               
+                label="آشپز"
                 value={food.chef}
               />
 
               <InfoPill
                 icon={<MapPin size={21} className="text-orange-400" />}
+                label="شهر"
                 value={food.location}
               />
 
               <InfoPill
                 icon={<PackageCheck size={21} className="text-emerald-500" />}
-                value={food.remaining}
+                label="باقیمانده"
+                value={toPersianDigits(food.remaining)}
               />
 
               <InfoPill
                 icon={<Wallet size={21} className="text-gray-400" />}
                 label="قیمت"
-                value={priceText}
+                value={toPersianDigits(priceText)}
                 strong
               />
             </div>
@@ -233,7 +237,7 @@ export default function FoodDetailsHero({
 
           <div className="mt-3 flex items-center justify-start gap-3">
             <span className="text-base font-bold text-gray-600">
-              {food.rating}
+              {toPersianDigits(food.rating)}
             </span>
 
             <RatingStars rating={food.rating} />
@@ -260,13 +264,13 @@ export default function FoodDetailsHero({
 
             <InfoPill
               icon={<PackageCheck size={20} className="text-emerald-500" />}
-              value={food.remaining}
+              value={toPersianDigits(food.remaining)}
             />
 
             <InfoPill
               icon={<Wallet size={20} className="text-gray-400" />}
               label="قیمت"
-              value={priceText}
+              value={toPersianDigits(priceText)}
               strong
             />
           </div>

@@ -21,6 +21,7 @@ import {
   getAddressTitleFromAddress,
   getProvinceCityFromAddress,
 } from "@/shared/location/location-text";
+import { toPersianDigits } from "@/shared/utils/persian-number";
 
 type CustomerAddressesScreenProps = {
   returnTo?: string;
@@ -318,12 +319,12 @@ export default function CustomerAddressesScreen({
               </div>
 
               <h2 className="mt-1 text-sm font-extrabold text-gray-950">
-                {getAddressTitleFromAddress(getAddressFullLine(selectedAddress))}
+                {toPersianDigits(getAddressTitleFromAddress(getAddressFullLine(selectedAddress)))}
               </h2>
 
 
               <p className="mt-1 text-sm leading-7 text-gray-700">
-                {getAddressDisplayLine(getAddressFullLine(selectedAddress))}
+                {toPersianDigits(getAddressDisplayLine(getAddressFullLine(selectedAddress)))}
               </p>
             </div>
           )}

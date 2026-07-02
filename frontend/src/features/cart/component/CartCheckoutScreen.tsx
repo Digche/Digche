@@ -12,6 +12,7 @@ import {
   getAddressDetailsFromAddress,
   getProvinceCityFromAddress,
 } from "@/shared/location/location-text";
+import { toPersianDigits } from "@/shared/utils/persian-number";
 
 const toEnglishDigits = (value: string) => {
   return value
@@ -179,7 +180,7 @@ export default function CartCheckoutScreen() {
                 <MapPin size={18} className="text-[#D16565]" />
 
                 <p className="text-sm font-bold text-gray-950">
-                  تحویل به: خانه
+                  تحویل به: 
                 </p>
               </div>
 
@@ -193,7 +194,7 @@ export default function CartCheckoutScreen() {
 
                   {addressView.details && (
                     <p className="mt-1 text-sm text-gray-800">
-                      {addressView.details}
+                      {toPersianDigits(addressView.details)}
                     </p>
                   )}
                 </>
@@ -208,7 +209,7 @@ export default function CartCheckoutScreen() {
               </p>
 
               <p className="mt-1 text-sm text-gray-800">
-                شماره تماس: {receiverPhone}
+                شماره تماس: {(receiverPhone)}
               </p>
             </div>
 
@@ -230,7 +231,7 @@ export default function CartCheckoutScreen() {
             <div className="flex items-center justify-between">
               <span className="text-gray-500">تعداد محصولات</span>
               <span className="font-bold text-gray-900">
-                {summary.totalQuantity} عدد
+                {toPersianDigits(summary.totalQuantity)} عدد
               </span>
             </div>
 

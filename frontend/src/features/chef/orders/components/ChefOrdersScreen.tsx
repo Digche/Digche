@@ -121,7 +121,7 @@ export default function ChefOrdersScreen() {
                 </div>
               </div>
 
-              <p className="mt-2 text-sm text-gray-500">{today}</p>
+              <p dir="rtl" className="mt-2 text-sm text-gray-500">{today}</p>
             </div>
           </div>
 

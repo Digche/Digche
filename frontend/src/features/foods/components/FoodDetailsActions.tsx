@@ -18,6 +18,7 @@ import { useDeleteChefFood } from "@/features/chef/hooks/use-delete-chef-food";
 import { useAddCartItem } from "@/features/cart/hooks/use-add-cart-item";
 import { useRemoveCartItem } from "@/features/cart/hooks/use-remove-cart-item";
 import { useSetCartItemQuantity } from "@/features/cart/hooks/use-set-cart-item-quantity";
+import { toPersianDigits } from "@/shared/utils/persian-number";
 
 interface FoodDetailsActionsProps {
   food: Food;
@@ -274,7 +275,7 @@ export default function FoodDetailsActions({
           </button>
 
           <span className="min-w-8 text-center text-lg font-bold text-gray-900">
-            {quantity}
+            {toPersianDigits(quantity)}
           </span>
 
           <button

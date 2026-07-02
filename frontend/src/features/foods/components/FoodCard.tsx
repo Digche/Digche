@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Star, MapPin } from "lucide-react";
 import FoodCardActions from "./FoodCardActions";
 import type { Food } from "../types/food.types";
+import { toPersianDigits } from "@/shared/utils/persian-number";
 
 interface FoodCardProps {
   item: Food;
@@ -96,14 +97,14 @@ export default function FoodCard({
 
               <div className="flex shrink-0 items-center gap-1 text-yellow-500">
                 <span className="text-xs font-bold text-gray-700">
-                  {item.rating}
+                  {toPersianDigits(item.rating)}
                 </span>
                 <Star size={13} fill="currentColor" />
               </div>
             </div>
 
             <p className="mt-1 truncate text-xs text-gray-500">
-              {item.remaining}
+              {toPersianDigits(item.remaining)}
             </p>
 
             <p className="mt-1 flex items-center justify-end gap-1 text-xs text-gray-500">
@@ -117,7 +118,7 @@ export default function FoodCard({
             className="mt-2 flex items-center justify-between gap-2 border-t border-gray-200 pt-2"
           >
             <span className="truncate text-sm font-bold text-gray-900">
-              {item.price}
+              {toPersianDigits(item.price)}
               {item.unit && (
                 <span className="mr-1 text-xs font-normal text-gray-500">
                   {item.unit}
@@ -176,14 +177,14 @@ export default function FoodCard({
 
           <div className="flex shrink-0 items-center gap-1 text-yellow-500">
             <span className="text-sm font-bold text-gray-700">
-              {item.rating}
+              {toPersianDigits(item.rating)}
             </span>
             <Star size={14} fill="currentColor" />
           </div>
         </div>
 
         <div className="mb-5 space-y-1 text-sm text-gray-600 sm:mb-6">
-          <p className="truncate">{item.remaining}</p>
+          <p className="truncate">{toPersianDigits(item.remaining)}</p>
           <p className="truncate">{item.chef}</p>
 
           <p className="flex items-center justify-end gap-1">
@@ -203,7 +204,7 @@ export default function FoodCard({
           />
 
           <span dir="rtl" className="text-left text-lg font-bold text-gray-900 min-[420px]:text-right">
-                        {item.price}
+                        {toPersianDigits(item.price)}
 
             {item.unit && (
               <span className="ml-1 text-sm font-normal">{" "}{item.unit}</span>

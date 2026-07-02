@@ -9,6 +9,7 @@ import SearchInput from "@/shared/components/SearchInput";
 import FoodCard from "@/features/foods/components/FoodCard";
 import { useAuthStore } from "@/store/auth-store";
 import { useChefFoods } from "../../hooks/use-chef-foods";
+import { toPersianDigits } from "@/shared/utils/persian-number";
 
 export default function ChefFoodsScreen() {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -95,7 +96,7 @@ export default function ChefFoodsScreen() {
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              تعداد غذاهای شما: {chefFoods.length}
+              تعداد غذاهای شما: {toPersianDigits(chefFoods.length)}
             </p>
           </div>
         </div>

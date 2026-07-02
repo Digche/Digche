@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import ProvinceCityDropdown from "@/shared/location/ProvinceCityDropdown";
 import { buildFullAddress } from "@/shared/location/location-text";
 import type { CustomerAddressPayload } from "../types/customer-address.types";
+import { toPersianDigits } from "@/shared/utils/persian-number";
 
 type AddressFormInitialValues = {
   title?: string;
@@ -100,7 +101,7 @@ export default function AddressForm({
             </div>
           ) : (
             <input
-              value={title}
+              value={toPersianDigits(title)}
               onChange={(event) => setTitle(event.target.value)}
               disabled={isSubmitting}
               placeholder="خانه، محل کار..."
@@ -146,7 +147,7 @@ export default function AddressForm({
         </span>
 
         <textarea
-          value={details}
+          value={toPersianDigits(details)}
           onChange={(event) => setDetails(event.target.value)}
           disabled={isSubmitting}
           rows={4}
