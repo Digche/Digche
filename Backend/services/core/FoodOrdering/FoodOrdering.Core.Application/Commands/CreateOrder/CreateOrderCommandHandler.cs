@@ -37,7 +37,7 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
         // 2. اعتبارسنجی آدرس (بهبود یافته)
         if (string.IsNullOrWhiteSpace(dto.DeliveryAddress))
             return Result<OrderDto>.Failure("آدرس تحویل نمی‌تواند خالی باشد.");
-        
+
         if (dto.DeliveryAddress.Length < 10) // حداقل طول آدرس
             return Result<OrderDto>.Failure("آدرس تحویل باید حداقل ۱۰ کاراکتر باشد.");
 
@@ -48,8 +48,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
         // if (chef.Status != ChefProfileStatus.Approved)
         //     return Result<OrderDto>.Failure("آشپز تأیید نشده است.");
 
-        var deliveryFee = 100; 
-        
+        var deliveryFee = 100;
+
         // 4. دریافت سبد خرید کاربر
         var cart = await _cartRepository.GetByUserIdWithItemsAsync(customerId, cancellationToken);
         if (cart is null || !cart.Items.Any())
@@ -69,7 +69,7 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
             var dish = await _dishRepository.GetByIdAsync(cartItem.DishId, cancellationToken);
             if (dish is null)
                 return Result<OrderDto>.Failure($"غذایی با شناسه {cartItem.DishId} یافت نشد.");
-            
+
             if (!dish.IsAvailable || !dish.HasEnoughStock(cartItem.Quantity))
                 return Result<OrderDto>.Failure($"غذای '{dish.Name}' موجود نیست یا موجودی کافی نیست.");
 

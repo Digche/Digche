@@ -63,13 +63,13 @@ public class AddDishCommandHandler : IRequestHandler<AddDishCommand, Result<Guid
         // 5. تنظیم فیلدهای اختیاری
         if (!string.IsNullOrWhiteSpace(dto.Ingredients))
             dish.SetIngredients(dto.Ingredients);
-        
+
         if (!string.IsNullOrWhiteSpace(dto.Image))
             dish.SetImageUrl(dto.Image);
 
         // 6. ذخیره
         await _dishRepository.AddAsync(dish, cancellationToken);
-        
+
         return Result<Guid>.Success(dish.Id);
     }
 }

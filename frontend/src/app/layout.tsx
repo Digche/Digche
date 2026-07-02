@@ -20,7 +20,7 @@ export default function RootLayout({
             <ReactQueryProvider>
           <div className="h-screen w-screen gap-15 overflow-x-hidden">
             {children}
-          </div>  
+          </div>
           </ReactQueryProvider>
 
         </AuthSessionProvider>

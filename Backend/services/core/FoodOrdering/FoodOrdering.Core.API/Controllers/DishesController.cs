@@ -31,7 +31,7 @@ public class DishesController : ControllerBase
         if (!result.IsSuccess)
             return BadRequest(new { message = result.ErrorMessage });
 
-        return Ok(result); 
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]

@@ -58,5 +58,5 @@ public class DishRepository : IDishRepository
             throw new InvalidOperationException("این غذا در سفارشات یا سبد خرید کاربران استفاده شده و قابل حذف نیست.");
         }
     }
-    
+
 }

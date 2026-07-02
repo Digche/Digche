@@ -12,10 +12,19 @@ import {
   isValidUsername,
   sanitizeUsername,
 } from "@/shared/validation/username";
+import type {
+  PhoneVerificationResultStatus,
+  PhoneVerificationStep,
+} from "@/shared/ui/PhoneVerificationGlassBox";
 import {
   isDigitKey,
   sanitizePersonalName,
 } from "../../utils/personal-name";
+import {
+  createAdminUser,
+  requestNewAdminPhoneCode,
+  verifyNewAdminPhoneCode,
+} from "../../services/admin-dashboard-api";
 
 type AddAdminFormState = {
   firstName: string;
@@ -59,7 +68,7 @@ function validateAddAdminForm(form: AddAdminFormState): AddAdminFormErrors {
   }
 
   if (!phone) {
-    errors.phone = "شماره موبایل را وارد کنید.";
+    errors.phone = "شماره موبایل را تایید کنید.";
   } else if (!phone.startsWith("09")) {
     errors.phone = "شماره موبایل باید با 09 شروع شود.";
   } else if (phone.length !== 11) {
@@ -84,6 +93,20 @@ export function useAddAdminForm() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
+
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const [phoneVerificationStep, setPhoneVerificationStep] =
+    useState<PhoneVerificationStep>("phone");
+  const [pendingPhone, setPendingPhone] = useState("");
+  const [phoneVerificationCode, setPhoneVerificationCode] = useState("");
+  const [isPhoneVerificationSubmitting, setIsPhoneVerificationSubmitting] =
+    useState(false);
+  const [phoneVerificationError, setPhoneVerificationError] = useState("");
+  const [phoneVerificationResultStatus, setPhoneVerificationResultStatus] =
+    useState<PhoneVerificationResultStatus>("idle");
+  const [phoneVerificationResultMessage, setPhoneVerificationResultMessage] =
+    useState("");
 
   const errors = useMemo(() => validateAddAdminForm(form), [form]);
 
@@ -105,6 +128,7 @@ export function useAddAdminForm() {
 
   const updateField = (field: keyof AddAdminFormState, value: string) => {
     setSuccessMessage("");
+    setSubmitError("");
 
     setForm((prevForm) => ({
       ...prevForm,
@@ -133,6 +157,94 @@ export function useAddAdminForm() {
 
   const updateUsername = (value: string) => {
     updateField("username", sanitizeUsername(value));
+  };
+
+  const openPhoneVerification = () => {
+    setPendingPhone(form.phone);
+    setPhoneVerificationCode("");
+    setPhoneVerificationStep("phone");
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+    setIsPhoneModalOpen(true);
+    markFieldAsTouched("phone");
+  };
+
+  const closePhoneVerification = () => {
+    if (isPhoneVerificationSubmitting) {
+      return;
+    }
+
+    setIsPhoneModalOpen(false);
+    setPhoneVerificationStep("phone");
+    setPhoneVerificationCode("");
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+  };
+
+  const requestPhoneVerificationCode = async () => {
+    const normalizedPhone = sanitizePhoneNumber(pendingPhone);
+
+    if (!isValidIranMobileNumber(normalizedPhone)) {
+      setPhoneVerificationError("شماره موبایل معتبر نیست.");
+      return;
+    }
+
+    setIsPhoneVerificationSubmitting(true);
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+
+    try {
+      await requestNewAdminPhoneCode(normalizedPhone);
+      setPendingPhone(normalizedPhone);
+      setPhoneVerificationCode("");
+      setPhoneVerificationStep("verification");
+    } catch (error) {
+      setPhoneVerificationError(
+        error instanceof Error
+          ? error.message
+          : "ارسال کد تایید انجام نشد."
+      );
+    } finally {
+      setIsPhoneVerificationSubmitting(false);
+    }
+  };
+
+  const verifyPhoneVerificationCode = async () => {
+    const normalizedPhone = sanitizePhoneNumber(pendingPhone);
+    const normalizedCode = phoneVerificationCode.trim();
+
+    if (!/^\d{4,6}$/.test(normalizedCode)) {
+      setPhoneVerificationError("کد تایید باید بین ۴ تا ۶ رقم باشد.");
+      return;
+    }
+
+    setIsPhoneVerificationSubmitting(true);
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+
+    try {
+      const result = await verifyNewAdminPhoneCode(
+        normalizedPhone,
+        normalizedCode
+      );
+
+      updatePhone(result.phone);
+      setPhoneVerificationResultStatus("success");
+      setPhoneVerificationResultMessage("شماره ادمین جدید با موفقیت تایید شد.");
+    } catch (error) {
+      setPhoneVerificationResultStatus("error");
+      setPhoneVerificationResultMessage(
+        error instanceof Error
+          ? error.message
+          : "تایید شماره انجام نشد. دوباره تلاش کنید."
+      );
+    } finally {
+      setIsPhoneVerificationSubmitting(false);
+    }
   };
 
   const handleNameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -176,6 +288,7 @@ export function useAddAdminForm() {
     setSubmitAttempted(true);
     setTouchedFields(allTouchedFields);
     setSuccessMessage("");
+    setSubmitError("");
 
     const currentErrors = validateAddAdminForm(form);
 
@@ -186,14 +299,23 @@ export function useAddAdminForm() {
     setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => {
-        window.setTimeout(resolve, 700);
+      await createAdminUser({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        username: form.username.trim(),
+        phone: form.phone.trim(),
       });
 
       setSuccessMessage("اطلاعات ادمین جدید با موفقیت ثبت شد.");
       setForm(initialFormState);
       setTouchedFields({});
       setSubmitAttempted(false);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "افزودن ادمین انجام نشد. دوباره تلاش کنید."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -205,11 +327,26 @@ export function useAddAdminForm() {
     isFormValid,
     isSubmitting,
     successMessage,
+    submitError,
+    isPhoneModalOpen,
+    phoneVerificationStep,
+    pendingPhone,
+    phoneVerificationCode,
+    isPhoneVerificationSubmitting,
+    phoneVerificationError,
+    phoneVerificationResultStatus,
+    phoneVerificationResultMessage,
     updateFirstName,
     updateLastName,
     updatePhone,
     updateUsername,
+    updatePendingPhone: setPendingPhone,
+    updatePhoneVerificationCode: setPhoneVerificationCode,
     markFieldAsTouched,
+    openPhoneVerification,
+    closePhoneVerification,
+    requestPhoneVerificationCode,
+    verifyPhoneVerificationCode,
     handleNameKeyDown,
     handlePhoneKeyDown,
     handleUsernameKeyDown,

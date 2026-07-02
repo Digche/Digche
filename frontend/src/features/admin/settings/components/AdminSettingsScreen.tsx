@@ -1,6 +1,7 @@
 "use client";
 
 import { MOBILE_NUMBER_MAX_LENGTH } from "@/shared/validation/phone-number";
+import PhoneVerificationGlassBox from "@/shared/ui/PhoneVerificationGlassBox";
 import AdminPanel from "../../components/AdminPanel";
 import AdminProfileBadge from "../../components/AdminProfileBadge";
 import AdminTextInput from "../../components/AdminTextInput";
@@ -16,20 +17,43 @@ export default function AdminSettingsScreen() {
     savedFullName,
     visibleErrors,
     canSubmit,
+    isLoadingProfile,
     isSubmitting,
+    loadError,
+    submitError,
     successMessage,
+    canEditPhone,
+    phoneEditRestrictionMessage,
+    isPhoneModalOpen,
+    phoneVerificationStep,
+    pendingPhone,
+    phoneVerificationCode,
+    isPhoneVerificationSubmitting,
+    phoneVerificationError,
+    phoneVerificationResultStatus,
+    phoneVerificationResultMessage,
     updateFirstName,
     updateLastName,
     updatePhone,
     updateUsername,
     updateAvatarFromGallery,
     updateAvatarFromFile,
+    updatePhoneVerificationCode,
+    openPhoneVerification,
+    requestPhoneVerificationCode,
+    closePhoneVerification,
+    verifyPhoneVerificationCode,
+    backToPhoneStep,
+    showPhoneEditRestriction,
     markFieldAsTouched,
     handleNameKeyDown,
-    handlePhoneKeyDown,
     handleUsernameKeyDown,
     handleSubmit,
   } = useAdminSettingsForm();
+
+  const getFieldTextClassName = (
+    field: "firstName" | "lastName" | "phone" | "username"
+  ) => (form[field] === savedProfile[field] ? "text-gray-500" : "text-gray-950");
 
   return (
     <AdminPanel
@@ -61,11 +85,18 @@ export default function AdminSettingsScreen() {
             تنظیمات حساب کاربری
           </h1>
 
+          {isLoadingProfile && (
+            <p className="mb-5 rounded-md bg-[#FFF1EA] px-4 py-2 text-center text-sm font-medium text-gray-600">
+              در حال دریافت اطلاعات حساب...
+            </p>
+          )}
+
           <div className="grid grid-cols-1 gap-x-20 gap-y-5 md:grid-cols-2">
             <AdminTextInput
               label="نام"
               name="firstName"
               value={form.firstName}
+              inputClassName={getFieldTextClassName("firstName")}
               onChange={updateFirstName}
               onBlur={() => markFieldAsTouched("firstName")}
               onKeyDown={handleNameKeyDown}
@@ -78,6 +109,7 @@ export default function AdminSettingsScreen() {
               label="نام خانوادگی"
               name="lastName"
               value={form.lastName}
+              inputClassName={getFieldTextClassName("lastName")}
               onChange={updateLastName}
               onBlur={() => markFieldAsTouched("lastName")}
               onKeyDown={handleNameKeyDown}
@@ -94,16 +126,19 @@ export default function AdminSettingsScreen() {
               autoComplete="tel"
               autoCorrect="off"
               spellCheck={false}
+              readOnly
               maxLength={MOBILE_NUMBER_MAX_LENGTH}
               minLength={MOBILE_NUMBER_MAX_LENGTH}
               pattern="09[0-9]{9}"
-              title="شماره موبایل باید با 09 شروع شود و دقیقاً 11 رقم باشد."
+              title="برای تغییر شماره موبایل روی این فیلد کلیک کنید."
               value={form.phone}
-              onChange={updatePhone}
+              inputClassName={getFieldTextClassName("phone")}
+              onChange={() => undefined}
+              onFocus={canEditPhone ? openPhoneVerification : showPhoneEditRestriction}
+              onClick={canEditPhone ? openPhoneVerification : showPhoneEditRestriction}
               onBlur={() => markFieldAsTouched("phone")}
-              onKeyDown={handlePhoneKeyDown}
               error={visibleErrors.phone}
-              helperText="شماره باید با 09 شروع شود و ۱۱ رقم باشد."
+              helperText={phoneEditRestrictionMessage || undefined}
               placeholder="09123456789"
             />
 
@@ -118,6 +153,7 @@ export default function AdminSettingsScreen() {
               pattern="[A-Za-z0-9_]{3,50}"
               title="فقط حروف انگلیسی، اعداد انگلیسی و آندرلاین مجاز هستند."
               value={form.username}
+              inputClassName={getFieldTextClassName("username")}
               onChange={updateUsername}
               onBlur={() => markFieldAsTouched("username")}
               onKeyDown={handleUsernameKeyDown}
@@ -145,9 +181,43 @@ export default function AdminSettingsScreen() {
                 {successMessage}
               </p>
             )}
+
+            {(loadError || submitError) && (
+              <p className="max-w-[520px] rounded-md bg-red-50 px-4 py-2 text-center text-sm font-medium text-red-500">
+                {loadError || submitError}
+              </p>
+            )}
           </div>
         </form>
       </div>
+
+      <PhoneVerificationGlassBox
+        isOpen={isPhoneModalOpen}
+        step={phoneVerificationStep}
+        title="ویرایش شماره موبایل"
+        description={
+          phoneVerificationStep === "phone"
+            ? "شماره موبایل جدید را وارد کنید تا کد تایید برایتان ارسال شود."
+            : "کد تایید ارسال‌شده به شماره جدید را وارد کنید."
+        }
+        phone={pendingPhone}
+        code={phoneVerificationCode}
+        isSubmitting={isPhoneVerificationSubmitting}
+        errorMessage={phoneVerificationError}
+        resultStatus={phoneVerificationResultStatus}
+        resultMessage={phoneVerificationResultMessage}
+        resultAutoCloseMs={2200}
+        phoneLabel="شماره موبایل جدید"
+        codeLabel="کد تایید"
+        requestCodeText="دریافت کد تایید"
+        verifyCodeText="تایید شماره"
+        onPhoneChange={updatePhone}
+        onCodeChange={updatePhoneVerificationCode}
+        onRequestCode={requestPhoneVerificationCode}
+        onVerifyCode={verifyPhoneVerificationCode}
+        onBackToPhone={backToPhoneStep}
+        onClose={closePhoneVerification}
+      />
     </AdminPanel>
   );
 }

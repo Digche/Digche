@@ -101,7 +101,7 @@ export const useOrderStore = create<OrderStore>()(
           orders: createFakeOrders(Number(chefId)),
         });
       },
-      
+
       seedFakeCustomerOrders: (customerId) => {
         set({
           orders: createFakeCustomerOrders(Number(customerId)),

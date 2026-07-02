@@ -47,7 +47,6 @@ async function sendAdminApiRequest<ResponseBody>(
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
       cache: options.cache ?? "no-store",
-      credentials: "include",
       headers,
       body,
     });

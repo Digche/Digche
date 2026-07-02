@@ -34,7 +34,7 @@ public class GetAvailableDishesQueryHandler : IRequestHandler<GetAvailableDishes
         var dtos = dishes.Select(d =>
         {
             var userInfo = userTasks.TryGetValue(d.ChefId, out var task) ? task.Result : null;
-            
+
             // استخراج نام و شهر
             string? chefCity = null;
             string? chefName = null;

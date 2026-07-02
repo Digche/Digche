@@ -18,7 +18,7 @@ public class GetDishesByChefIdQueryHandler : IRequestHandler<GetDishesByChefIdQu
     {
         // دریافت غذاهای آشپز (همه، شامل غیرفعال)
         var dishes = await _dishRepository.GetByChefIdAsync(request.ChefId, cancellationToken);
-        
+
         if (dishes == null || !dishes.Any())
             return Result<IEnumerable<DishDto>>.Success(Enumerable.Empty<DishDto>());
 

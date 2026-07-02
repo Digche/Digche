@@ -1,8 +1,7 @@
 "use client";
 
-import {
-  MOBILE_NUMBER_MAX_LENGTH,
-} from "@/shared/validation/phone-number";
+import { MOBILE_NUMBER_MAX_LENGTH } from "@/shared/validation/phone-number";
+import PhoneVerificationGlassBox from "@/shared/ui/PhoneVerificationGlassBox";
 import AdminPanel from "../../components/AdminPanel";
 import AdminProfileBadge from "../../components/AdminProfileBadge";
 import AdminTextInput from "../../components/AdminTextInput";
@@ -15,11 +14,25 @@ export default function AdminAddAdminScreen() {
     isFormValid,
     isSubmitting,
     successMessage,
+    submitError,
+    isPhoneModalOpen,
+    phoneVerificationStep,
+    pendingPhone,
+    phoneVerificationCode,
+    isPhoneVerificationSubmitting,
+    phoneVerificationError,
+    phoneVerificationResultStatus,
+    phoneVerificationResultMessage,
     updateFirstName,
     updateLastName,
-    updatePhone,
+    updatePendingPhone,
+    updatePhoneVerificationCode,
     updateUsername,
     markFieldAsTouched,
+    openPhoneVerification,
+    closePhoneVerification,
+    requestPhoneVerificationCode,
+    verifyPhoneVerificationCode,
     handleNameKeyDown,
     handlePhoneKeyDown,
     handleUsernameKeyDown,
@@ -76,16 +89,22 @@ export default function AdminAddAdminScreen() {
               autoComplete="tel"
               autoCorrect="off"
               spellCheck={false}
+              readOnly
               maxLength={MOBILE_NUMBER_MAX_LENGTH}
               minLength={MOBILE_NUMBER_MAX_LENGTH}
               pattern="09[0-9]{9}"
-              title="شماره موبایل باید با 09 شروع شود و دقیقاً 11 رقم باشد."
+              title="برای ثبت شماره، ابتدا شماره را با کد تایید تایید کنید."
               value={form.phone}
-              onChange={updatePhone}
-              onBlur={() => markFieldAsTouched("phone")}
+              onChange={() => undefined}
+              onFocus={openPhoneVerification}
+              onClick={openPhoneVerification}
               onKeyDown={handlePhoneKeyDown}
               error={visibleErrors.phone}
-              helperText="شماره باید با 09 شروع شود و ۱۱ رقم باشد."
+              helperText={
+                form.phone
+                  ? "شماره تایید شده است."
+                  : "برای وارد کردن شماره، روی این فیلد کلیک کنید و کد تایید بگیرید."
+              }
               placeholder="09123456789"
             />
 
@@ -127,9 +146,41 @@ export default function AdminAddAdminScreen() {
                 {successMessage}
               </p>
             )}
+
+            {submitError && (
+              <p className="max-w-[520px] rounded-md bg-red-50 px-4 py-2 text-center text-sm font-medium text-red-500">
+                {submitError}
+              </p>
+            )}
           </div>
         </form>
       </div>
+
+      <PhoneVerificationGlassBox
+        isOpen={isPhoneModalOpen}
+        step={phoneVerificationStep}
+        title="تایید شماره ادمین جدید"
+        description="شماره تماس ادمین جدید را وارد کنید، کد تایید را بگیرید و سپس شماره را ثبت کنید."
+        phone={pendingPhone}
+        code={phoneVerificationCode}
+        isSubmitting={isPhoneVerificationSubmitting}
+        errorMessage={phoneVerificationError}
+        resultStatus={phoneVerificationResultStatus}
+        resultMessage={phoneVerificationResultMessage}
+        resultAutoCloseMs={2500}
+        phoneLabel="شماره تماس"
+        codeLabel="کد تایید"
+        requestCodeText="دریافت کد تایید"
+        verifyCodeText="ثبت شماره"
+        onPhoneChange={updatePendingPhone}
+        onCodeChange={updatePhoneVerificationCode}
+        onRequestCode={requestPhoneVerificationCode}
+        onVerifyCode={verifyPhoneVerificationCode}
+        onBackToPhone={() => {
+          updatePhoneVerificationCode("");
+        }}
+        onClose={closePhoneVerification}
+      />
     </AdminPanel>
   );
 }

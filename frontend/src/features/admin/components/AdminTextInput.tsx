@@ -14,6 +14,7 @@ type AdminTextInputProps = Omit<
   error?: string;
   helperText?: string;
   className?: string;
+  inputClassName?: string;
 };
 
 export default function AdminTextInput({
@@ -28,6 +29,7 @@ export default function AdminTextInput({
   type = "text",
   name,
   className = "",
+  inputClassName = "text-gray-950",
   ...props
 }: AdminTextInputProps) {
   const inputId = id ?? name;
@@ -63,7 +65,7 @@ export default function AdminTextInput({
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
           aria-describedby={hasDescription ? descriptionId : undefined}
-          className={`h-full min-w-0 flex-1 bg-transparent pr-3 text-right text-sm text-gray-950 outline-none placeholder:text-gray-400 selection:bg-[#FFD8C4] selection:text-gray-950 ${
+          className={`h-full min-w-0 flex-1 bg-transparent pr-3 text-right text-sm ${inputClassName} outline-none placeholder:text-gray-400 selection:bg-[#FFD8C4] selection:text-gray-950 ${
             error
               ? "[&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_#FEF2F2_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:#111827]"
               : "[&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_#FFF1EA_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:#111827]"

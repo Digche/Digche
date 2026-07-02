@@ -53,7 +53,7 @@ function getSettingsFormFromUser(
   defaultAvatar: string
 ): SettingsFormState {
   return {
-    name: user?.firstName ?? user?.name ?? "", 
+    name: user?.firstName ?? user?.name ?? "",
     lastName: user?.lastName ?? "",
     username: user?.username ?? "",
     phone: user?.phone ?? "",

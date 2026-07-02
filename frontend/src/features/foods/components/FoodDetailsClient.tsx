@@ -85,7 +85,7 @@ export default function FoodDetailsClient({ foodID }: FoodDetailsClientProps) {
           foodId={foodID}
           comments={comments}
           canComment={currentUser?.role === "customer"}
-        />     
+        />
       )}
     </>
   );

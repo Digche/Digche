@@ -17,7 +17,7 @@ public class UserContext : IUserContext
     public bool TryGetCurrentUserId(out Guid userId)
     {
         userId = Guid.Empty;
-        
+
         var user = _httpContextAccessor.HttpContext?.User;
         if (user == null || !user.Identity?.IsAuthenticated == true)
             return false;

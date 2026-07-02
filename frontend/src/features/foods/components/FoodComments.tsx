@@ -220,7 +220,7 @@ export default function FoodComments({
           {comments.map((comment) => {
             const avatarSrc = getSafeAvatarSrc(comment.userAvatar);
             const displayUserName = getSafeCommentUserName(comment);
-            
+
             return (
               <article
                 key={comment.id}
