@@ -156,7 +156,7 @@ export default function ChefDashboardScreen() {
     localDashboardData.activeFoodsCount;
 
   return (
-    <section dir="rtl" className="relative h-full overflow-hidden">
+    <section dir="rtl" className="relative h-full overflow-y-auto lg:overflow-hidden">
       <div className="h-full px-7 py-6 lg:px-9">
         <div className="flex items-start justify-between gap-5">
           <div className="text-right">
@@ -199,7 +199,7 @@ export default function ChefDashboardScreen() {
         </div>
 
         <div className="mt-14 flex justify-center">
-          <div className="grid grid-cols-2 gap-x-5 gap-y-5">
+          <div className="grid w-full max-w-[520px] lg:grid-cols-2 sm:grid-cols-1 gap-y-5 sm:gap-5">
             <DashboardStatCard
               title="درآمد این ماه"
               value={formatNumber(monthlyIncome)}

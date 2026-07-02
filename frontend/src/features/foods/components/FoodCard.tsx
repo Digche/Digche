@@ -28,8 +28,6 @@ export default function FoodCard({
   canAddToCart,
   isClickable = false,
 }: FoodCardProps) {
-  console.log("Food image:", item.image);
-
   const router = useRouter();
 
   const resolvedCanEditFood = canEditFood ?? variant === "chef";
@@ -38,15 +36,17 @@ export default function FoodCard({
   const isScroll = display === "scroll";
   const isCompact = display === "compact";
 
+  const foodDetailsHref = `/foods/${item.id}`;
+
   const cardClass = isScroll
-    ? "min-w-[260px] sm:min-w-[300px] md:min-w-[320px]"
-    : "w-full";
+    ? "w-[286px] min-w-[286px] max-w-[300px] snap-start sm:w-[300px] sm:min-w-[300px]"
+    : "w-full min-w-0"
 
   const imageClass = isCompact
     ? "relative aspect-square w-28 shrink-0 overflow-hidden sm:w-32"
     : isScroll
-      ? "relative h-[230px] w-full sm:h-[248px]"
-      : "relative aspect-[4/3] w-full";
+      ? "relative h-[218px] w-full overflow-hidden sm:h-[226px]"
+      : "relative aspect-[4/3] w-full overflow-hidden";
 
   const clickableClasses = isClickable
     ? "cursor-pointer hover:-translate-y-0.5"
@@ -55,7 +55,7 @@ export default function FoodCard({
   const goToFoodDetails = () => {
     if (!isClickable) return;
 
-    router.push(`/foods/${item.id}`);
+    router.push(foodDetailsHref);
   };
 
   const stopCardClick = (event: MouseEvent<HTMLElement>) => {
@@ -70,7 +70,7 @@ export default function FoodCard({
         className={`flex w-full gap-3 overflow-hidden rounded-3xl border border-gray-100 bg-white p-2 shadow-sm transition hover:shadow-md ${clickableClasses}`}
       >
         <Link
-          href={`/foods/${item.id}`}
+          href={foodDetailsHref}
           onClick={isClickable ? stopCardClick : undefined}
           className={imageClass}
         >
@@ -86,7 +86,7 @@ export default function FoodCard({
           <div>
             <div className="flex items-start justify-between gap-2">
               <Link
-                href={`/foods/${item.id}`}
+                href={foodDetailsHref}
                 onClick={isClickable ? stopCardClick : undefined}
                 className="min-w-0"
               >
@@ -108,8 +108,8 @@ export default function FoodCard({
             </p>
 
             <p className="mt-1 flex items-center justify-end gap-1 text-xs text-gray-500">
-              {item.location}
-              <MapPin size={13} className="text-orange-400" />
+              <span className="truncate">{item.location}</span>
+              <MapPin size={13} className="shrink-0 text-orange-400" />
             </p>
           </div>
 
@@ -142,10 +142,10 @@ export default function FoodCard({
     <article
       dir="rtl"
       onClick={goToFoodDetails}
-      className={`${cardClass} bg- snap-start overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md ${clickableClasses}`}
+      className={`${cardClass} flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md ${clickableClasses}`}
     >
       <Link
-        href={`/foods/${item.id}`}
+        href={foodDetailsHref}
         onClick={isClickable ? stopCardClick : undefined}
         className="block"
       >
@@ -163,12 +163,12 @@ export default function FoodCard({
         </div>
       </Link>
 
-      <div className="p-4 text-right sm:p-5">
+      <div className="flex flex-1 flex-col p-4 text-right sm:p-5">
         <div className="mb-2 flex items-start justify-between gap-3">
           <Link
-            href={`/foods/${item.id}`}
+            href={foodDetailsHref}
             onClick={isClickable ? stopCardClick : undefined}
-            className="min-w-0"
+            className="min-w-0 flex-1"
           >
             <h3 className="truncate text-lg font-bold text-gray-800 sm:text-xl">
               {item.title}
@@ -195,7 +195,7 @@ export default function FoodCard({
 
         <div
           onClick={stopCardClick}
-          className="flex mt-10 flex-col-reverse gap-3 border-t border-gray-200 pt-4 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between"
+          className="mt-auto flex flex-col-reverse gap-3 border-t border-gray-200 pt-4 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between"
         >
           <FoodCardActions
             food={item}
@@ -203,11 +203,16 @@ export default function FoodCard({
             canAddToCart={resolvedCanAddToCart}
           />
 
-          <span dir="rtl" className="text-left text-lg font-bold text-gray-900 min-[420px]:text-right">
-                        {formatPrice(item.price)}
+          <span
+            dir="rtl"
+            className="text-left text-lg font-bold text-gray-900 min-[420px]:text-right"
+          >
+            {formatPrice(item.price)}
 
             {item.unit && (
-              <span className="ml-1 text-sm font-normal">{" "}{item.unit}</span>
+              <span className="mr-1 text-sm font-normal text-gray-500">
+                {item.unit}
+              </span>
             )}
           </span>
         </div>

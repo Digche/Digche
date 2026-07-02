@@ -11,7 +11,7 @@ export default function HomeFooter() {
   const isChef = currentUser?.role === "chef";
 
   return (
-    <footer className="border-t border-gray-200 bg-white pb-8 pt-16" dir="rtl">
+    <footer className="border-t px-4 sm:px-6 border-gray-200 bg-white pb-8 pt-16" dir="rtl">
       <div className="container mx-auto px-4 lg:px-12">
         <div className="mb-12 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* ستون اول: درباره ما و لوگو */}

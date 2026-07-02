@@ -294,8 +294,8 @@ export default function CustomerAddressesScreen({
               type="button"
               onClick={handleMainButtonClick}
               disabled={saveAddress.isPending || deleteAddress.isPending}
-              className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#EFC5A8] px-6 text-sm font-bold text-gray-900 transition hover:bg-[#e9b892] disabled:cursor-not-allowed disabled:opacity-60"
-            >
+              className="flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#EFC5A8] px-6 text-sm font-bold text-gray-900 transition hover:bg-[#e9b892] sm:w-auto"
+>
               {hasCurrentAddress ? <Edit3 size={18} /> : <Plus size={18} />}
 
               {hasCurrentAddress ? "ویرایش آدرس فعلی" : "افزودن آدرس"}
@@ -331,7 +331,7 @@ export default function CustomerAddressesScreen({
 
           {!selectedAddress && fallbackAddressText && (
             <div className="mt-5 rounded-2xl border border-[#EFC5A8] bg-[#FFF9F4] px-5 py-4 text-right">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs font-bold text-[#D16565]">آدرس فعلی</p>
 
                 <button

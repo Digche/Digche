@@ -20,10 +20,9 @@ export default function DashboardStatCard({
   return (
     <article
       dir="rtl"
-      className={`relative flex h-[120px] w-[150px] flex-col rounded-md px-4 py-3 text-right shadow-[0_4px_8px_rgba(0,0,0,0.22)] ${cardClassName}`}
-    >
+      className={`relative flex min-h-[116px] w-full flex-col rounded-md px-4 py-3 text-right shadow-[0_4px_8px_rgba(0,0,0,0.22)] ${cardClassName}`}>
       <div className="flex items-start justify-between gap-2">
-        <p className="max-w-[92px] truncate text-[11px] font-medium leading-5 text-gray-950">
+        <p className="min-w-0 truncate text-[11px] font-medium leading-5 text-gray-950">
           {title}
         </p>
 

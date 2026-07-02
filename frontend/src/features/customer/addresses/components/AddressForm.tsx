@@ -87,8 +87,7 @@ export default function AddressForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-3xl border border-orange-100 bg-[#FFF9F4] p-5 text-right"
-    >
+      className="rounded-3xl border border-orange-100 bg-[#FFF9F4] p-4 text-right sm:p-5"    >
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block">
           <span className="mb-2 block text-sm font-bold text-gray-800">
