@@ -1,7 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { type FormEvent, useMemo, useState } from "react";
+import {
+  type FormEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -9,10 +16,15 @@ import {
   Clock,
   Headphones,
   Mail,
+  Menu,
   Phone,
   Send,
 } from "lucide-react";
-import { createSupportTicket } from "../api/support-tickets.api";
+import {
+  createSupportTicket,
+  getMySupportTickets,
+  type SupportTicket,
+} from "../api/support-tickets.api";
 import { useAuthStore, type UserRole } from "@/store/auth-store";
 
 type SupportTicketScreenProps = {
@@ -32,10 +44,14 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
 
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [openTicketId, setOpenTicketId] = useState<string | null>(null);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingTickets, setIsLoadingTickets] = useState(true);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [ticketsErrorMessage, setTicketsErrorMessage] = useState("");
 
   const profile = useMemo(() => {
     const fallbackName = role === "chef" ? "آشپز دیگچه" : "کاربر دیگچه";
@@ -49,6 +65,28 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
       label: role === "chef" ? "آشپز" : "مشتری",
     };
   }, [currentUser, role]);
+
+  const loadMyTickets = useCallback(async () => {
+    setIsLoadingTickets(true);
+    setTicketsErrorMessage("");
+
+    try {
+      const response = await getMySupportTickets();
+      setTickets(response.tickets ?? []);
+    } catch (error) {
+      setTicketsErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "دریافت تیکت‌های شما ناموفق بود."
+      );
+    } finally {
+      setIsLoadingTickets(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadMyTickets();
+  }, [loadMyTickets]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -72,7 +110,7 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
     setIsSubmitting(true);
 
     try {
-      await createSupportTicket({
+      const response = await createSupportTicket({
         subject: normalizedSubject,
         description: normalizedDescription,
       });
@@ -80,6 +118,9 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
       setSubject("");
       setDescription("");
       setSuccessMessage("تیکت شما با موفقیت ثبت شد. تیم پشتیبانی به‌زودی بررسی می‌کند.");
+
+      setTickets((currentTickets) => [response.ticket, ...currentTickets]);
+      setOpenTicketId(response.ticket.id ?? null);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -177,6 +218,17 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
           </div>
         </form>
 
+        <MyTicketsSection
+          tickets={tickets}
+          openTicketId={openTicketId}
+          isLoading={isLoadingTickets}
+          errorMessage={ticketsErrorMessage}
+          onToggleTicket={(ticketId) =>
+            setOpenTicketId((currentId) => (currentId === ticketId ? null : ticketId))
+          }
+          onRetry={loadMyTickets}
+        />
+
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-[1.4rem] bg-[#FFF1E8] p-5 sm:p-6">
             <h2 className="border-b border-gray-300 pb-3 text-center text-xl font-extrabold text-gray-950">
@@ -221,21 +273,9 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
             </h2>
 
             <div className="mt-4 space-y-4">
-              <ContactItem
-                icon={<Phone size={21} />}
-                title="شماره تماس"
-                value="01132323233"
-              />
-              <ContactItem
-                icon={<Mail size={21} />}
-                title="ایمیل"
-                value="support@gmail.com"
-              />
-              <ContactItem
-                icon={<Clock size={21} />}
-                title="ساعت پاسخگویی"
-                value="همه روزه از ۹ صبح تا ۹ شب"
-              />
+              <ContactItem icon={<Phone size={21} />} title="شماره تماس" value="01132323233" />
+              <ContactItem icon={<Mail size={21} />} title="ایمیل" value="support@gmail.com" />
+              <ContactItem icon={<Clock size={21} />} title="ساعت پاسخگویی" value="همه روزه از ۹ صبح تا ۹ شب" />
             </div>
           </div>
         </div>
@@ -244,8 +284,165 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
   );
 }
 
+type MyTicketsSectionProps = {
+  tickets: SupportTicket[];
+  openTicketId: string | null;
+  isLoading: boolean;
+  errorMessage: string;
+  onToggleTicket: (ticketId: string) => void;
+  onRetry: () => void;
+};
+
+function MyTicketsSection({
+  tickets,
+  openTicketId,
+  isLoading,
+  errorMessage,
+  onToggleTicket,
+  onRetry,
+}: MyTicketsSectionProps) {
+  return (
+    <div className="rounded-[1.4rem] bg-[#FFF1E8] p-5 sm:p-6">
+      <div className="flex items-center justify-between gap-4 border-b border-gray-300 pb-3">
+        <button
+          type="button"
+          onClick={onRetry}
+          className="rounded-full bg-white px-4 py-2 text-xs font-bold text-[#F97316] transition hover:bg-orange-50"
+        >
+          بروزرسانی
+        </button>
+
+        <h2 className="text-xl font-extrabold text-gray-950">تیکت‌های من</h2>
+      </div>
+
+      {isLoading && (
+        <p className="py-6 text-center text-sm text-gray-500">در حال دریافت تیکت‌ها...</p>
+      )}
+
+      {!isLoading && errorMessage && (
+        <div className="mt-4 flex items-center justify-between gap-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+          <span>{errorMessage}</span>
+          <button type="button" onClick={onRetry} className="font-bold">
+            تلاش دوباره
+          </button>
+        </div>
+      )}
+
+      {!isLoading && !errorMessage && tickets.length === 0 && (
+        <p className="py-6 text-center text-sm text-gray-500">
+          هنوز تیکتی ثبت نکردی.
+        </p>
+      )}
+
+      {!isLoading && !errorMessage && tickets.length > 0 && (
+        <div className="mt-4 space-y-3">
+          {tickets.map((ticket, index) => {
+            const ticketId = ticket.id ?? `ticket-${index}`;
+            const isOpen = openTicketId === ticketId;
+            const hasReply = Boolean(ticket.adminReplyText);
+
+            return (
+              <article key={ticketId} className="overflow-hidden rounded-2xl bg-white">
+                <button
+                  type="button"
+                  onClick={() => onToggleTicket(ticketId)}
+                  className="flex w-full items-center justify-between gap-4 px-4 py-4 text-right transition hover:bg-orange-50"
+                  aria-expanded={isOpen}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF1E8] text-gray-700">
+                    <Menu size={20} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <TicketStatusBadge ticket={ticket} />
+                      <h3 className="truncate text-sm font-extrabold text-gray-950">
+                        {ticket.subject}
+                      </h3>
+                    </div>
+
+                    <p className="mt-1 text-xs text-gray-500">
+                      {formatTicketDate(ticket.createdAt)}
+                    </p>
+                  </div>
+
+                  <ChevronDown
+                    size={18}
+                    className={`shrink-0 text-gray-500 transition ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isOpen && (
+                  <div className="space-y-4 border-t border-gray-100 px-4 py-4">
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900">متن تیکت</h4>
+                      <p className="mt-2 whitespace-pre-line rounded-xl bg-[#FFF9F4] px-4 py-3 text-sm leading-7 text-gray-700">
+                        {ticket.description}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900">پاسخ پشتیبانی</h4>
+
+                      {hasReply ? (
+                        <div className="mt-2 rounded-xl bg-green-50 px-4 py-3">
+                          <p className="whitespace-pre-line text-sm leading-7 text-green-800">
+                            {ticket.adminReplyText}
+                          </p>
+
+                          {ticket.repliedAt && (
+                            <p className="mt-2 text-xs text-green-600">
+                              پاسخ داده شده در {formatTicketDate(ticket.repliedAt)}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="mt-2 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-500">
+                          هنوز پاسخی برای این تیکت ثبت نشده است.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TicketStatusBadge({ ticket }: { ticket: SupportTicket }) {
+  const hasReply = Boolean(ticket.adminReplyText);
+
+  if (hasReply) {
+    return (
+      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+        پاسخ داده شده
+      </span>
+    );
+  }
+
+  if (ticket.status === "reviewed") {
+    return (
+      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+        بررسی شده
+      </span>
+    );
+  }
+
+  return (
+    <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700">
+      در انتظار بررسی
+    </span>
+  );
+}
+
 type ContactItemProps = {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   value: string;
 };
@@ -263,4 +460,20 @@ function ContactItem({ icon, title, value }: ContactItemProps) {
       </div>
     </div>
   );
+}
+
+function formatTicketDate(value?: string | null) {
+  if (!value) {
+    return "تاریخ نامشخص";
+  }
+
+  try {
+    return new Intl.DateTimeFormat("fa-IR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(new Date(value));
+  } catch {
+    return "تاریخ نامشخص";
+  }
 }
