@@ -148,7 +148,16 @@ export default function FoodDetailsActions({
   if (canEditFood) {
     return (
       <>
-        <div className="flex w-full flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+        <div dir="ltr"  className="grid w-full grid-cols-[1fr_1.35fr] gap-3">
+                  <button
+            type="button"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            disabled={deleteFood.isPending}
+            className="flex h-14 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-red-100 px-4 text-sm font-bold text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-60 sm:w-40"
+          >
+            <Trash2 size={18} />
+            حذف غذا
+          </button>  
           <Link
             href={`/chef/foods/${food.id}/edit`}
             className="flex h-14 flex-1 items-center justify-center gap-3 rounded-full bg-[#111322] px-5 text-sm font-bold text-white transition hover:bg-gray-800 sm:text-base"
@@ -157,15 +166,7 @@ export default function FoodDetailsActions({
             ویرایش اطلاعات غذا
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setIsDeleteDialogOpen(true)}
-            disabled={deleteFood.isPending}
-            className="flex h-14 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-red-100 px-4 text-sm font-bold text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-60 sm:w-40"
-          >
-            <Trash2 size={18} />
-            حذف غذا
-          </button>
+
         </div>
 
         {isDeleteDialogOpen && (
@@ -196,7 +197,7 @@ export default function FoodDetailsActions({
               </p>
 
               <div
-                dir="ltr"
+                dir="rtl"
                 className="mt-6 flex items-center justify-center gap-5"
               >
                 <button
