@@ -113,7 +113,11 @@ export default function UserSettingsScreen({
   );
 
   useEffect(() => {
-    setForm(getSettingsFormFromUser(currentUser, defaultAvatar));
+    const syncTimer = window.setTimeout(() => {
+      setForm(getSettingsFormFromUser(currentUser, defaultAvatar));
+    }, 0);
+
+    return () => window.clearTimeout(syncTimer);
   }, [currentUser, defaultAvatar]);
 
   if (!currentUser || currentUser.role !== role) {

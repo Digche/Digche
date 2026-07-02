@@ -44,10 +44,14 @@ export default function AddressForm({
   const [details, setDetails] = useState(initialValues?.details || "");
 
   useEffect(() => {
-    setTitle(normalizeTitle(initialValues?.title));
-    setProvince(initialValues?.province || "");
-    setCity(initialValues?.city || "");
-    setDetails(initialValues?.details || "");
+    const syncTimer = window.setTimeout(() => {
+      setTitle(normalizeTitle(initialValues?.title));
+      setProvince(initialValues?.province || "");
+      setCity(initialValues?.city || "");
+      setDetails(initialValues?.details || "");
+    }, 0);
+
+    return () => window.clearTimeout(syncTimer);
   }, [
     initialValues?.title,
     initialValues?.province,

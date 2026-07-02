@@ -167,7 +167,8 @@ export default function CustomerAddressesScreen({
 
   useEffect(() => {
     if (effectiveLockCity) {
-      setFormMode("edit");
+      const syncTimer = window.setTimeout(() => setFormMode("edit"), 0);
+      return () => window.clearTimeout(syncTimer);
     }
   }, [effectiveLockCity]);
 

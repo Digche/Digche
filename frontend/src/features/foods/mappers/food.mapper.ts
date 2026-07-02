@@ -14,7 +14,7 @@ export function mapFoodDtoToFood(dto: FoodDto): Food {
     remaining: remainingText,
     chef: dto.chef ?? "",
     chefId: dto.chefId,
-    location: "اصفهان",
+    location: dto.location ?? "",
     price: String(dto.price ?? ""),
     unit: "تومان",
     image: dto.image || "/images/cake.webp",

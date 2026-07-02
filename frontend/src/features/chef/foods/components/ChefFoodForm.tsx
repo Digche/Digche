@@ -58,8 +58,20 @@ export default function ChefFoodForm({
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   useEffect(() => {
-    setForm(initialValues);
-    setSelectedImageFile(null);
+    const syncTimer = window.setTimeout(() => {
+      setForm({
+        title: initialValues.title,
+        category: initialValues.category,
+        remaining: initialValues.remaining,
+        price: initialValues.price,
+        ingredients: initialValues.ingredients,
+        description: initialValues.description,
+        image: initialValues.image,
+      });
+      setSelectedImageFile(null);
+    }, 0);
+
+    return () => window.clearTimeout(syncTimer);
   }, [
     initialValues.title,
     initialValues.category,

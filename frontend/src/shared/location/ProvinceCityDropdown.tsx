@@ -42,14 +42,18 @@ export default function ProvinceCityDropdown({
   useEffect(() => {
     if (!isOpen) return;
 
-    if (value.province) {
-      setActiveProvince(value.province);
-      setActiveProvinceTop(8);
-      return;
-    }
+    const syncTimer = window.setTimeout(() => {
+      if (value.province) {
+        setActiveProvince(value.province);
+        setActiveProvinceTop(8);
+        return;
+      }
 
-    setActiveProvince(iranLocations[0]?.name ?? "");
-    setActiveProvinceTop(8);
+      setActiveProvince(iranLocations[0]?.name ?? "");
+      setActiveProvinceTop(8);
+    }, 0);
+
+    return () => window.clearTimeout(syncTimer);
   }, [isOpen, value.province]);
 
   useEffect(() => {
