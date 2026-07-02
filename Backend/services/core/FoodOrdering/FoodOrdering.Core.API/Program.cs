@@ -99,11 +99,8 @@ builder.Services.AddAuthorization();
 
 
 // HttpClient - فقط تنظیمات پایه (بدون BaseAddress و ApiKey)
-builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(10);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+// HttpClient - کاملاً خالی، همه چیز در کلاس UserServiceClient تنظیم می‌شود
+builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>();
 
 
 // CORS (allow all for development)
