@@ -98,19 +98,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 
-// HttpClient
+// HttpClient - فقط تنظیمات پایه (بدون BaseAddress و ApiKey)
 builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
 {
-    // استفاده از آدرس مستقیم سرویس auth (نه gateway)
-    client.BaseAddress = new Uri(builder.Configuration["AuthService:BaseUrl"] ?? "http://auth-service:3001");
     client.Timeout = TimeSpan.FromSeconds(10);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-
-    var apiKey = builder.Configuration["AuthService:ApiKey"];
-    if (!string.IsNullOrEmpty(apiKey))
-    {
-        client.DefaultRequestHeaders.Add("x-internal-api-key", apiKey);
-    }
 });
 
 

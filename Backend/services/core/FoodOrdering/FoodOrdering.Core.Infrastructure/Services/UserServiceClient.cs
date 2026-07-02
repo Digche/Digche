@@ -17,6 +17,11 @@ namespace FoodOrdering.Core.Infrastructure.Services
         {
             _httpClient = httpClient;
             _logger = logger;
+
+            _httpClient.BaseAddress = new Uri("http://auth-service:3001/");
+            _httpClient.Timeout = TimeSpan.FromSeconds(10);
+            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            _httpClient.DefaultRequestHeaders.Add("x-internal-api-key", "change_me_internal_auth_key");
         }
 
         public async Task<AuthUserDto> GetUserInfoAsync(Guid userId, CancellationToken cancellation = default)
