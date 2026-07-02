@@ -34,4 +34,11 @@ export const endpoints = {
   profilePhotoPresign: "/media/profile-photo/presign",
   dishImagePresign: "/media/dish-images/presign",
 },
+
+  cart: {
+    get: "/core/Carts",
+    clear: "/core/Carts",
+    addItem: "/core/Carts/items",
+    removeItem: (dishId: number | string) => `/core/Carts/items/${dishId}`,
+  },
 };

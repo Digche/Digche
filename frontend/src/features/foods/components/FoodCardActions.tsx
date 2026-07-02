@@ -8,6 +8,9 @@ import { ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import type { Food } from "../types/food.types";
 import { useDeleteChefFood } from "@/features/chef/hooks/use-delete-chef-food";
+import { useAddCartItem } from "@/features/cart/hooks/use-add-cart-item";
+import { useRemoveCartItem } from "@/features/cart/hooks/use-remove-cart-item";
+import { useSetCartItemQuantity } from "@/features/cart/hooks/use-set-cart-item-quantity";
 
 interface FoodCardActionsProps {
   food: Food;
@@ -27,33 +30,98 @@ export default function FoodCardActions({
   const decreaseQuantity = useCartStore((state) => state.decreaseQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
 
-  const deleteFood = useDeleteChefFood();
-
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
   const cartItem = useCartStore((state) =>
-    state.items.find((cartItem) => cartItem.id === food.id)
+    state.items.find((cartItem) => String(cartItem.id) === String(food.id))
   );
 
   const quantity = cartItem?.quantity ?? 0;
+
+  const addCartItem = useAddCartItem();
+  const removeCartItem = useRemoveCartItem();
+  const setCartItemQuantity = useSetCartItemQuantity();
+
+  const isCartPending =
+    addCartItem.isPending ||
+    removeCartItem.isPending ||
+    setCartItemQuantity.isPending;
+
+  const deleteFood = useDeleteChefFood();
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const stopActionClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation();
   };
 
-  const handleAddToCart = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleAddToCart = async (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    addToCart(food);
+
+    if (isCartPending) return;
+
+    try {
+      await addCartItem.mutateAsync({
+        dishId: food.id,
+        quantity: 1,
+      });
+
+      addToCart(food);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "افزودن به سبد خرید ناموفق بود."
+      );
+    }
   };
 
-  const handleIncreaseQuantity = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleIncreaseQuantity = async (
+    event: MouseEvent<HTMLButtonElement>
+  ) => {
     event.stopPropagation();
-    increaseQuantity(food.id);
+
+    if (isCartPending) return;
+
+    try {
+      await addCartItem.mutateAsync({
+        dishId: food.id,
+        quantity: 1,
+      });
+
+      increaseQuantity(food.id);
+    } catch (error) {
+      alert(
+        error instanceof Error ? error.message : "افزایش تعداد ناموفق بود."
+      );
+    }
   };
 
-  const handleDecreaseQuantity = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleDecreaseQuantity = async (
+    event: MouseEvent<HTMLButtonElement>
+  ) => {
     event.stopPropagation();
-    decreaseQuantity(food.id);
+
+    if (isCartPending) return;
+
+    const nextQuantity = quantity - 1;
+
+    try {
+      if (nextQuantity <= 0) {
+        await removeCartItem.mutateAsync(food.id);
+        removeFromCart(food.id);
+        return;
+      }
+
+      await setCartItemQuantity.mutateAsync({
+        dishId: food.id,
+        quantity: nextQuantity,
+      });
+
+      decreaseQuantity(food.id);
+    } catch (error) {
+      alert(
+        error instanceof Error ? error.message : "کاهش تعداد ناموفق بود."
+      );
+    }
   };
 
   const handleOpenDeleteDialog = (event: MouseEvent<HTMLButtonElement>) => {
@@ -112,7 +180,7 @@ export default function FoodCardActions({
           مطمئنی می‌خوای «{food.title}» رو حذف کنی؟ این عملیات قابل برگشت نیست.
         </p>
 
-        <div dir="ltr" className="mt-6 flex items-center justify-center gap-5">
+        <div dir="rtl" className="mt-6 flex items-center justify-center gap-5">
           <button
             type="button"
             onClick={handleCloseDeleteDialog}
@@ -196,14 +264,15 @@ export default function FoodCardActions({
         <button
           type="button"
           onClick={handleAddToCart}
+          disabled={isCartPending}
           className={
             compact
-              ? "rounded-full bg-[#D48B8B] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#c97b7b]"
-              : "flex items-center justify-center gap-2 rounded-full bg-[#D48B8B] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#c97b7b] min-[420px]:justify-start"
+              ? "rounded-full bg-[#D48B8B] px-3 py-1.5 text-xs font-bold text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60"
+              : "flex items-center justify-center gap-2 rounded-full bg-[#D48B8B] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60 min-[420px]:justify-start"
           }
         >
           {!compact && <ShoppingCart size={16} />}
-          افزودن
+          {isCartPending ? "..." : "افزودن"}
         </button>
       );
     }
@@ -219,10 +288,11 @@ export default function FoodCardActions({
         <button
           type="button"
           onClick={handleIncreaseQuantity}
+          disabled={isCartPending}
           className={
             compact
-              ? "flex h-7 w-7 items-center justify-center rounded-full bg-[#D48B8B] text-white transition hover:bg-[#c97b7b]"
-              : "flex h-8 w-8 items-center justify-center rounded-full bg-[#D48B8B] text-white transition hover:bg-[#c97b7b]"
+              ? "flex h-7 w-7 items-center justify-center rounded-full bg-[#D48B8B] text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60"
+              : "flex h-8 w-8 items-center justify-center rounded-full bg-[#D48B8B] text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60"
           }
           aria-label="زیاد کردن تعداد"
         >
@@ -242,10 +312,11 @@ export default function FoodCardActions({
         <button
           type="button"
           onClick={handleDecreaseQuantity}
+          disabled={isCartPending}
           className={
             compact
-              ? "flex h-7 w-7 items-center justify-center rounded-full bg-[#FDF7F2] text-gray-700 transition hover:bg-gray-100"
-              : "flex h-8 w-8 items-center justify-center rounded-full bg-[#FDF7F2] text-gray-700 transition hover:bg-gray-100"
+              ? "flex h-7 w-7 items-center justify-center rounded-full bg-[#FDF7F2] text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+              : "flex h-8 w-8 items-center justify-center rounded-full bg-[#FDF7F2] text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
           }
           aria-label="کم کردن تعداد"
         >

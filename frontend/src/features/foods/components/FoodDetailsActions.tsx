@@ -7,6 +7,9 @@ import { Edit3, ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import type { Food } from "../types/food.types";
 import { useDeleteChefFood } from "@/features/chef/hooks/use-delete-chef-food";
+import { useAddCartItem } from "@/features/cart/hooks/use-add-cart-item";
+import { useRemoveCartItem } from "@/features/cart/hooks/use-remove-cart-item";
+import { useSetCartItemQuantity } from "@/features/cart/hooks/use-set-cart-item-quantity";
 
 interface FoodDetailsActionsProps {
   food: Food;
@@ -26,15 +29,85 @@ export default function FoodDetailsActions({
   const decreaseQuantity = useCartStore((state) => state.decreaseQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
 
+  const cartItem = useCartStore((state) =>
+    state.items.find((cartItem) => String(cartItem.id) === String(food.id))
+  );
+
+  const quantity = cartItem?.quantity ?? 0;
+
+  const addCartItem = useAddCartItem();
+  const removeCartItem = useRemoveCartItem();
+  const setCartItemQuantity = useSetCartItemQuantity();
+
+  const isCartPending =
+    addCartItem.isPending ||
+    removeCartItem.isPending ||
+    setCartItemQuantity.isPending;
+
   const deleteFood = useDeleteChefFood();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const cartItem = useCartStore((state) =>
-    state.items.find((cartItem) => cartItem.id === food.id)
-  );
+  const handleAddToCart = async () => {
+    if (isCartPending) return;
 
-  const quantity = cartItem?.quantity ?? 0;
+    try {
+      await addCartItem.mutateAsync({
+        dishId: food.id,
+        quantity: 1,
+      });
+
+      addToCart(food);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "افزودن به سبد خرید ناموفق بود."
+      );
+    }
+  };
+
+  const handleIncreaseQuantity = async () => {
+    if (isCartPending) return;
+
+    try {
+      await addCartItem.mutateAsync({
+        dishId: food.id,
+        quantity: 1,
+      });
+
+      increaseQuantity(food.id);
+    } catch (error) {
+      alert(
+        error instanceof Error ? error.message : "افزایش تعداد ناموفق بود."
+      );
+    }
+  };
+
+  const handleDecreaseQuantity = async () => {
+    if (isCartPending) return;
+
+    const nextQuantity = quantity - 1;
+
+    try {
+      if (nextQuantity <= 0) {
+        await removeCartItem.mutateAsync(food.id);
+        removeFromCart(food.id);
+        return;
+      }
+
+      await setCartItemQuantity.mutateAsync({
+        dishId: food.id,
+        quantity: nextQuantity,
+      });
+
+      decreaseQuantity(food.id);
+    } catch (error) {
+      alert(
+        error instanceof Error ? error.message : "کاهش تعداد ناموفق بود."
+      );
+    }
+  };
 
   const handleConfirmDeleteFood = async () => {
     try {
@@ -79,20 +152,19 @@ export default function FoodDetailsActions({
               className="relative w-full max-w-sm rounded-3xl bg-white p-6 text-right shadow-2xl"
             >
               <div className="flex flex-row">
-                  <button
-                    type="button"
-                    onClick={() => setIsDeleteDialogOpen(false)}
-                    disabled={deleteFood.isPending}
-                    className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
-                    aria-label="بستن"
-                  >
-                    <X size={17} />
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                  disabled={deleteFood.isPending}
+                  className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-label="بستن"
+                >
+                  <X size={17} />
+                </button>
 
-                  <h2 className="text-lg font-extrabold text-gray-900">
-                    حذف غذا
-                  </h2>
-
+                <h2 className="text-lg font-extrabold text-gray-900">
+                  حذف غذا
+                </h2>
               </div>
 
               <p className="mt-3 text-sm leading-6 text-gray-600">
@@ -100,7 +172,10 @@ export default function FoodDetailsActions({
                 نیست.
               </p>
 
-              <div dir="ltr" className="mt-6 flex items-center justify-center gap-5">
+              <div
+                dir="rtl"
+                className="mt-6 flex items-center justify-center gap-5"
+              >
                 <button
                   type="button"
                   onClick={() => setIsDeleteDialogOpen(false)}
@@ -131,11 +206,12 @@ export default function FoodDetailsActions({
       return (
         <button
           type="button"
-          onClick={() => addToCart(food)}
-          className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#D48B8B] px-5 text-sm font-bold text-white transition hover:bg-[#c97b7b] sm:text-base"
+          onClick={handleAddToCart}
+          disabled={isCartPending}
+          className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#D48B8B] px-5 text-sm font-bold text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
         >
           <ShoppingCart size={20} />
-          افزودن به سبد خرید
+          {isCartPending ? "در حال افزودن..." : "افزودن به سبد خرید"}
         </button>
       );
     }
@@ -144,8 +220,9 @@ export default function FoodDetailsActions({
       <div className="mx-auto flex h-14 w-40 max-w-sm items-center justify-between rounded-full border border-gray-200 bg-white p-1 shadow-sm">
         <button
           type="button"
-          onClick={() => increaseQuantity(food.id)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D48B8B] text-white transition hover:bg-[#c97b7b]"
+          onClick={handleIncreaseQuantity}
+          disabled={isCartPending}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D48B8B] text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60"
           aria-label="زیاد کردن تعداد"
         >
           <Plus size={18} />
@@ -157,8 +234,9 @@ export default function FoodDetailsActions({
 
         <button
           type="button"
-          onClick={() => decreaseQuantity(food.id)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FDF7F2] text-gray-700 transition hover:bg-gray-100"
+          onClick={handleDecreaseQuantity}
+          disabled={isCartPending}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FDF7F2] text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
           aria-label="کم کردن تعداد"
         >
           <Minus size={18} />

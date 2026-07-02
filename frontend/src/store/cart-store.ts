@@ -23,6 +23,9 @@ export interface CartItem extends CartFoodItem {
 
 interface CartStore {
   items: CartItem[];
+
+  setCartItems: (items: CartItem[]) => void;
+
   addToCart: (item: CartFoodItem) => void;
   removeFromCart: (id: number | string) => void;
   increaseQuantity: (id: number | string) => void;
@@ -36,15 +39,19 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
 
+      setCartItems: (items) => {
+        set({ items });
+      },
+
       addToCart: (item) => {
         const existingItem = get().items.find(
-          (cartItem) => cartItem.id === item.id
+          (cartItem) => String(cartItem.id) === String(item.id)
         );
 
         if (existingItem) {
           set({
             items: get().items.map((cartItem) =>
-              cartItem.id === item.id
+              String(cartItem.id) === String(item.id)
                 ? { ...cartItem, quantity: cartItem.quantity + 1 }
                 : cartItem
             ),
@@ -59,14 +66,18 @@ export const useCartStore = create<CartStore>()(
 
       removeFromCart: (id) => {
         set({
-          items: get().items.filter((item) => item.id !== id),
+          items: get().items.filter(
+            (item) => String(item.id) !== String(id)
+          ),
         });
       },
 
       increaseQuantity: (id) => {
         set({
           items: get().items.map((item) =>
-            item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+            String(item.id) === String(id)
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
           ),
         });
       },
@@ -75,7 +86,9 @@ export const useCartStore = create<CartStore>()(
         set({
           items: get()
             .items.map((item) =>
-              item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+              String(item.id) === String(id)
+                ? { ...item, quantity: item.quantity - 1 }
+                : item
             )
             .filter((item) => item.quantity > 0),
         });

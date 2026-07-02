@@ -65,11 +65,37 @@ export default function ChefSidebar() {
   const logout = useAuthStore((state) => state.logout);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    setIsOpen(false);
-    router.push("/");
+  const handleOpenLogoutDialog = () => {
+    setIsLogoutDialogOpen(true);
+  };
+
+  const handleCloseLogoutDialog = () => {
+    if (isLoggingOut) return;
+
+    setIsLogoutDialogOpen(false);
+  };
+
+  const handleConfirmLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+
+      setIsOpen(false);
+      setIsLogoutDialogOpen(false);
+
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "خروج از حساب ناموفق بود.");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -150,13 +176,72 @@ export default function ChefSidebar() {
 
         <button
           type="button"
-          onClick={handleLogout}
-          className="mt-4 flex shrink-0 items-center justify-between rounded-full bg-[#D97777] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#cf6969]"
+          onClick={handleOpenLogoutDialog}
+          disabled={isLoggingOut}
+          className="mt-4 flex shrink-0 items-center justify-between rounded-full bg-[#D97777] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#cf6969] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <span>خروج از حساب</span>
+          <span>{isLoggingOut ? "در حال خروج..." : "خروج از حساب"}</span>
           <LogOut size={20} />
         </button>
       </aside>
+
+      {isLogoutDialogOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 px-4"
+          onClick={handleCloseLogoutDialog}
+        >
+          <div
+            dir="rtl"
+            onClick={(event) => event.stopPropagation()}
+            className="relative w-full max-w-sm rounded-3xl bg-white p-6 text-right shadow-2xl"
+          >
+            <button
+              type="button"
+              onClick={handleCloseLogoutDialog}
+              disabled={isLoggingOut}
+              className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-label="بستن"
+            >
+              <X size={17} />
+            </button>
+
+            <div className="flex items-center gap-3">
+
+
+              <div>
+                <h2 className="text-lg font-extrabold text-gray-900">
+                  خروج از حساب
+                </h2>
+
+              </div>
+            </div>
+
+            <p className="mt-5 text-sm leading-7 text-gray-600">
+              مطمئنی می‌خوای از حسابت خارج شی؟
+            </p>
+
+            <div dir="rtl" className="mt-6 flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={handleCloseLogoutDialog}
+                disabled={isLoggingOut}
+                className="rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-bold text-gray-700 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                انصراف
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmLogout}
+                disabled={isLoggingOut}
+                className="rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoggingOut ? "در حال خروج..." : "بله، خارج شو"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
