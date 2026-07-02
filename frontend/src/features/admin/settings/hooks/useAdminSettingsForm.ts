@@ -12,7 +12,10 @@ import {
   isValidUsername,
   sanitizeUsername,
 } from "@/shared/validation/username";
-import type { PhoneVerificationResultStatus, PhoneVerificationStep } from "@/shared/ui/PhoneVerificationGlassBox";
+import type {
+  PhoneVerificationResultStatus,
+  PhoneVerificationStep,
+} from "@/shared/ui/PhoneVerificationGlassBox";
 import type { AdminApiUser } from "../../auth/types/admin-auth.types";
 import { useAdminAuthStore } from "../../auth/store/admin-auth-store";
 import { isDigitKey, sanitizePersonalName } from "../../utils/personal-name";
@@ -34,8 +37,13 @@ type AdminSettingsFormState = {
   avatarSrc: string;
 };
 
-type AdminSettingsErrors = Partial<Record<keyof AdminSettingsFormState | "avatar", string>>;
-type AdminSettingsTouchedFields = Partial<Record<keyof AdminSettingsFormState, boolean>>;
+type AdminSettingsErrors = Partial<
+  Record<keyof AdminSettingsFormState | "avatar", string>
+>;
+
+type AdminSettingsTouchedFields = Partial<
+  Record<keyof AdminSettingsFormState, boolean>
+>;
 
 const DEFAULT_ADMIN_AVATAR = "/images/avatars/user-2.webp";
 
@@ -56,9 +64,19 @@ const allTouchedFields: AdminSettingsTouchedFields = {
 
 function toLocalIranMobileNumber(value: string) {
   const digits = String(value || "").replace(/\D/g, "");
-  if (digits.startsWith("0098") && digits.length === 14) return `0${digits.slice(4)}`;
-  if (digits.startsWith("98") && digits.length === 12) return `0${digits.slice(2)}`;
-  if (digits.startsWith("9") && digits.length === 10) return `0${digits}`;
+
+  if (digits.startsWith("0098") && digits.length === 14) {
+    return `0${digits.slice(4)}`;
+  }
+
+  if (digits.startsWith("98") && digits.length === 12) {
+    return `0${digits.slice(2)}`;
+  }
+
+  if (digits.startsWith("9") && digits.length === 10) {
+    return `0${digits}`;
+  }
+
   return digits;
 }
 
@@ -78,7 +96,10 @@ function getFullName(profile: AdminSettingsFormState) {
 
 function getPersistablePhotoUrl(avatarSrc: string) {
   const value = avatarSrc.trim();
-  if (!value || value.startsWith("/")) return null;
+
+  if (!value || value.startsWith("/")) {
+    return null;
+  }
 
   try {
     const url = new URL(value);
@@ -88,7 +109,9 @@ function getPersistablePhotoUrl(avatarSrc: string) {
   }
 }
 
-function validateAdminSettingsForm(form: AdminSettingsFormState): AdminSettingsErrors {
+function validateAdminSettingsForm(
+  form: AdminSettingsFormState
+): AdminSettingsErrors {
   const errors: AdminSettingsErrors = {};
   const firstName = form.firstName.trim();
   const lastName = form.lastName.trim();
@@ -111,13 +134,17 @@ function validateAdminSettingsForm(form: AdminSettingsFormState): AdminSettingsE
   if (!username) {
     errors.username = "نام کاربری را وارد کنید.";
   } else if (!isValidUsername(username)) {
-    errors.username = "نام کاربری باید ۳ تا ۵۰ کاراکتر و فقط شامل حروف انگلیسی، عدد انگلیسی و آندرلاین باشد.";
+    errors.username =
+      "نام کاربری باید ۳ تا ۵۰ کاراکتر و فقط شامل حروف انگلیسی، عدد انگلیسی و آندرلاین باشد.";
   }
 
   return errors;
 }
 
-function isSameProfile(form: AdminSettingsFormState, savedProfile: AdminSettingsFormState) {
+function isSameProfile(
+  form: AdminSettingsFormState,
+  savedProfile: AdminSettingsFormState
+) {
   return (
     form.firstName === savedProfile.firstName &&
     form.lastName === savedProfile.lastName &&
@@ -129,15 +156,21 @@ function isSameProfile(form: AdminSettingsFormState, savedProfile: AdminSettings
 
 export function useAdminSettingsForm() {
   const currentAdmin = useAdminAuthStore((state) => state.currentAdmin);
-  const applyProfileUpdate = useAdminAuthStore((state) => state.applyProfileUpdate);
+  const applyProfileUpdate = useAdminAuthStore(
+    (state) => state.applyProfileUpdate
+  );
   const setAdminSession = useAdminAuthStore((state) => state.setSession);
   const canEditPhone = Boolean(currentAdmin?.isManager);
 
-  const initialProfile = currentAdmin ? toFormState(currentAdmin) : emptyProfileState;
+  const initialProfile = currentAdmin
+    ? toFormState(currentAdmin)
+    : emptyProfileState;
 
-  const [savedProfile, setSavedProfile] = useState<AdminSettingsFormState>(initialProfile);
+  const [savedProfile, setSavedProfile] =
+    useState<AdminSettingsFormState>(initialProfile);
   const [form, setForm] = useState<AdminSettingsFormState>(initialProfile);
-  const [touchedFields, setTouchedFields] = useState<AdminSettingsTouchedFields>({});
+  const [touchedFields, setTouchedFields] =
+    useState<AdminSettingsTouchedFields>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -145,16 +178,22 @@ export function useAdminSettingsForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [loadError, setLoadError] = useState("");
-  const [phoneEditRestrictionMessage, setPhoneEditRestrictionMessage] = useState("");
+  const [phoneEditRestrictionMessage, setPhoneEditRestrictionMessage] =
+    useState("");
 
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
-  const [phoneVerificationStep, setPhoneVerificationStep] = useState<PhoneVerificationStep>("verification");
+  const [phoneVerificationStep, setPhoneVerificationStep] =
+    useState<PhoneVerificationStep>("phone");
+  const [pendingPhone, setPendingPhone] = useState("");
   const [phoneVerificationCode, setPhoneVerificationCode] = useState("");
-  const [isPhoneVerificationSubmitting, setIsPhoneVerificationSubmitting] = useState(false);
+  const [isPhoneVerificationSubmitting, setIsPhoneVerificationSubmitting] =
+    useState(false);
   const [phoneVerificationError, setPhoneVerificationError] = useState("");
   const [phoneVerificationResultStatus, setPhoneVerificationResultStatus] =
     useState<PhoneVerificationResultStatus>("idle");
-  const [phoneVerificationResultMessage, setPhoneVerificationResultMessage] = useState("");
+  const [phoneVerificationResultMessage, setPhoneVerificationResultMessage] =
+    useState("");
+  const [verifiedPhoneForSave, setVerifiedPhoneForSave] = useState("");
 
   useEffect(() => {
     let ignore = false;
@@ -172,10 +211,15 @@ export function useAdminSettingsForm() {
           setForm(nextProfile);
           setTouchedFields({});
           setSubmitAttempted(false);
+          setVerifiedPhoneForSave("");
         }
       } catch (error) {
         if (!ignore) {
-          setLoadError(error instanceof Error ? error.message : "اطلاعات حساب ادمین دریافت نشد.");
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : "اطلاعات حساب ادمین دریافت نشد."
+          );
         }
       } finally {
         if (!ignore) setIsLoadingProfile(false);
@@ -196,6 +240,7 @@ export function useAdminSettingsForm() {
 
     Object.entries(errors).forEach(([field, error]) => {
       const typedField = field as keyof AdminSettingsFormState;
+
       if (submitAttempted || touchedFields[typedField]) {
         result[typedField] = error;
       }
@@ -224,28 +269,47 @@ export function useAdminSettingsForm() {
   };
 
   const markFieldAsTouched = (field: keyof AdminSettingsFormState) => {
-    setTouchedFields((prevTouchedFields) => ({ ...prevTouchedFields, [field]: true }));
+    setTouchedFields((prevTouchedFields) => ({
+      ...prevTouchedFields,
+      [field]: true,
+    }));
   };
 
-  const updateFirstName = (value: string) => updateField("firstName", sanitizePersonalName(value));
-  const updateLastName = (value: string) => updateField("lastName", sanitizePersonalName(value));
+  const updateFirstName = (value: string) =>
+    updateField("firstName", sanitizePersonalName(value));
+
+  const updateLastName = (value: string) =>
+    updateField("lastName", sanitizePersonalName(value));
+
+  const updateUsername = (value: string) =>
+    updateField("username", sanitizeUsername(value));
+
   const showPhoneEditRestriction = () => {
     if (canEditPhone) return;
 
     setPhoneEditRestrictionMessage(
-      "امکان ویرایش شماره موبایل توسط شما وجود ندارد. به سوپر ادمین درخواست ویرایش شماره موبایل دهید."
+      "امکان ویرایش شماره موبایل توسط شما وجود ندارد. به منیجر درخواست ویرایش شماره موبایل دهید."
     );
   };
 
   const updatePhone = (value: string) => {
+    setPendingPhone(sanitizePhoneNumber(value));
+  };
+
+  const openPhoneVerification = () => {
     if (!canEditPhone) {
       showPhoneEditRestriction();
       return;
     }
 
-    updateField("phone", sanitizePhoneNumber(value));
+    setPendingPhone(form.phone);
+    setPhoneVerificationCode("");
+    setPhoneVerificationStep("phone");
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+    setIsPhoneModalOpen(true);
   };
-  const updateUsername = (value: string) => updateField("username", sanitizeUsername(value));
 
   const updateAvatarFromGallery = (avatarSrc: string) => {
     setSuccessMessage("");
@@ -280,7 +344,10 @@ export function useAdminSettingsForm() {
   const handleNameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     const isShortcutKey = event.ctrlKey || event.metaKey || event.altKey;
     const isControlKey = event.key.length !== 1;
-    if (!isShortcutKey && !isControlKey && isDigitKey(event.key)) event.preventDefault();
+
+    if (!isShortcutKey && !isControlKey && isDigitKey(event.key)) {
+      event.preventDefault();
+    }
   };
 
   const handlePhoneKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -298,6 +365,41 @@ export function useAdminSettingsForm() {
 
     if (!isShortcutKey && !isControlKey && !isAllowedUsernameValue(event.key)) {
       event.preventDefault();
+    }
+  };
+
+  const requestPhoneVerificationCode = async () => {
+    if (!canEditPhone) {
+      showPhoneEditRestriction();
+      return;
+    }
+
+    if (!isValidIranMobileNumber(pendingPhone)) {
+      setPhoneVerificationError("شماره موبایل معتبر نیست.");
+      return;
+    }
+
+    if (pendingPhone === savedProfile.phone) {
+      setPhoneVerificationError("شماره جدید باید با شماره فعلی متفاوت باشد.");
+      return;
+    }
+
+    try {
+      setIsPhoneVerificationSubmitting(true);
+      setPhoneVerificationError("");
+      setPhoneVerificationResultStatus("idle");
+      setPhoneVerificationResultMessage("");
+
+      await requestCurrentAdminPhoneChangeCode(pendingPhone);
+
+      setPhoneVerificationCode("");
+      setPhoneVerificationStep("verification");
+    } catch (error) {
+      setPhoneVerificationError(
+        error instanceof Error ? error.message : "ارسال کد تایید انجام نشد."
+      );
+    } finally {
+      setIsPhoneVerificationSubmitting(false);
     }
   };
 
@@ -324,23 +426,43 @@ export function useAdminSettingsForm() {
       setPhoneVerificationError("");
       setPhoneVerificationResultStatus("idle");
 
-      const session = await verifyCurrentAdminPhoneChange(form.phone.trim(), code);
+      const session = await verifyCurrentAdminPhoneChange(pendingPhone, code);
       setAdminSession(session);
 
       const nextProfile = toFormState(session.admin);
-      setSavedProfile(nextProfile);
-      setForm(nextProfile);
+
+      setForm((prevForm) => ({
+        ...prevForm,
+        phone: nextProfile.phone,
+      }));
+      setVerifiedPhoneForSave(nextProfile.phone);
       setPhoneVerificationResultStatus("success");
-      setPhoneVerificationResultMessage("شماره تماس جدید با موفقیت ثبت شد.");
-      setSuccessMessage("تغییرات حساب کاربری با موفقیت ذخیره شد.");
+      setPhoneVerificationResultMessage(
+        "شماره جدید تایید شد. حالا برای ثبت نهایی روی ذخیره تغییرات بزنید."
+      );
       setSubmitAttempted(false);
-      setTouchedFields({});
+      setTouchedFields((prevTouchedFields) => ({
+        ...prevTouchedFields,
+        phone: false,
+      }));
     } catch (error) {
       setPhoneVerificationResultStatus("error");
-      setPhoneVerificationError(error instanceof Error ? error.message : "ثبت شماره جدید انجام نشد.");
+      setPhoneVerificationError(
+        error instanceof Error ? error.message : "تایید شماره جدید انجام نشد."
+      );
     } finally {
       setIsPhoneVerificationSubmitting(false);
     }
+  };
+
+  const backToPhoneStep = () => {
+    if (isPhoneVerificationSubmitting) return;
+
+    setPhoneVerificationStep("phone");
+    setPhoneVerificationCode("");
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -353,6 +475,11 @@ export function useAdminSettingsForm() {
 
     const currentErrors = validateAdminSettingsForm(form);
     if (Object.keys(currentErrors).length > 0 || avatarError || !hasChanges) return;
+
+    if (form.phone !== savedProfile.phone && form.phone !== verifiedPhoneForSave) {
+      openPhoneVerification();
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -385,34 +512,19 @@ export function useAdminSettingsForm() {
 
       if (latestUpdate) {
         applyProfileUpdate(latestUpdate);
-        const nextProfile = toFormState(latestUpdate.admin);
-        setSavedProfile((prev) => ({ ...nextProfile, phone: prev.phone }));
-        setForm((prev) => ({ ...nextProfile, phone: prev.phone }));
       }
 
-      if (form.phone !== savedProfile.phone) {
-        if (!canEditPhone) {
-          showPhoneEditRestriction();
-          return;
-        }
-
-        await requestCurrentAdminPhoneChangeCode(form.phone.trim());
-        setIsPhoneModalOpen(true);
-        setPhoneVerificationCode("");
-        setPhoneVerificationStep("verification");
-        setPhoneVerificationError("");
-        setPhoneVerificationResultStatus("idle");
-        setPhoneVerificationResultMessage("");
-        return;
-      }
-
-      if (latestUpdate) {
-        setSuccessMessage("تغییرات حساب کاربری با موفقیت ذخیره شد.");
-        setSubmitAttempted(false);
-        setTouchedFields({});
-      }
+      setSavedProfile(form);
+      setVerifiedPhoneForSave("");
+      setSuccessMessage("تغییرات حساب کاربری با موفقیت ذخیره شد.");
+      setSubmitAttempted(false);
+      setTouchedFields({});
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "ذخیره تغییرات حساب کاربری انجام نشد.");
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "ذخیره تغییرات حساب کاربری انجام نشد."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -435,6 +547,7 @@ export function useAdminSettingsForm() {
     phoneEditRestrictionMessage,
     isPhoneModalOpen,
     phoneVerificationStep,
+    pendingPhone,
     phoneVerificationCode,
     isPhoneVerificationSubmitting,
     phoneVerificationError,
@@ -447,9 +560,12 @@ export function useAdminSettingsForm() {
     updateAvatarFromGallery,
     updateAvatarFromFile,
     updatePhoneVerificationCode: setPhoneVerificationCode,
-    showPhoneEditRestriction,
+    openPhoneVerification,
+    requestPhoneVerificationCode,
     closePhoneVerification,
     verifyPhoneVerificationCode,
+    backToPhoneStep,
+    showPhoneEditRestriction,
     markFieldAsTouched,
     handleNameKeyDown,
     handlePhoneKeyDown,

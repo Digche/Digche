@@ -26,6 +26,7 @@ export default function AdminSettingsScreen() {
     phoneEditRestrictionMessage,
     isPhoneModalOpen,
     phoneVerificationStep,
+    pendingPhone,
     phoneVerificationCode,
     isPhoneVerificationSubmitting,
     phoneVerificationError,
@@ -38,12 +39,14 @@ export default function AdminSettingsScreen() {
     updateAvatarFromGallery,
     updateAvatarFromFile,
     updatePhoneVerificationCode,
+    openPhoneVerification,
+    requestPhoneVerificationCode,
     closePhoneVerification,
     verifyPhoneVerificationCode,
+    backToPhoneStep,
     showPhoneEditRestriction,
     markFieldAsTouched,
     handleNameKeyDown,
-    handlePhoneKeyDown,
     handleUsernameKeyDown,
     handleSubmit,
   } = useAdminSettingsForm();
@@ -117,26 +120,18 @@ export default function AdminSettingsScreen() {
               autoComplete="tel"
               autoCorrect="off"
               spellCheck={false}
+              readOnly
               maxLength={MOBILE_NUMBER_MAX_LENGTH}
               minLength={MOBILE_NUMBER_MAX_LENGTH}
               pattern="09[0-9]{9}"
-              title="شماره موبایل باید با 09 شروع شود و دقیقاً 11 رقم باشد."
+              title="برای تغییر شماره موبایل روی این فیلد کلیک کنید."
               value={form.phone}
-              readOnly={!canEditPhone}
-              onChange={updatePhone}
-              onFocus={() => {
-                if (!canEditPhone) showPhoneEditRestriction();
-              }}
-              onClick={() => {
-                if (!canEditPhone) showPhoneEditRestriction();
-              }}
+              onChange={() => undefined}
+              onFocus={canEditPhone ? openPhoneVerification : showPhoneEditRestriction}
+              onClick={canEditPhone ? openPhoneVerification : showPhoneEditRestriction}
               onBlur={() => markFieldAsTouched("phone")}
-              onKeyDown={canEditPhone ? handlePhoneKeyDown : undefined}
               error={visibleErrors.phone}
-              helperText={
-                phoneEditRestrictionMessage ||
-                "برای ذخیره شماره جدید، بعد از زدن ذخیره تغییرات کد تایید می‌گیری."
-              }
+              helperText={phoneEditRestrictionMessage || undefined}
               placeholder="09123456789"
             />
 
@@ -191,24 +186,28 @@ export default function AdminSettingsScreen() {
       <PhoneVerificationGlassBox
         isOpen={isPhoneModalOpen}
         step={phoneVerificationStep}
-        title="تایید شماره جدید"
-        description="کد تایید ارسال‌شده به شماره جدید را وارد کن تا شماره ادمین تغییر کند."
-        phone={form.phone}
+        title="ویرایش شماره موبایل"
+        description={
+          phoneVerificationStep === "phone"
+            ? "شماره موبایل جدید را وارد کنید تا کد تایید برایتان ارسال شود."
+            : "کد تایید ارسال‌شده به شماره جدید را وارد کنید."
+        }
+        phone={pendingPhone}
         code={phoneVerificationCode}
         isSubmitting={isPhoneVerificationSubmitting}
         errorMessage={phoneVerificationError}
         resultStatus={phoneVerificationResultStatus}
         resultMessage={phoneVerificationResultMessage}
-        resultAutoCloseMs={2500}
-        phoneLabel="شماره تماس"
+        resultAutoCloseMs={2200}
+        phoneLabel="شماره موبایل جدید"
         codeLabel="کد تایید"
-        requestCodeText="دریافت دوباره کد"
-        verifyCodeText="ثبت شماره"
+        requestCodeText="دریافت کد تایید"
+        verifyCodeText="تایید شماره"
         onPhoneChange={updatePhone}
         onCodeChange={updatePhoneVerificationCode}
-        onRequestCode={() => undefined}
+        onRequestCode={requestPhoneVerificationCode}
         onVerifyCode={verifyPhoneVerificationCode}
-        onBackToPhone={() => undefined}
+        onBackToPhone={backToPhoneStep}
         onClose={closePhoneVerification}
       />
     </AdminPanel>
