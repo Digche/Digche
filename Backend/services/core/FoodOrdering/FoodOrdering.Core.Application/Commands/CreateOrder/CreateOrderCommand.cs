@@ -4,4 +4,4 @@ using MediatR;
 
 namespace FoodOrdering.Core.Application.Commands.CreateOrder;
 
-public record CreateOrderCommand(CreateOrderDto Dto) : IRequest<Result<OrderDto>>;
+public record CreateOrderCommand() : IRequest<Result<OrderDto>>;

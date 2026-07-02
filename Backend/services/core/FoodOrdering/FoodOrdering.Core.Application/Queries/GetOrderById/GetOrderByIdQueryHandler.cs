@@ -9,11 +9,16 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Resul
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IUserContext _userContext;
+    private readonly IUserServiceClient _userServiceClient;
 
-    public GetOrderByIdQueryHandler(IOrderRepository orderRepository, IUserContext userContext)
+    public GetOrderByIdQueryHandler(
+        IOrderRepository orderRepository,
+        IUserContext userContext,
+        IUserServiceClient userServiceClient)
     {
         _orderRepository = orderRepository;
         _userContext = userContext;
+        _userServiceClient = userServiceClient;
     }
 
     public async Task<Result<OrderDto>> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
@@ -22,7 +27,7 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Resul
         if (!_userContext.IsAuthenticated())
             return Result<OrderDto>.Failure("User not authenticated.");
 
-        // دریافت سفارش با آیتم‌ها
+        // دریافت سفارش با آیتم‌ها (شامل بارگذاری Dish)
         var order = await _orderRepository.GetByIdWithItemsAsync(request.OrderId, cancellationToken);
         if (order is null)
             return Result<OrderDto>.Failure("سفارش یافت نشد.");
@@ -31,31 +36,58 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Resul
         if (!_userContext.TryGetCurrentUserId(out var userId))
             return Result<OrderDto>.Failure("User ID not found in token.");
 
-        // اگر کاربر نه مشتری این سفارش است و نه آشپز آن، دسترسی ندارد
         if (order.CustomerId != userId && order.ChefId != userId)
             return Result<OrderDto>.Failure("شما دسترسی به این سفارش را ندارید.");
 
-        // نگاشت به DTO
+        // دریافت اطلاعات کاربر (مشتری) برای نام و تلفن
+        AuthUserDto userInfo = null;
+        try
+        {
+            // اگر کاربر جاری خود مشتری است، اطلاعات خودش را می‌گیریم
+            // در غیر این صورت (آشپز) اطلاعات مشتری را درخواست می‌کنیم
+            var targetUserId = (order.CustomerId == userId) ? userId : order.CustomerId;
+            userInfo = await _userServiceClient.GetUserInfoAsync(targetUserId, cancellationToken);
+        }
+        catch
+        {
+            // در صورت خطا در دریافت اطلاعات، مقدار پیش‌فرض استفاده می‌شود
+        }
+
+        var customerName = userInfo != null ? GetDisplayName(userInfo) : "نامشخص";
+        var customerPhone = userInfo?.Phone ?? "نامشخص";
+
+        // نگاشت به DTO جدید
         var orderDto = new OrderDto
         {
             Id = order.Id,
             CustomerId = order.CustomerId,
             ChefId = order.ChefId,
-            DeliveryAddress = order.DeliveryAddress,
-            DeliveryFee = order.DeliveryFee,
-            EstimatedDeliveryTime = order.EstimatedDeliveryTime,
+            CustomerName = customerName,
+            CustomerPhone = customerPhone,
             Status = order.Status,
-            TotalPrice = order.TotalPrice,
-            CreatedAt = order.CreatedAt,
+            OrderedAt = order.CreatedAt,
             Items = order.Items.Select(item => new OrderItemDto
             {
-                DishId = item.DishId,
-                DishName = item.Dish?.Name ?? "نامشخص",
+                FoodId = item.DishId,
+                FoodTitle = item.Dish?.Name ?? "نامشخص",
+                FoodImage = item.Dish?.ImageUrl ?? string.Empty,
                 Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice
+                Price = item.UnitPrice,
+                Unit = "تومان"
             }).ToList()
         };
 
         return Result<OrderDto>.Success(orderDto);
+    }
+
+    private static string GetDisplayName(AuthUserDto user)
+    {
+        if (!string.IsNullOrWhiteSpace(user.FirstName) && !string.IsNullOrWhiteSpace(user.LastName))
+            return $"{user.FirstName} {user.LastName}";
+        if (!string.IsNullOrWhiteSpace(user.DisplayName))
+            return user.DisplayName;
+        if (!string.IsNullOrWhiteSpace(user.Username))
+            return user.Username;
+        return "کاربر";
     }
 }
