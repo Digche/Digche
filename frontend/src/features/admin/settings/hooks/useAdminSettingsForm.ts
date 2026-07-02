@@ -131,6 +131,7 @@ export function useAdminSettingsForm() {
   const currentAdmin = useAdminAuthStore((state) => state.currentAdmin);
   const applyProfileUpdate = useAdminAuthStore((state) => state.applyProfileUpdate);
   const setAdminSession = useAdminAuthStore((state) => state.setSession);
+  const canEditPhone = Boolean(currentAdmin?.isManager);
 
   const initialProfile = currentAdmin ? toFormState(currentAdmin) : emptyProfileState;
 
@@ -144,6 +145,7 @@ export function useAdminSettingsForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [phoneEditRestrictionMessage, setPhoneEditRestrictionMessage] = useState("");
 
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
   const [phoneVerificationStep, setPhoneVerificationStep] = useState<PhoneVerificationStep>("verification");
@@ -213,6 +215,11 @@ export function useAdminSettingsForm() {
   const updateField = (field: keyof AdminSettingsFormState, value: string) => {
     setSuccessMessage("");
     setSubmitError("");
+
+    if (field !== "phone") {
+      setPhoneEditRestrictionMessage("");
+    }
+
     setForm((prevForm) => ({ ...prevForm, [field]: value }));
   };
 
@@ -222,7 +229,22 @@ export function useAdminSettingsForm() {
 
   const updateFirstName = (value: string) => updateField("firstName", sanitizePersonalName(value));
   const updateLastName = (value: string) => updateField("lastName", sanitizePersonalName(value));
-  const updatePhone = (value: string) => updateField("phone", sanitizePhoneNumber(value));
+  const showPhoneEditRestriction = () => {
+    if (canEditPhone) return;
+
+    setPhoneEditRestrictionMessage(
+      "امکان ویرایش شماره موبایل توسط شما وجود ندارد. به سوپر ادمین درخواست ویرایش شماره موبایل دهید."
+    );
+  };
+
+  const updatePhone = (value: string) => {
+    if (!canEditPhone) {
+      showPhoneEditRestriction();
+      return;
+    }
+
+    updateField("phone", sanitizePhoneNumber(value));
+  };
   const updateUsername = (value: string) => updateField("username", sanitizeUsername(value));
 
   const updateAvatarFromGallery = (avatarSrc: string) => {
@@ -369,6 +391,11 @@ export function useAdminSettingsForm() {
       }
 
       if (form.phone !== savedProfile.phone) {
+        if (!canEditPhone) {
+          showPhoneEditRestriction();
+          return;
+        }
+
         await requestCurrentAdminPhoneChangeCode(form.phone.trim());
         setIsPhoneModalOpen(true);
         setPhoneVerificationCode("");
@@ -376,7 +403,6 @@ export function useAdminSettingsForm() {
         setPhoneVerificationError("");
         setPhoneVerificationResultStatus("idle");
         setPhoneVerificationResultMessage("");
-        setSubmitError("برای ثبت شماره جدید، کد تایید ارسال‌شده را وارد کنید.");
         return;
       }
 
@@ -405,6 +431,8 @@ export function useAdminSettingsForm() {
     loadError,
     submitError,
     successMessage,
+    canEditPhone,
+    phoneEditRestrictionMessage,
     isPhoneModalOpen,
     phoneVerificationStep,
     phoneVerificationCode,
@@ -419,6 +447,7 @@ export function useAdminSettingsForm() {
     updateAvatarFromGallery,
     updateAvatarFromFile,
     updatePhoneVerificationCode: setPhoneVerificationCode,
+    showPhoneEditRestriction,
     closePhoneVerification,
     verifyPhoneVerificationCode,
     markFieldAsTouched,

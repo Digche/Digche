@@ -22,6 +22,8 @@ export default function AdminSettingsScreen() {
     loadError,
     submitError,
     successMessage,
+    canEditPhone,
+    phoneEditRestrictionMessage,
     isPhoneModalOpen,
     phoneVerificationStep,
     phoneVerificationCode,
@@ -38,6 +40,7 @@ export default function AdminSettingsScreen() {
     updatePhoneVerificationCode,
     closePhoneVerification,
     verifyPhoneVerificationCode,
+    showPhoneEditRestriction,
     markFieldAsTouched,
     handleNameKeyDown,
     handlePhoneKeyDown,
@@ -119,11 +122,21 @@ export default function AdminSettingsScreen() {
               pattern="09[0-9]{9}"
               title="شماره موبایل باید با 09 شروع شود و دقیقاً 11 رقم باشد."
               value={form.phone}
+              readOnly={!canEditPhone}
               onChange={updatePhone}
+              onFocus={() => {
+                if (!canEditPhone) showPhoneEditRestriction();
+              }}
+              onClick={() => {
+                if (!canEditPhone) showPhoneEditRestriction();
+              }}
               onBlur={() => markFieldAsTouched("phone")}
-              onKeyDown={handlePhoneKeyDown}
+              onKeyDown={canEditPhone ? handlePhoneKeyDown : undefined}
               error={visibleErrors.phone}
-              helperText="برای ذخیره شماره جدید، بعد از زدن ذخیره تغییرات کد تایید می‌گیری."
+              helperText={
+                phoneEditRestrictionMessage ||
+                "برای ذخیره شماره جدید، بعد از زدن ذخیره تغییرات کد تایید می‌گیری."
+              }
               placeholder="09123456789"
             />
 
