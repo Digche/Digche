@@ -22,9 +22,9 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
+    public async Task<IActionResult> CreateOrder()
     {
-        var command = new CreateOrderCommand(dto);
+        var command = new CreateOrderCommand();
         var result = await _mediator.Send(command);
 
         if (!result.IsSuccess)
@@ -70,30 +70,30 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    // ===== اکشن جدید برای تأیید سفارش توسط آشپز =====
-    [HttpPut("{id:guid}/approve")]
-    [Authorize(Roles = "chef")]
-    public async Task<IActionResult> ApproveOrder(Guid id)
-    {
-        var command = new ApproveOrderCommand(id);
-        var result = await _mediator.Send(command);
+    // // ===== اکشن جدید برای تأیید سفارش توسط آشپز =====
+    // [HttpPut("{id:guid}/approve")]
+    // [Authorize(Roles = "chef")]
+    // public async Task<IActionResult> ApproveOrder(Guid id)
+    // {
+    //     var command = new ApproveOrderCommand(id);
+    //     var result = await _mediator.Send(command);
 
-        if (!result.IsSuccess)
-            return BadRequest(new { message = result.ErrorMessage });
+    //     if (!result.IsSuccess)
+    //         return BadRequest(new { message = result.ErrorMessage });
 
-        return Ok(new { message = "Order approved successfully." });
-    }
+    //     return Ok(new { message = "Order approved successfully." });
+    // }
 
-    // ===== اکشن جدید برای پرداخت توسط مشتری =====
-    [HttpPost("{id:guid}/pay")]
-    public async Task<IActionResult> PayOrder(Guid id)
-    {
-        var command = new PayOrderCommand(id);
-        var result = await _mediator.Send(command);
+    // // ===== اکشن جدید برای پرداخت توسط مشتری =====
+    // [HttpPost("{id:guid}/pay")]
+    // public async Task<IActionResult> PayOrder(Guid id)
+    // {
+    //     var command = new PayOrderCommand(id);
+    //     var result = await _mediator.Send(command);
 
-        if (!result.IsSuccess)
-            return BadRequest(new { message = result.ErrorMessage });
+    //     if (!result.IsSuccess)
+    //         return BadRequest(new { message = result.ErrorMessage });
 
-        return Ok(new { message = "Payment successful. Money transferred to chef." });
-    }
+    //     return Ok(new { message = "Payment successful. Money transferred to chef." });
+    // }
 }

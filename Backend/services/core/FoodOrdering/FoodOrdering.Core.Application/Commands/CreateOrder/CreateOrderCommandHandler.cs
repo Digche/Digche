@@ -13,98 +13,129 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
     private readonly IOrderRepository _orderRepository;
     private readonly IDishRepository _dishRepository;
     private readonly IUserContext _userContext;
+    private readonly IUserServiceClient _userServiceClient; // ← سرویس جدید
 
     public CreateOrderCommandHandler(
         ICartRepository cartRepository,
         IOrderRepository orderRepository,
         IDishRepository dishRepository,
-        IUserContext userContext)
+        IUserContext userContext,
+        IUserServiceClient userServiceClient)
     {
         _cartRepository = cartRepository;
         _orderRepository = orderRepository;
         _dishRepository = dishRepository;
         _userContext = userContext;
+        _userServiceClient = userServiceClient;
     }
 
     public async Task<Result<OrderDto>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        // 1. دریافت شناسه کاربر جاری
+        // ۱. دریافت شناسه کاربر جاری
         if (!_userContext.TryGetCurrentUserId(out var customerId))
-            return Result<OrderDto>.Failure("User ID not found in token.");
+            return Result<OrderDto>.Failure("شناسه کاربر در توکن یافت نشد.");
 
-        var dto = request.Dto;
+        // ۲. دریافت اطلاعات کاربر از سرویس Auth
+        var userInfo = await _userServiceClient.GetUserInfoAsync(customerId, cancellationToken);
+        if (userInfo is null)
+            return Result<OrderDto>.Failure("اطلاعات کاربر یافت نشد.");
 
-        // 2. اعتبارسنجی آدرس (بهبود یافته)
-        if (string.IsNullOrWhiteSpace(dto.DeliveryAddress))
-            return Result<OrderDto>.Failure("آدرس تحویل نمی‌تواند خالی باشد.");
-
-        if (dto.DeliveryAddress.Length < 10) // حداقل طول آدرس
-            return Result<OrderDto>.Failure("آدرس تحویل باید حداقل ۱۰ کاراکتر باشد.");
-
-        // // 3. بررسی آشپز و دریافت هزینه ارسال از پروفایل
-        // var chef = await _chefProfileRepository.GetByIdAsync(dto.ChefId, cancellationToken);
-        // if (chef is null)
-        //     return Result<OrderDto>.Failure("آشپز یافت نشد.");
-        // if (chef.Status != ChefProfileStatus.Approved)
-        //     return Result<OrderDto>.Failure("آشپز تأیید نشده است.");
-
-        var deliveryFee = 100;
-
-        // 4. دریافت سبد خرید کاربر
+        // ۳. دریافت سبد خرید
         var cart = await _cartRepository.GetByUserIdWithItemsAsync(customerId, cancellationToken);
         if (cart is null || !cart.Items.Any())
             return Result<OrderDto>.Failure("سبد خرید خالی است.");
 
-        // 5. ایجاد سفارش با هزینه ارسال محاسبه‌شده در سرور
-        var order = new Order(
-            customerId,
-            dto.ChefId,
-            dto.DeliveryAddress,
-            deliveryFee  // ← هزینه از سرور
-        );
+        // ۴. استخراج ChefId از آیتم‌های سبد (همه باید یک آشپز داشته باشند)
+        var chefIds = new HashSet<Guid>();
+        var dishDictionary = new Dictionary<Guid, Dish>(); // برای نگهداری غذاها
 
-        // 6. اضافه کردن آیتم‌های سبد به سفارش (با بررسی موجودی)
         foreach (var cartItem in cart.Items)
         {
             var dish = await _dishRepository.GetByIdAsync(cartItem.DishId, cancellationToken);
             if (dish is null)
                 return Result<OrderDto>.Failure($"غذایی با شناسه {cartItem.DishId} یافت نشد.");
 
+            dishDictionary[cartItem.DishId] = dish;
+            chefIds.Add(dish.ChefId); // فرض بر این است که Dish دارای ChefId است
+        }
+
+        if (chefIds.Count == 0)
+            return Result<OrderDto>.Failure("هیچ آشپزی برای سفارش یافت نشد.");
+        if (chefIds.Count > 1)
+            return Result<OrderDto>.Failure("سبد خرید شامل آیتم‌هایی از چند آشپز است. لطفاً هر آشپز را جداگانه سفارش دهید.");
+
+        var chefId = chefIds.First();
+
+        // ۵. دریافت آدرس تحویل (از اطلاعات کاربر)
+        var deliveryAddress = !string.IsNullOrWhiteSpace(userInfo.Address) 
+            ? userInfo.Address 
+            : "آدرس ثبت نشده";
+
+        // ۶. محاسبه هزینه ارسال (فعلاً ثابت، بعداً از پروفایل آشپز قابل دریافت است)
+        var deliveryFee = 100;
+
+        // ۷. ایجاد سفارش
+        var order = new Order(
+            customerId,
+            chefId,
+            deliveryAddress,
+            deliveryFee
+        );
+
+        // ۸. افزودن آیتم‌های سبد به سفارش با بررسی موجودی
+        foreach (var cartItem in cart.Items)
+        {
+            var dish = dishDictionary[cartItem.DishId];
+
             if (!dish.IsAvailable || !dish.HasEnoughStock(cartItem.Quantity))
                 return Result<OrderDto>.Failure($"غذای '{dish.Name}' موجود نیست یا موجودی کافی نیست.");
 
             if (!order.AddItem(dish, cartItem.Quantity))
                 return Result<OrderDto>.Failure($"خطا در افزودن آیتم '{dish.Name}' به سفارش.");
+
+            await _dishRepository.UpdateAsync(dish, cancellationToken);
         }
 
-        // 7. ذخیره سفارش
+        // ۹. ذخیره سفارش
         await _orderRepository.AddAsync(order, cancellationToken);
 
-        // 8. خالی کردن سبد خرید
+        // ۱۰. خالی کردن سبد خرید
         cart.Clear();
         await _cartRepository.UpdateAsync(cart, cancellationToken);
 
-        // 9. تبدیل به DTO برای بازگشت به کاربر
+        // ۱۱. ساخت DTO خروجی مطابق درخواست شما
         var orderDto = new OrderDto
         {
             Id = order.Id,
             CustomerId = order.CustomerId,
             ChefId = order.ChefId,
-            DeliveryAddress = order.DeliveryAddress,
-            DeliveryFee = order.DeliveryFee,   // مقدار واقعی از سرور
-            EstimatedDeliveryTime = order.EstimatedDeliveryTime,
+            CustomerName = GetDisplayName(userInfo),
+            CustomerPhone = userInfo.Phone ?? "نامشخص",
             Status = order.Status,
-            TotalPrice = order.TotalPrice,
-            CreatedAt = order.CreatedAt,
+            OrderedAt = order.CreatedAt,
             Items = order.Items.Select(item => new OrderItemDto
             {
-                DishId = item.DishId,
-                DishName = item.Dish?.Name ?? "نامشخص",
+                FoodId = item.DishId,
+                FoodTitle = dishDictionary[item.DishId]?.Name ?? "نامشخص",
+                FoodImage = dishDictionary[item.DishId]?.ImageUrl ?? string.Empty,
                 Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice
+                Price = item.UnitPrice,
+                Unit = "تومان"
             }).ToList()
         };
 
         return Result<OrderDto>.Success(orderDto);
+    }
+
+    // متد کمکی برای ساخت نام کامل
+    private static string GetDisplayName(AuthUserDto user)
+    {
+        if (!string.IsNullOrWhiteSpace(user.FirstName) && !string.IsNullOrWhiteSpace(user.LastName))
+            return $"{user.FirstName} {user.LastName}";
+        if (!string.IsNullOrWhiteSpace(user.DisplayName))
+            return user.DisplayName;
+        if (!string.IsNullOrWhiteSpace(user.Username))
+            return user.Username;
+        return "کاربر";
     }
 }
