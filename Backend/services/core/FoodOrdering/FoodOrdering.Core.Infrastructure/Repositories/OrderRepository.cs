@@ -27,6 +27,7 @@ public class OrderRepository : IOrderRepository
     public async Task<IEnumerable<Order>> GetByChefIdAsync(Guid chefId, CancellationToken cancellation = default)
         => await _context.Orders
             .Where(o => o.ChefId == chefId)
+            .Include(o => o.Items).ThenInclude(i => i.Dish)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync(cancellation);
 

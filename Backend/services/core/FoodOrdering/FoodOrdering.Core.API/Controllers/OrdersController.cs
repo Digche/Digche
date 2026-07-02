@@ -57,18 +57,18 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    // [HttpGet("chef")]
-    // [Authorize(Roles = "chef")]
-    // public async Task<IActionResult> GetChefOrders()
-    // {
-    //     var query = new GetChefOrdersQuery();
-    //     var result = await _mediator.Send(query);
+    [HttpGet("chef")]
+    [Authorize(Roles = "chef")]
+    public async Task<IActionResult> GetChefOrders()
+    {
+        var query = new GetChefOrdersQuery();
+        var result = await _mediator.Send(query);
 
-    //     if (!result.IsSuccess)
-    //         return BadRequest(new { message = result.ErrorMessage });
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage });
 
-    //     return Ok(result);
-    // }
+        return Ok(result);
+    }
 
     // // ===== اکشن جدید برای تأیید سفارش توسط آشپز =====
     // [HttpPut("{id:guid}/approve")]
