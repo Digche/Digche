@@ -27,7 +27,6 @@ type AdminAuthStore = {
   setHasHydrated: (value: boolean) => void;
   setSession: (session: AdminSessionResponse) => void;
   applyProfileUpdate: (profileUpdate: AdminProfileUpdateResponse) => void;
-  applyProfileUpdate: (profileUpdate: AdminProfileUpdateResponse) => void;
   clearSession: () => void;
   fetchCurrentAdmin: () => Promise<CurrentAdmin | null>;
   refreshSession: () => Promise<AdminSessionResponse | null>;
