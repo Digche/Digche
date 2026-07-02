@@ -36,7 +36,7 @@ export function useAdminMessages() {
           return currentId;
         }
 
-        return mappedMessages[0]?.id ?? null;
+        return null;
       });
     } catch (error) {
       setLoadError(
