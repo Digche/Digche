@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using FoodOrdering.Core.Application.Common;
 using FoodOrdering.Core.Application.DTOs;
 using FoodOrdering.Core.Domain.Interfaces;
@@ -9,10 +8,12 @@ namespace FoodOrdering.Core.Application.Queries;
 public class GetDishByIdQueryHandler : IRequestHandler<GetDishByIdQuery, Result<DishDto>>
 {
     private readonly IDishRepository _dishRepository;
+    private readonly IUserServiceClient _userServiceClient;
 
-    public GetDishByIdQueryHandler(IDishRepository dishRepository)
+    public GetDishByIdQueryHandler(IDishRepository dishRepository, IUserServiceClient userServiceClient)
     {
         _dishRepository = dishRepository;
+        _userServiceClient = userServiceClient;
     }
 
     public async Task<Result<DishDto>> Handle(GetDishByIdQuery request, CancellationToken cancellationToken)
@@ -21,13 +22,27 @@ public class GetDishByIdQueryHandler : IRequestHandler<GetDishByIdQuery, Result<
         if (dish is null)
             return Result<DishDto>.Failure("غذا یافت نشد.");
 
-        double? averageRating = null;
-        if (dish.Comments.Any(c => c.Rating.HasValue))
+        // دریافت اطلاعات کاربر
+        string? chefCity = null;
+        string? chefName = null;
+        var userInfo = await _userServiceClient.GetUserInfoAsync(dish.ChefId, cancellationToken);
+        if (userInfo != null)
         {
-            averageRating = dish.Comments
-                .Where(c => c.Rating.HasValue)
-                .Average(c => c.Rating.Value);
+            chefCity = userInfo.Address;  // شهر
+            chefName = userInfo.DisplayName;  // اسم نمایشی
+            if (string.IsNullOrWhiteSpace(chefName))
+            {
+                // اگر DisplayName خالی بود، از FirstName و LastName ترکیب کن
+                chefName = $"{userInfo.FirstName} {userInfo.LastName}".Trim();
+                if (string.IsNullOrWhiteSpace(chefName))
+                    chefName = userInfo.Username;  // باز هم اگر خالی بود، از Username استفاده کن
+            }
         }
+
+        // محاسبه میانگین امتیاز
+        double? avgRating = null;
+        if (dish.Comments.Any(c => c.Rating.HasValue))
+            avgRating = dish.Comments.Where(c => c.Rating.HasValue).Average(c => c.Rating.Value);
 
         var dto = new DishDto
         {
@@ -41,7 +56,9 @@ public class GetDishByIdQueryHandler : IRequestHandler<GetDishByIdQuery, Result<
             IsAvailable = dish.IsAvailable,
             Remaining = dish.StockQuantity,
             Category = dish.Category,
-            Rating = averageRating
+            Rating = avgRating,
+            Location = chefCity,
+            Chef = chefName
         };
 
         return Result<DishDto>.Success(dto);

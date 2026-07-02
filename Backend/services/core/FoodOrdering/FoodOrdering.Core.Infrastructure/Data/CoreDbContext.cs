@@ -21,14 +21,24 @@ public class CoreDbContext : DbContext
         modelBuilder.Entity<Cart>(entity =>
         {
             entity.HasKey(c => c.Id);
+
+            entity.Property(c => c.Id).ValueGeneratedNever();
+
             entity.Property(c => c.UserId).IsRequired();
+
             entity.HasIndex(c => c.UserId).IsUnique();
+
+            entity.Navigation(c => c.Items).UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
         // ---- CartItem ----
         modelBuilder.Entity<CartItem>(entity =>
         {
             entity.HasKey(ci => ci.Id);
+            entity.Property(ci => ci.Id).ValueGeneratedNever();
+            entity.Property(ci => ci.Quantity).IsRequired();
+
+            entity.HasIndex(ci => new {ci.CartId, ci.DishId}).IsUnique();
             entity.HasOne(ci => ci.Cart)
                 .WithMany(c => c.Items)
                 .HasForeignKey(ci => ci.CartId)

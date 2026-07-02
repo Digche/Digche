@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: foodpass
       POSTGRES_DB: foodorderingdb
     ports:
-      - "6000:5432"   # نگاشت پورت 5433 روی هاست به 5432 داخل کانتینر (از تداخل جلوگیری می‌کند)
+      - "6000:5432" # نگاشت پورت 5433 روی هاست به 5432 داخل کانتینر (از تداخل جلوگیری می‌کند)
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -30,6 +30,8 @@ services:
       - Jwt__Secret=YourSuperSecretKeyForJwtWithAtLeast32Characters123
       - Jwt__Issuer=FoodOrderingCoreAPI
       - Jwt__Audience=FoodOrderingClients
+      - AuthService__BaseUrl=http://localhost:8081/auth/
+      - AuthService__ApiKey=${AUTH_INTERNAL_API_KEY:-change_me_internal_auth_key}
     ports:
       - "5000:80"
     depends_on:

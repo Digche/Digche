@@ -14,4 +14,6 @@ public class DishDto
     public bool IsAvailable { get; set; }
     public string? Category { get; set; }
     public double? Rating { get; set; }
+    public string? Chef { get; set; }
+    public string? Location { get; set; }
 }
