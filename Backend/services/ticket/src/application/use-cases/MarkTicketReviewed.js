@@ -1,8 +1,9 @@
 import { AppError, NotFoundError } from "../errors/AppError.js";
 
 export class MarkTicketReviewed {
-  constructor({ ticketRepository }) {
+  constructor({ ticketRepository, ticketProfileHydrator = null }) {
     this.ticketRepository = ticketRepository;
+    this.ticketProfileHydrator = ticketProfileHydrator;
   }
 
   async execute({ ticketId }) {
@@ -21,7 +22,9 @@ export class MarkTicketReviewed {
     const ticket = await this.ticketRepository.markReviewed(ticketId);
 
     return {
-      ticket
+      ticket: this.ticketProfileHydrator
+        ? await this.ticketProfileHydrator.hydrateTicket(ticket)
+        : ticket
     };
   }
 }

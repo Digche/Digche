@@ -2,8 +2,9 @@ import { AppError, NotFoundError } from "../errors/AppError.js";
 import { ADMIN_ROLES } from "../../domain/constants/roles.js";
 
 export class ReplyToTicket {
-  constructor({ ticketRepository }) {
+  constructor({ ticketRepository, ticketProfileHydrator = null }) {
     this.ticketRepository = ticketRepository;
+    this.ticketProfileHydrator = ticketProfileHydrator;
   }
 
   async execute({ actor, ticketId, replyText }) {
@@ -43,7 +44,9 @@ export class ReplyToTicket {
     }
 
     return {
-      ticket
+      ticket: this.ticketProfileHydrator
+        ? await this.ticketProfileHydrator.hydrateTicket(ticket)
+        : ticket
     };
   }
 
