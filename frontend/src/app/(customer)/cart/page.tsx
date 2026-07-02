@@ -11,7 +11,7 @@ import { useCart } from "@/features/cart/hooks/use-cart";
 import { useAddCartItem } from "@/features/cart/hooks/use-add-cart-item";
 import { useRemoveCartItem } from "@/features/cart/hooks/use-remove-cart-item";
 import { useSetCartItemQuantity } from "@/features/cart/hooks/use-set-cart-item-quantity";
-import { toPersianDigits } from "@/shared/utils/persian-number";
+import { formatPrice, toPersianDigits } from "@/shared/utils/persian-number";
 
 export default function CartPage() {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -251,7 +251,7 @@ export default function CartPage() {
                     </p>
 
                     <p className="text-sm font-bold text-gray-900 sm:text-lg">
-                        {toPersianDigits(item.price)}
+                        {formatPrice(item.price)}
 
                       {item.unit && (
                         <span className="ml-1 text-xs font-normal text-gray-500 sm:text-sm">

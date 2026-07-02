@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { Star, MapPin } from "lucide-react";
 import FoodCardActions from "./FoodCardActions";
 import type { Food } from "../types/food.types";
-import { toPersianDigits } from "@/shared/utils/persian-number";
+import { formatPrice, toPersianDigits } from "@/shared/utils/persian-number";
 
 interface FoodCardProps {
   item: Food;
@@ -118,7 +118,7 @@ export default function FoodCard({
             className="mt-2 flex items-center justify-between gap-2 border-t border-gray-200 pt-2"
           >
             <span className="truncate text-sm font-bold text-gray-900">
-              {toPersianDigits(item.price)}
+              {formatPrice(item.price)}
               {item.unit && (
                 <span className="mr-1 text-xs font-normal text-gray-500">
                   {item.unit}
@@ -204,7 +204,7 @@ export default function FoodCard({
           />
 
           <span dir="rtl" className="text-left text-lg font-bold text-gray-900 min-[420px]:text-right">
-                        {toPersianDigits(item.price)}
+                        {formatPrice(item.price)}
 
             {item.unit && (
               <span className="ml-1 text-sm font-normal">{" "}{item.unit}</span>

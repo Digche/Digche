@@ -28,3 +28,7 @@ export function formatPersianPrice(value?: string | number | null) {
 
   return `${formattedValue} تومان`;
 }
+
+export function formatPrice(value?: string | number | null) {
+  return formatPersianNumber(value);
+}

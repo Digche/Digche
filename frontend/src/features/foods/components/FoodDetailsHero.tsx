@@ -14,7 +14,7 @@ import {
   CookingPot,
 } from "lucide-react";
 import FoodDetailsActions from "./FoodDetailsActions";
-import { toPersianDigits } from "@/shared/utils/persian-number";
+import { formatPersianNumber, formatPersianPrice, formatPrice, toPersianDigits } from "@/shared/utils/persian-number";
 
 interface FoodDetailsHeroProps {
   food: {
@@ -270,7 +270,7 @@ export default function FoodDetailsHero({
             <InfoPill
               icon={<Wallet size={20} className="text-gray-400" />}
               label="قیمت"
-              value={toPersianDigits(priceText)}
+              value={formatPrice(priceText)}
               strong
             />
           </div>
