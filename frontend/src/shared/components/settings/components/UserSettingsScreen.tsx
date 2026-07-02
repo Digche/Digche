@@ -5,19 +5,30 @@
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Camera, Info } from "lucide-react";
+import { Camera, Info, Pencil } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import ProfileField from "@/shared/components/ProfileField";
 import ProvinceCityDropdown, {
   type ProvinceCityValue,
 } from "@/shared/location/ProvinceCityDropdown";
+import {
+  isValidIranMobileNumber,
+  sanitizePhoneNumber,
+} from "@/shared/validation/phone-number";
+import PhoneVerificationGlassBox, {
+  type PhoneVerificationResultStatus,
+  type PhoneVerificationStep,
+} from "@/shared/ui/PhoneVerificationGlassBox";
 import { uploadProfilePhoto } from "@/features/media/api/media-upload.api";
 import {
+  getAuthErrorMessage,
+  requestPublicPhoneChangeOtp,
   updatePublicAddress,
   updatePublicFirstName,
   updatePublicLastName,
   updatePublicPhotoUrl,
   updatePublicUsername,
+  verifyPublicPhoneChange,
   type PublicProfileUpdateResponse,
 } from "@/features/auth/services/auth-api";
 
@@ -48,6 +59,24 @@ const defaultSuccessMessage = "تغییرات با موفقیت ذخیره شد.
 const defaultInfoMessage =
   "لطفا اطلاعاتتون رو به صورت کامل وارد کنید تا بهتر دیده بشین و از تمام امکانات دیگچه استفاده کنین.";
 
+function toLocalIranMobileNumber(value?: string | null) {
+  const digits = String(value || "").replace(/\D/g, "");
+
+  if (digits.startsWith("0098") && digits.length === 14) {
+    return `0${digits.slice(4)}`;
+  }
+
+  if (digits.startsWith("98") && digits.length === 12) {
+    return `0${digits.slice(2)}`;
+  }
+
+  if (digits.startsWith("9") && digits.length === 10) {
+    return `0${digits}`;
+  }
+
+  return digits;
+}
+
 function getSettingsFormFromUser(
   user: ReturnType<typeof useAuthStore.getState>["currentUser"],
   defaultAvatar: string
@@ -56,7 +85,7 @@ function getSettingsFormFromUser(
     name: user?.firstName ?? user?.name ?? "",
     lastName: user?.lastName ?? "",
     username: user?.username ?? "",
-    phone: user?.phone ?? "",
+    phone: toLocalIranMobileNumber(user?.phone),
     location: user?.location ?? "",
     bio: user?.bio ?? "",
     avatar: user?.avatar ?? defaultAvatar,
@@ -111,6 +140,18 @@ export default function UserSettingsScreen({
   const [form, setForm] = useState<SettingsFormState>(() =>
     getSettingsFormFromUser(currentUser, defaultAvatar)
   );
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const [phoneVerificationStep, setPhoneVerificationStep] =
+    useState<PhoneVerificationStep>("phone");
+  const [pendingPhone, setPendingPhone] = useState("");
+  const [phoneVerificationCode, setPhoneVerificationCode] = useState("");
+  const [isPhoneVerificationSubmitting, setIsPhoneVerificationSubmitting] =
+    useState(false);
+  const [phoneVerificationError, setPhoneVerificationError] = useState("");
+  const [phoneVerificationResultStatus, setPhoneVerificationResultStatus] =
+    useState<PhoneVerificationResultStatus>("idle");
+  const [phoneVerificationResultMessage, setPhoneVerificationResultMessage] =
+    useState("");
 
   useEffect(() => {
     const syncTimer = window.setTimeout(() => {
@@ -172,6 +213,133 @@ export default function UserSettingsScreen({
     };
 
     reader.readAsDataURL(file);
+  };
+
+  const openPhoneVerification = () => {
+    setPendingPhone(form.phone);
+    setPhoneVerificationCode("");
+    setPhoneVerificationStep("phone");
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+    setIsPhoneModalOpen(true);
+  };
+
+  const closePhoneVerification = () => {
+    if (isPhoneVerificationSubmitting) return;
+
+    setIsPhoneModalOpen(false);
+    setPhoneVerificationCode("");
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+  };
+
+  const backToPhoneStep = () => {
+    if (isPhoneVerificationSubmitting) return;
+
+    setPhoneVerificationStep("phone");
+    setPhoneVerificationCode("");
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+  };
+
+  const handlePendingPhoneChange = (value: string) => {
+    setPendingPhone(sanitizePhoneNumber(value));
+    setPhoneVerificationError("");
+    setPhoneVerificationResultStatus("idle");
+    setPhoneVerificationResultMessage("");
+  };
+
+  const requestPhoneVerificationCode = async () => {
+    if (!accessToken) {
+      setPhoneVerificationError("نشست کاربری پیدا نشد. لطفاً دوباره وارد شوید.");
+      return;
+    }
+
+    const currentPhone = toLocalIranMobileNumber(currentUser.phone);
+
+    if (!isValidIranMobileNumber(pendingPhone)) {
+      setPhoneVerificationError("شماره موبایل معتبر نیست.");
+      return;
+    }
+
+    if (pendingPhone === currentPhone) {
+      setPhoneVerificationError("شماره جدید باید با شماره فعلی متفاوت باشد.");
+      return;
+    }
+
+    try {
+      setIsPhoneVerificationSubmitting(true);
+      setPhoneVerificationError("");
+      setPhoneVerificationResultStatus("idle");
+      setPhoneVerificationResultMessage("");
+
+      await requestPublicPhoneChangeOtp({
+        accessToken,
+        newPhone: pendingPhone,
+      });
+
+      setPhoneVerificationCode("");
+      setPhoneVerificationStep("verification");
+    } catch (error) {
+      setPhoneVerificationError(
+        getAuthErrorMessage(error, {
+          action: "changePhone",
+          role,
+        })
+      );
+    } finally {
+      setIsPhoneVerificationSubmitting(false);
+    }
+  };
+
+  const verifyPhoneVerificationCode = async () => {
+    if (!accessToken) {
+      setPhoneVerificationError("نشست کاربری پیدا نشد. لطفاً دوباره وارد شوید.");
+      return;
+    }
+
+    const code = phoneVerificationCode.trim();
+
+    if (!/^\d{4,6}$/.test(code)) {
+      setPhoneVerificationError("کد تایید باید بین ۴ تا ۶ رقم باشد.");
+      return;
+    }
+
+    try {
+      setIsPhoneVerificationSubmitting(true);
+      setPhoneVerificationError("");
+      setPhoneVerificationResultStatus("idle");
+
+      const session = await verifyPublicPhoneChange({
+        accessToken,
+        newPhone: pendingPhone,
+        code,
+      });
+      const nextPhone = toLocalIranMobileNumber(session.user.phone);
+
+      setSession(session);
+      setForm((prev) => ({
+        ...prev,
+        phone: nextPhone,
+      }));
+      setIsSaved(true);
+      setPhoneVerificationResultStatus("success");
+      setPhoneVerificationResultMessage("شماره موبایل با موفقیت تایید و ثبت شد.");
+    } catch (error) {
+      const message = getAuthErrorMessage(error, {
+        action: "changePhone",
+        role,
+      });
+
+      setPhoneVerificationResultStatus("error");
+      setPhoneVerificationResultMessage(message);
+      setPhoneVerificationError(message);
+    } finally {
+      setIsPhoneVerificationSubmitting(false);
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -388,14 +556,26 @@ export default function UserSettingsScreen({
               placeholder="ایکس"
             />
 
-            <ProfileField
-              label="شماره تلفن"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="09123456789"
-              inputMode="tel"
-            />
+            <div className="block">
+              <span className="mt-4 block text-right text-md font-bold text-gray-900">
+                شماره تلفن
+              </span>
+
+              <button
+                type="button"
+                onClick={openPhoneVerification}
+                className="relative mt-1 h-10 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 pr-4 pl-12 text-right text-sm text-gray-800 outline-none transition hover:bg-[#F2CDB5]/70 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
+                title="برای تغییر شماره موبایل کلیک کنید."
+              >
+                <span dir="ltr" className="block text-right">
+                  {form.phone || "09123456789"}
+                </span>
+                <Pencil
+                  size={19}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-950"
+                />
+              </button>
+            </div>
 
             <ProfileField
               label="نام کاربری"
@@ -485,6 +665,34 @@ export default function UserSettingsScreen({
           </div>
         </form>
       </div>
+
+      <PhoneVerificationGlassBox
+        isOpen={isPhoneModalOpen}
+        step={phoneVerificationStep}
+        title="ویرایش شماره موبایل"
+        description={
+          phoneVerificationStep === "phone"
+            ? "شماره موبایل جدید را وارد کنید تا کد تایید برایتان ارسال شود."
+            : "کد تایید ارسال‌شده به شماره جدید را وارد کنید."
+        }
+        phone={pendingPhone}
+        code={phoneVerificationCode}
+        isSubmitting={isPhoneVerificationSubmitting}
+        errorMessage={phoneVerificationError}
+        resultStatus={phoneVerificationResultStatus}
+        resultMessage={phoneVerificationResultMessage}
+        resultAutoCloseMs={2200}
+        phoneLabel="شماره موبایل جدید"
+        codeLabel="کد تایید"
+        requestCodeText="دریافت کد تایید"
+        verifyCodeText="تایید شماره"
+        onPhoneChange={handlePendingPhoneChange}
+        onCodeChange={setPhoneVerificationCode}
+        onRequestCode={requestPhoneVerificationCode}
+        onVerifyCode={verifyPhoneVerificationCode}
+        onBackToPhone={backToPhoneStep}
+        onClose={closePhoneVerification}
+      />
     </section>
   );
 }
