@@ -32,11 +32,31 @@ type SupportTicketScreenProps = {
 };
 
 const faqItems = [
-  "چطور می‌توانم وضعیت سفارش را پیگیری کنم؟",
-  "چطور اطلاعات حساب کاربری را تغییر بدهم؟",
-  "اگر پرداخت ناموفق بود چه کار کنم؟",
-  "چطور با پشتیبانی درباره سفارش صحبت کنم؟",
-  "چه زمانی پاسخ تیکت را دریافت می‌کنم؟",
+  {
+    question: "چطور می‌توانم وضعیت سفارش را پیگیری کنم؟",
+    answer:
+      "از بخش تاریخچه سفارشات می‌توانی آخرین وضعیت سفارش، زمان ثبت و جزئیات آن را ببینی. اگر وضعیت سفارش برای مدت طولانی تغییر نکرد، شماره سفارش را داخل تیکت بنویس تا دقیق‌تر بررسی شود.",
+  },
+  {
+    question: "چطور اطلاعات حساب کاربری را تغییر بدهم؟",
+    answer:
+      "از منوی تنظیمات حساب کاربری می‌توانی اطلاعات پروفایل، نام، تصویر و بعضی جزئیات حساب را ویرایش کنی. برای تغییر شماره موبایل باید مراحل تایید شماره جدید را کامل انجام بدهی.",
+  },
+  {
+    question: "اگر پرداخت ناموفق بود چه کار کنم؟",
+    answer:
+      "اول وضعیت حساب بانکی‌ات را بررسی کن؛ معمولاً مبلغ پرداخت ناموفق به صورت خودکار برمی‌گردد. اگر مبلغ کم شده ولی سفارش ثبت نشده، زمان پرداخت و جزئیات سفارش را برای پشتیبانی بفرست.",
+  },
+  {
+    question: "چطور با پشتیبانی درباره سفارش صحبت کنم؟",
+    answer:
+      "در فرم بالای همین صفحه، موضوع را کوتاه و واضح بنویس و در شرح مشکل، جزئیات سفارش، زمان اتفاق و هر اطلاعات مهم دیگری را وارد کن تا تیم پشتیبانی سریع‌تر راهنمایی‌ات کند.",
+  },
+  {
+    question: "چه زمانی پاسخ تیکت را دریافت می‌کنم؟",
+    answer:
+      "تیکت‌ها معمولاً در ساعات پاسخگویی بررسی می‌شوند. اگر تیکتت پاسخ گرفته باشد، در بخش تیکت‌های من زیر همان تیکت، پاسخ پشتیبانی نمایش داده می‌شود.",
+  },
 ];
 
 export default function SupportTicketScreen({ role }: SupportTicketScreenProps) {
@@ -135,8 +155,15 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
   return (
     <section className="h-full overflow-y-auto bg-white px-4 py-5 text-right sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="inline-flex w-fit items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-center gap-3 lg:order-1">
+            <Headphones className="h-9 w-9 shrink-0 text-[#F97316]" />
+            <h1 className="text-2xl font-extrabold text-gray-950 sm:text-3xl">
+              ما اینجاییم تا بهت کمک کنیم.
+            </h1>
+          </div>
+
+          <div className="inline-flex w-fit items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm lg:order-2 lg:self-start">
             <div className="relative h-14 w-14 overflow-hidden rounded-full bg-[#FFF1E8]">
               <Image
                 src={profile.avatar}
@@ -151,13 +178,6 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
               <p className="text-sm text-gray-500">{profile.label}</p>
               <h2 className="text-base font-bold text-gray-900">{profile.name}</h2>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Headphones className="h-9 w-9 text-[#F97316]" />
-            <h1 className="text-2xl font-extrabold text-gray-950 sm:text-3xl">
-              ما اینجاییم تا بهت کمک کنیم.
-            </h1>
           </div>
         </div>
 
@@ -236,11 +256,11 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
             </h2>
 
             <div className="mt-3 divide-y divide-gray-300">
-              {faqItems.map((question, index) => {
+              {faqItems.map((item, index) => {
                 const isOpen = openFaqIndex === index;
 
                 return (
-                  <div key={question}>
+                  <div key={item.question}>
                     <button
                       type="button"
                       onClick={() => setOpenFaqIndex(isOpen ? null : index)}
@@ -253,12 +273,12 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
                           isOpen ? "rotate-180" : ""
                         }`}
                       />
-                      <span>{question}</span>
+                      <span>{item.question}</span>
                     </button>
 
                     {isOpen && (
                       <p className="pb-4 pr-8 text-sm leading-7 text-gray-500">
-                        از همین صفحه تیکت ثبت کن تا تیم پشتیبانی موضوع را بررسی کند و پاسخ مناسب بدهد.
+                        {item.answer}
                       </p>
                     )}
                   </div>
