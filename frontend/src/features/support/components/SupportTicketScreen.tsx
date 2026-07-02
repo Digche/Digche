@@ -86,26 +86,53 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
     };
   }, [currentUser, role]);
 
-  const loadMyTickets = useCallback(async () => {
-    setIsLoadingTickets(true);
-    setTicketsErrorMessage("");
+  const loadMyTickets = useCallback(
+    async (options: { silent?: boolean } = {}) => {
+      if (!options.silent) {
+        setIsLoadingTickets(true);
+      }
 
-    try {
-      const response = await getMySupportTickets();
-      setTickets(response.tickets ?? []);
-    } catch (error) {
-      setTicketsErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "دریافت تیکت‌های شما ناموفق بود."
-      );
-    } finally {
-      setIsLoadingTickets(false);
-    }
-  }, []);
+      setTicketsErrorMessage("");
+
+      try {
+        const response = await getMySupportTickets();
+        setTickets(response.tickets ?? []);
+      } catch (error) {
+        setTicketsErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "دریافت تیکت‌های شما ناموفق بود."
+        );
+      } finally {
+        if (!options.silent) {
+          setIsLoadingTickets(false);
+        }
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     void loadMyTickets();
+
+    const intervalId = window.setInterval(() => {
+      void loadMyTickets({ silent: true });
+    }, 3000);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        void loadMyTickets({ silent: true });
+      }
+    };
+
+    window.addEventListener("focus", handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [loadMyTickets]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -141,6 +168,7 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
 
       setTickets((currentTickets) => [response.ticket, ...currentTickets]);
       setOpenTicketId(response.ticket.id ?? null);
+      void loadMyTickets({ silent: true });
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -246,7 +274,7 @@ export default function SupportTicketScreen({ role }: SupportTicketScreenProps) 
           onToggleTicket={(ticketId) =>
             setOpenTicketId((currentId) => (currentId === ticketId ? null : ticketId))
           }
-          onRetry={loadMyTickets}
+
         />
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -310,7 +338,7 @@ type MyTicketsSectionProps = {
   isLoading: boolean;
   errorMessage: string;
   onToggleTicket: (ticketId: string) => void;
-  onRetry: () => void;
+
 };
 
 function MyTicketsSection({
@@ -319,19 +347,10 @@ function MyTicketsSection({
   isLoading,
   errorMessage,
   onToggleTicket,
-  onRetry,
 }: MyTicketsSectionProps) {
   return (
     <div className="rounded-[1.4rem] bg-[#FFF1E8] p-5 sm:p-6">
-      <div className="flex flex-row-reverse items-center justify-between gap-4 border-b border-gray-300 pb-3">
-        <button
-          type="button"
-          onClick={onRetry}
-          className="rounded-full bg-white px-4 py-2 text-xs font-bold text-[#F97316] transition hover:bg-orange-50"
-        >
-          بروزرسانی
-        </button>
-
+      <div className="flex items-center justify-start border-b border-gray-300 pb-3">
         <h2 className="text-xl font-extrabold text-gray-950">تیکت‌های من</h2>
       </div>
 
@@ -342,9 +361,7 @@ function MyTicketsSection({
       {!isLoading && errorMessage && (
         <div className="mt-4 flex items-center justify-between gap-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
           <span>{errorMessage}</span>
-          <button type="button" onClick={onRetry} className="font-bold">
-            تلاش دوباره
-          </button>
+
         </div>
       )}
 

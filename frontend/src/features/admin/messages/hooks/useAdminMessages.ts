@@ -21,36 +21,62 @@ export function useAdminMessages() {
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  const loadMessages = useCallback(async () => {
-    setIsLoading(true);
-    setLoadError("");
+  const loadMessages = useCallback(
+    async (options: { silent?: boolean } = {}) => {
+      if (!options.silent) {
+        setIsLoading(true);
+      }
 
-    try {
-      const response = await getAdminSupportTickets();
-      const mappedMessages = (response.tickets ?? []).map(mapTicketToMessage);
+      try {
+        const response = await getAdminSupportTickets();
+        const mappedMessages = (response.tickets ?? []).map(mapTicketToMessage);
 
-      setMessages(mappedMessages);
+        setMessages(mappedMessages);
+        setLoadError("");
 
-      setSelectedMessageId((currentId) => {
-        if (currentId && mappedMessages.some((message) => message.id === currentId)) {
-          return currentId;
+        setSelectedMessageId((currentId) => {
+          if (currentId && mappedMessages.some((message) => message.id === currentId)) {
+            return currentId;
+          }
+
+          return null;
+        });
+      } catch (error) {
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "دریافت پیام‌های پشتیبانی ناموفق بود."
+        );
+      } finally {
+        if (!options.silent) {
+          setIsLoading(false);
         }
-
-        return null;
-      });
-    } catch (error) {
-      setLoadError(
-        error instanceof Error
-          ? error.message
-          : "دریافت پیام‌های پشتیبانی ناموفق بود."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     void loadMessages();
+
+    const intervalId = window.setInterval(() => {
+      void loadMessages({ silent: true });
+    }, 3000);
+
+    const handleRefresh = () => {
+      if (!document.hidden) {
+        void loadMessages({ silent: true });
+      }
+    };
+
+    window.addEventListener("focus", handleRefresh);
+    document.addEventListener("visibilitychange", handleRefresh);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleRefresh);
+      document.removeEventListener("visibilitychange", handleRefresh);
+    };
   }, [loadMessages]);
 
   const selectedMessage = useMemo(() => {
@@ -89,9 +115,7 @@ export function useAdminMessages() {
     }
 
     if (!targetMessage.isSeen && targetMessage.status === "pending") {
-      setStatusError(
-        "برای تغییر وضعیت به بررسی شده، ابتدا باید پیام را مشاهده کنید."
-      );
+      setStatusError("برای تغییر وضعیت به بررسی شده، ابتدا باید پیام را مشاهده کنید.");
       return;
     }
 
@@ -116,9 +140,7 @@ export function useAdminMessages() {
       );
     } catch (error) {
       setStatusError(
-        error instanceof Error
-          ? error.message
-          : "تغییر وضعیت پیام ناموفق بود."
+        error instanceof Error ? error.message : "تغییر وضعیت پیام ناموفق بود."
       );
     } finally {
       setIsUpdatingStatus(false);
@@ -166,9 +188,7 @@ export function useAdminMessages() {
       setReplyText(normalizedReplyText);
       setIsReplyBoxOpen(false);
     } catch (error) {
-      setStatusError(
-        error instanceof Error ? error.message : "ارسال پاسخ ناموفق بود."
-      );
+      setStatusError(error instanceof Error ? error.message : "ارسال پاسخ ناموفق بود.");
     } finally {
       setIsSubmittingReply(false);
     }
@@ -191,7 +211,6 @@ export function useAdminMessages() {
     openReplyBox,
     closeReplyBox,
     submitReply,
-    refetchMessages: loadMessages,
   };
 }
 
@@ -224,15 +243,10 @@ function mapTicketToMessage(
 }
 
 function formatDate(value?: string) {
-  if (!value) {
-    return "تاریخ نامشخص";
-  }
+  if (!value) return "تاریخ نامشخص";
 
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "تاریخ نامشخص";
-  }
+  if (Number.isNaN(date.getTime())) return "تاریخ نامشخص";
 
   const today = new Date();
   const isToday =
@@ -240,9 +254,7 @@ function formatDate(value?: string) {
     date.getMonth() === today.getMonth() &&
     date.getDate() === today.getDate();
 
-  if (isToday) {
-    return "امروز";
-  }
+  if (isToday) return "امروز";
 
   return new Intl.DateTimeFormat("fa-IR", {
     year: "numeric",
@@ -252,15 +264,10 @@ function formatDate(value?: string) {
 }
 
 function formatTime(value?: string) {
-  if (!value) {
-    return "";
-  }
+  if (!value) return "";
 
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
+  if (Number.isNaN(date.getTime())) return "";
 
   return new Intl.DateTimeFormat("fa-IR", {
     hour: "2-digit",
