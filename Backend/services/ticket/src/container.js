@@ -2,6 +2,8 @@ import { env } from "./config/env.js";
 
 import { SequelizeTicketRepository } from "./infrastructure/database/repositories/SequelizeTicketRepository.js";
 import { AuthTokenClient } from "./infrastructure/http/AuthTokenClient.js";
+import { AuthProfileClient } from "./infrastructure/http/AuthProfileClient.js";
+import { TicketProfileHydrator } from "./application/services/TicketProfileHydrator.js";
 import { CreateTicket } from "./application/use-cases/CreateTicket.js";
 import { ListTickets } from "./application/use-cases/ListTickets.js";
 import { ListMyTickets } from "./application/use-cases/ListMyTickets.js";
@@ -21,29 +23,42 @@ export function createContainer() {
     internalApiKey: env.auth.internalApiKey,
     timeoutMs: env.auth.tokenVerifyTimeoutMs
   });
+  const authProfileClient = new AuthProfileClient({
+    baseUrl: env.auth.internalBaseUrl,
+    internalApiKey: env.auth.internalApiKey,
+    timeoutMs: env.auth.tokenVerifyTimeoutMs
+  });
+  const ticketProfileHydrator = new TicketProfileHydrator({
+    authProfileClient
+  });
 
   const createTicket = new CreateTicket({
     ticketRepository
   });
 
   const listTickets = new ListTickets({
-    ticketRepository
+    ticketRepository,
+    ticketProfileHydrator
   });
 
   const listMyTickets = new ListMyTickets({
-    ticketRepository
+    ticketRepository,
+    ticketProfileHydrator
   });
 
   const getTicket = new GetTicket({
-    ticketRepository
+    ticketRepository,
+    ticketProfileHydrator
   });
 
   const markTicketReviewed = new MarkTicketReviewed({
-    ticketRepository
+    ticketRepository,
+    ticketProfileHydrator
   });
 
   const replyToTicket = new ReplyToTicket({
-    ticketRepository
+    ticketRepository,
+    ticketProfileHydrator
   });
 
   const ticketController = new TicketController({

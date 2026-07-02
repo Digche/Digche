@@ -201,12 +201,17 @@ function mapTicketToMessage(
 ): AdminSupportMessage {
   const isChef = ticket.creatorRole === "chef";
   const role = isChef ? "آشپز" : "مشتری";
-  const shortId = ticket.creatorId ? ticket.creatorId.slice(0, 8) : "ناشناس";
+  const creatorName =
+    ticket.creatorProfile?.displayName ||
+    ticket.creatorProfile?.phone ||
+    "کاربر بدون نام";
 
   return {
     id: ticket.id,
-    userFullName: `${role} ${shortId}`,
-    userAvatar: isChef ? "/images/chef.webp" : "/images/customer-avatar.webp",
+    userFullName: creatorName,
+    userAvatar:
+      ticket.creatorProfile?.photoUrl ||
+      (isChef ? "/images/chef.webp" : "/images/customer-avatar.webp"),
     role,
     subject: ticket.subject,
     date: formatDate(ticket.createdAt),
