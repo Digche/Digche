@@ -2,23 +2,41 @@ services:
   gateway:
     image: nginx:1.27-alpine
     container_name: food_gateway
+    restart: unless-stopped
     ports:
-      - "8080:80"
+      - "127.0.0.1:8081:80"
     volumes:
       - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - auth-service
-      - media-service
-      - chat-service
-      - ticket-service
+      auth-service:
+        condition: service_started
+      media-service:
+        condition: service_started
+      chat-service:
+        condition: service_started
+      ticket-service:
+        condition: service_started
+      core-service:
+        condition: service_started
     networks:
       - food_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1/health >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   auth-service:
     build:
       context: ./services/auth
       dockerfile: Dockerfile
     container_name: auth_service
+    restart: unless-stopped
     env_file:
       - ./services/auth/.env
     expose:
@@ -26,16 +44,29 @@ services:
     volumes:
       - ./docs:/docs:ro
     depends_on:
-      - auth-db
-      - auth-redis
+      auth-db:
+        condition: service_healthy
+      auth-redis:
+        condition: service_healthy
     networks:
       - food_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3001/health >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   media-service:
     build:
       context: ./services/media
       dockerfile: Dockerfile
     container_name: media_service
+    restart: unless-stopped
     env_file:
       - ./services/media/.env
     expose:
@@ -44,12 +75,23 @@ services:
       - ./docs:/docs:ro
     networks:
       - food_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3002/media/health >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   chat-service:
     build:
       context: ./services/chat
       dockerfile: Dockerfile
     container_name: chat_service
+    restart: unless-stopped
     env_file:
       - ./services/chat/.env
     expose:
@@ -57,15 +99,27 @@ services:
     volumes:
       - ./docs:/docs:ro
     depends_on:
-      - chat-db
+      chat-db:
+        condition: service_healthy
     networks:
       - food_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3003/chat/health >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   ticket-service:
     build:
       context: ./services/ticket
       dockerfile: Dockerfile
     container_name: ticket_service
+    restart: unless-stopped
     env_file:
       - ./services/ticket/.env
     expose:
@@ -73,23 +127,72 @@ services:
     volumes:
       - ./docs:/docs:ro
     depends_on:
-      - ticket-db
+      ticket-db:
+        condition: service_healthy
     networks:
       - food_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3004/tickets/health >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  core-service:
+    build:
+      context: ./services/core/FoodOrdering
+      dockerfile: Dockerfile
+    container_name: core_service
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: Host=core-db;Database=core_db;Username=core_user;Password=${CORE_DB_PASSWORD:-core_password}
+      Jwt__Secret: ${JWT_SECRET}
+      Jwt__Issuer: FoodOrdering.Auth
+      Jwt__Audience: FoodOrdering.Clients
+    expose:
+      - "80"
+    depends_on:
+      core-db:
+        condition: service_healthy
+    networks:
+      - food_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://127.0.0.1/health >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 180s
 
   auth-db:
     image: postgres:16-alpine
     container_name: auth_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: auth_db
       POSTGRES_USER: auth_user
-      POSTGRES_PASSWORD: auth_password
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-auth_password}
     expose:
       - "5432"
     volumes:
       - auth_db_data:/var/lib/postgresql/data
     networks:
       - food_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   auth-redis:
     image: redis:7-alpine
@@ -101,40 +204,82 @@ services:
       - auth_redis_data:/data
     networks:
       - food_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   chat-db:
     image: postgres:16-alpine
     container_name: chat_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: chat_db
       POSTGRES_USER: chat_user
-      POSTGRES_PASSWORD: chat_password
+      POSTGRES_PASSWORD: ${CHAT_DB_PASSWORD:-chat_password}
     expose:
       - "5432"
     volumes:
       - chat_db_data:/var/lib/postgresql/data
     networks:
       - food_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chat_user -d chat_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   ticket-db:
     image: postgres:16-alpine
     container_name: ticket_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ticket_db
       POSTGRES_USER: ticket_user
-      POSTGRES_PASSWORD: ticket_password
+      POSTGRES_PASSWORD: ${TICKET_DB_PASSWORD:-ticket_password}
     expose:
       - "5432"
     volumes:
       - ticket_db_data:/var/lib/postgresql/data
     networks:
       - food_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticket_user -d ticket_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  core-db:
+    image: postgres:16-alpine
+    container_name: core_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: core_db
+      POSTGRES_USER: core_user
+      POSTGRES_PASSWORD: ${CORE_DB_PASSWORD:-core_password}
+    expose:
+      - "5432"
+    volumes:
+      - core_db_data:/var/lib/postgresql/data
+    networks:
+      - food_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U core_user -d core_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
 volumes:
   auth_db_data:
   auth_redis_data:
   chat_db_data:
   ticket_db_data:
+  core_db_data:
 
 networks:
   food_network:

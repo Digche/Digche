@@ -7,7 +7,7 @@ public class Cart
     public DateTime CreatedAt { get; private set; }
 
     private readonly List<CartItem> _items = new();
-    public IReadOnlyCollection<CartItem> Items => _items.AsReadOnly();
+    public IReadOnlyCollection<CartItem> Items => _items;
 
     private Cart() { }
 

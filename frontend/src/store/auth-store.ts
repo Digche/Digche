@@ -56,6 +56,8 @@ type AuthStore = {
   logout: () => Promise<void>;
 };
 
+let refreshSessionPromise: Promise<PublicSessionResponse | null> | null = null;
+
 function buildDisplayName(user: PublicUser) {
   const fullName = [user.firstName, user.lastName]
     .filter(Boolean)
@@ -200,41 +202,51 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       refreshSession: async () => {
-        const refreshToken = get().refreshToken;
-
-        if (!refreshToken) {
-          get().clearSession();
-          return null;
+        if (refreshSessionPromise) {
+          return refreshSessionPromise;
         }
 
-        try {
-          set({ authStatus: "checking", authError: null });
+        refreshSessionPromise = (async () => {
+          const refreshToken = get().refreshToken;
 
-          const session = await refreshPublicSession(refreshToken);
+          if (!refreshToken) {
+            get().clearSession();
+            return null;
+          }
 
-          set({
-            currentUser: toCurrentUser(session.user),
-            accessToken: session.accessToken,
-            refreshToken: session.refreshToken,
-            authStatus: "authenticated",
-            authError: null,
-          });
+          try {
+            set({ authStatus: "checking", authError: null });
 
-          return session;
-        } catch (error) {
-          set({
-            currentUser: null,
-            accessToken: null,
-            refreshToken: null,
-            authStatus: "guest",
-            authError:
-              error instanceof Error
-                ? error.message
-                : "نشست کاربری منقضی شده است.",
-          });
+            const session = await refreshPublicSession(refreshToken);
 
-          return null;
-        }
+            set({
+              currentUser: toCurrentUser(session.user),
+              accessToken: session.accessToken,
+              refreshToken: session.refreshToken,
+              authStatus: "authenticated",
+              authError: null,
+            });
+
+            return session;
+          } catch (error) {
+            set({
+              currentUser: null,
+              accessToken: null,
+              refreshToken: null,
+              authStatus: "guest",
+              authError:
+                error instanceof Error
+                  ? error.message
+                  : "نشست کاربری منقضی شده است.",
+            });
+
+            return null;
+          } finally {
+            refreshSessionPromise = null;
+          }
+        })();
+
+        return refreshSessionPromise;
       },
 
       ensureSession: async () => {

@@ -22,6 +22,8 @@ import { ChangeAdminUserPhone } from "./application/use-cases/ChangeAdminUserPho
 import { RequestAdminPhoneChangeOtp } from "./application/use-cases/RequestAdminPhoneChangeOtp.js";
 import { VerifyAdminPhoneChangeOtp } from "./application/use-cases/VerifyAdminPhoneChangeOtp.js";
 import { ResolveActorProfiles } from "./application/use-cases/ResolveActorProfiles.js";
+import { GetInternalUserProfile } from "./application/use-cases/GetInternalUserProfile.js";
+import { VerifyAccessToken } from "./application/use-cases/VerifyAccessToken.js";
 import { ListChefs } from "./application/use-cases/ListChefs.js";
 import { SuspendChef } from "./application/use-cases/SuspendChef.js";
 import { ActivateChef } from "./application/use-cases/ActivateChef.js";
@@ -93,6 +95,7 @@ export function createContainer() {
 
   const requestPublicOtp = new RequestPublicOtp({
     userRepository,
+    chefAccountRepository,
     otpRepository,
     otpCodeGenerator,
     otpHasher,
@@ -266,6 +269,18 @@ export function createContainer() {
     adminUserRepository
   });
 
+  const getInternalUserProfile = new GetInternalUserProfile({
+    userRepository,
+    chefAccountRepository
+  });
+
+  const verifyAccessToken = new VerifyAccessToken({
+    tokenService,
+    userRepository,
+    adminUserRepository,
+    chefAccountRepository
+  });
+
   const listChefs = new ListChefs({
     chefAccountRepository
   });
@@ -312,7 +327,9 @@ export function createContainer() {
   });
 
   const internalAuthController = new InternalAuthController({
-    resolveActorProfiles
+    resolveActorProfiles,
+    getInternalUserProfile,
+    verifyAccessToken
   });
 
   const chefAdminController = new ChefAdminController({

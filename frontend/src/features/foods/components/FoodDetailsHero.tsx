@@ -17,18 +17,18 @@ import FoodDetailsActions from "./FoodDetailsActions";
 
 interface FoodDetailsHeroProps {
   food: {
-    id: number;
+    id: number | string;
     title: string;
     category: string;
     rating: number;
     remaining: string;
     chef: string;
-    chefId: number;
+    chefId: number | string;
     location: string;
     price: string;
     unit?: string;
     image: string;
-    ingredients?: string[];
+    ingredients?: string;
     description: string;
   };
   canEditFood: boolean;
@@ -91,8 +91,14 @@ function InfoPill({
   );
 }
 
-function IngredientsBox({ ingredients }: { ingredients?: string[] }) {
-  if (!ingredients || ingredients.length === 0) {
+function IngredientsBox({ ingredients }: { ingredients?: string }) {
+  const ingredientsList =
+    ingredients
+      ?.split(/[،,]/)
+      .map((ingredient) => ingredient.trim())
+      .filter(Boolean) ?? [];
+
+  if (ingredientsList.length === 0) {
     return null;
   }
 
@@ -105,7 +111,7 @@ function IngredientsBox({ ingredients }: { ingredients?: string[] }) {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {ingredients.map((ingredient) => (
+        {ingredientsList.map((ingredient) => (
           <span
             key={ingredient}
             className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm"
@@ -142,7 +148,7 @@ export default function FoodDetailsHero({
     <section
       dir="rtl"
       onClick={goToFoodDetails}
-      className={`overflow-hidden rounded-[2rem] border border-orange-100 bg-white p-4 shadow-sm sm:p-5 ${clickableClasses}`}
+      className={`overflow-hidden rounded-4xl border border-orange-100 bg-white p-4 shadow-sm sm:p-5 ${clickableClasses}`}
     >
       {/* Desktop / Tablet */}
       <div className="hidden items-stretch gap-6 lg:flex">
@@ -203,7 +209,7 @@ export default function FoodDetailsHero({
           </div>
         </div>
 
-        <div className="relative h-[390px] w-[43%] shrink-0 overflow-hidden rounded-[1.7rem] bg-[#FDF7F2]">
+        <div className="relative h-97.5 w-[43%] shrink-0 overflow-hidden rounded-[1.7rem] bg-[#FDF7F2]">
           <Image
             src={food.image}
             alt={food.title}
@@ -265,7 +271,7 @@ export default function FoodDetailsHero({
             />
           </div>
 
-          <div className="relative aspect-square w-[42%] shrink-0 overflow-hidden rounded-[1.5rem] bg-[#FDF7F2]">
+          <div className="relative aspect-square w-[42%] shrink-0 overflow-hidden rounded-3xl bg-[#FDF7F2]">
             <Image
               src={food.image}
               alt={food.title}

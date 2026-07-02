@@ -1,61 +1,65 @@
-import { ShoppingCart, User, ChevronDown } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+"use client";
 
-export default function HomeHeader()
-{
+import { ShoppingCart, User } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useAuthStore } from "@/store/auth-store";
+
+export default function HomeHeader() {
+  const currentUser = useAuthStore((state) => state.currentUser);
+
+  const profileHref =
+    currentUser?.role === "chef"
+      ? "/chef"
+      : currentUser?.role === "customer"
+        ? "/customer"
+        : "/auth";
+
   return (
-    <header className="w-[90%] mx-auto bg-[#FFF9F4]  py-3 px-6 md:px-12">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        
-        {/* بخش سمت راست: لوگو و شعار */}
-        <div className="flex flex-col  ">
+    <header className="mx-auto w-[90%] bg-[#FFF9F4] px-6 py-3 md:px-12">
+      <div className="mx-auto flex max-w-7xl items-center justify-between">
+        <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <Image
               className="h-18 w-20 object-cover"
-              src={"/icons/Logo.svg"}
+              src="/icons/Logo.svg"
               alt="لوگو دیگچه"
               width={250}
               height={250}
             />
-
           </div>
-          <p className="text-[13px] text-black mt-[-10] mr-16 font-medium">
+
+          <p className="mr-16 mt-[-10px] text-[13px] font-medium text-black">
             طعم اصیل خانگی...!
           </p>
         </div>
 
-        {/* بخش سمت چپ: سبد خرید و پروفایل */}
         <div className="flex items-center gap-4">
-
-            {/* پروفایل کاربر */}
-          <div className="flex items-center gap-1 cursor-pointer group">
-
-          </div>
-
-                    <Link
-          href="/chef"
-          className="text-gray-700 hover:text-orange-600 transition-colors">
-            <User size={26} strokeWidth={1.5} className="text-gray-700 group-hover:text-orange-600" />
+          <Link
+            href={profileHref}
+            className="group text-gray-700 transition-colors hover:text-orange-600"
+            aria-label="پروفایل کاربر"
+          >
+            <User
+              size={26}
+              strokeWidth={1.5}
+              className="text-gray-700 transition-colors group-hover:text-orange-600"
+            />
           </Link>
 
-          {/* جداکننده عمودی */}
-          <div className="h-6 w-[1px] bg-gray-300"></div>
-          
-          
+          <div className="h-6 w-px bg-gray-300" />
+
           <Link
-          href="/cart"
-          className="text-gray-700 hover:text-orange-600 transition-colors">
+            href="/cart"
+            className="text-gray-700 transition-colors hover:text-orange-600"
+            aria-label="سبد خرید"
+          >
             <ShoppingCart size={26} strokeWidth={1.5} />
           </Link>
         </div>
-
-
       </div>
 
-      <div className="w-full h-[1px] mt-2.5 bg-gray-800"></div>
-
+      <div className="mt-2.5 h-px w-full bg-gray-800" />
     </header>
   );
-};
-
+}

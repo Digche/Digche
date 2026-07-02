@@ -1,6 +1,7 @@
 using FoodOrdering.Core.Domain.Entities;
 
-namespace FoodOrdering.Core.Domain.Repositories;
+namespace FoodOrdering.Core.Domain.Interfaces;
+
 
 public interface IDishRepository
 {
@@ -10,4 +11,5 @@ public interface IDishRepository
     Task AddAsync(Dish dish, CancellationToken cancellation = default);
     Task UpdateAsync(Dish dish, CancellationToken cancellation = default);
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellation = default);
+    Task DeleteAsync(Dish dish, CancellationToken cancellation = default);
 }

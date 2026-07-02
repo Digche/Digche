@@ -10,4 +10,6 @@ COPY src ./src
 
 EXPOSE 3002
 
+USER node
+
 CMD ["npm", "start"]

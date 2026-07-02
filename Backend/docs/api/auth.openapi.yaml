@@ -86,7 +86,8 @@ paths:
       summary: Verify OTP for public login or registration
       description: |
         If the user already has the selected role and completed profile, a public session is returned.
-        If registration is required, a temporary registrationToken is returned for completing registration.
+        If registration is required, a temporary registrationToken is returned.
+        registrationMode is complete_profile for a new/incomplete profile and add_role when an existing completed user is adding a new role.
       requestBody:
         required: true
         content:
@@ -159,6 +160,9 @@ paths:
                   firstName: "Reza"
                   lastName: "Chef"
                   username: "reza_chef"
+              addRole:
+                value:
+                  registrationToken: "registration_token_here"
       responses:
         "201":
           description: Registration completed and public session created
@@ -1104,6 +1108,42 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /internal/auth/users/{userId}:
+    get:
+      tags:
+        - Internal
+      summary: Get full user profile for internal services
+      description: Internal endpoint used by backend services to fetch a user's full auth profile. Requires x-internal-api-key and is not exposed through the public gateway.
+      parameters:
+        - in: header
+          name: x-internal-api-key
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          description: User id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Full user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/InternalUserProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1187,9 +1227,6 @@ components:
       type: object
       required:
         - registrationToken
-        - firstName
-        - lastName
-        - username
       properties:
         registrationToken:
           type: string
@@ -1360,6 +1397,12 @@ components:
         requiresRegistration:
           type: boolean
           example: true
+        registrationMode:
+          type: string
+          enum:
+            - complete_profile
+            - add_role
+          example: complete_profile
         registrationToken:
           type: string
           example: "registration_token_here"
@@ -1374,6 +1417,29 @@ components:
           example: client
         flow:
           $ref: "#/components/schemas/PublicAuthFlow"
+        existingUser:
+          type: object
+          nullable: true
+          properties:
+            firstName:
+              type: string
+              nullable: true
+              example: Ali
+            lastName:
+              type: string
+              nullable: true
+              example: Ahmadi
+            username:
+              type: string
+              nullable: true
+              example: ali_ahmadi
+            roles:
+              type: array
+              items:
+                type: string
+                enum:
+                  - client
+                  - chef
 
     PublicUser:
       type: object
@@ -1419,6 +1485,81 @@ components:
           properties:
             status:
               $ref: "#/components/schemas/ChefAccountStatus"
+
+    InternalUserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phone:
+          type: string
+          example: "+989121234567"
+        firstName:
+          type: string
+          nullable: true
+          example: "Ali"
+        lastName:
+          type: string
+          nullable: true
+          example: "Ahmadi"
+        username:
+          type: string
+          nullable: true
+          example: "ali_ahmadi"
+        displayName:
+          type: string
+          nullable: true
+          example: "Ali Ahmadi"
+        photoUrl:
+          type: string
+          nullable: true
+          example: "https://cdn.example.com/users/user-1/profile.jpg"
+        address:
+          type: string
+          nullable: true
+          example: "Tehran, Vanak Square"
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+              - client
+              - chef
+        hasCompletedProfile:
+          type: boolean
+          example: true
+        tokenVersion:
+          type: integer
+          example: 2
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        chef:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            userId:
+              type: string
+              format: uuid
+            status:
+              $ref: "#/components/schemas/ChefAccountStatus"
+            createdAt:
+              type: string
+              format: date-time
+              nullable: true
+            updatedAt:
+              type: string
+              format: date-time
+              nullable: true
 
     ChefAccountStatus:
       type: string

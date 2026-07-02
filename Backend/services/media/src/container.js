@@ -1,5 +1,6 @@
 import { env } from "./config/env.js";
 import { ArvanStorageService } from "./infrastructure/storage/ArvanStorageService.js";
+import { AuthTokenClient } from "./infrastructure/http/AuthTokenClient.js";
 import { CreateImageUploadPresign } from "./application/use-cases/CreateImageUploadPresign.js";
 import { MediaController } from "./interfaces/http/controllers/MediaController.js";
 import {
@@ -8,6 +9,12 @@ import {
 } from "./interfaces/http/middlewares/authMiddleware.js";
 
 export function createContainer() {
+  const authTokenClient = new AuthTokenClient({
+    baseUrl: env.auth.internalBaseUrl,
+    internalApiKey: env.auth.internalApiKey,
+    timeoutMs: env.auth.tokenVerifyTimeoutMs
+  });
+
   const storageService = new ArvanStorageService({
     region: env.arvan.region,
     endpoint: env.arvan.endpoint,
@@ -33,7 +40,7 @@ export function createContainer() {
   return {
     mediaController,
     authMiddleware: createAuthMiddleware({
-      jwtSecret: env.jwt.secret
+      authTokenClient
     }),
     internalAuthMiddleware: createInternalAuthMiddleware({
       internalApiKey: env.internalApiKey

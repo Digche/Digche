@@ -9,6 +9,10 @@ export class Ticket {
     description,
     status = TICKET_STATUSES.UNREVIEWED,
     reviewedAt = null,
+    adminReplyText = null,
+    repliedByAdminId = null,
+    repliedByAdminRole = null,
+    repliedAt = null,
     createdAt = null,
     updatedAt = null
   }) {
@@ -35,6 +39,10 @@ export class Ticket {
     this.description = description;
     this.status = status;
     this.reviewedAt = reviewedAt;
+    this.adminReplyText = adminReplyText;
+    this.repliedByAdminId = repliedByAdminId;
+    this.repliedByAdminRole = repliedByAdminRole;
+    this.repliedAt = repliedAt;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -46,6 +54,29 @@ export class Ticket {
 
     this.status = TICKET_STATUSES.REVIEWED;
     this.reviewedAt = reviewedAt;
+
+    return true;
+  }
+
+  reply({ text, adminId, adminRole }, repliedAt = new Date()) {
+    if (!text) {
+      return false;
+    }
+
+    if (!adminId) {
+      return false;
+    }
+
+    if (!adminRole) {
+      return false;
+    }
+
+    this.adminReplyText = text;
+    this.repliedByAdminId = adminId;
+    this.repliedByAdminRole = adminRole;
+    this.repliedAt = repliedAt;
+    this.status = TICKET_STATUSES.REVIEWED;
+    this.reviewedAt = this.reviewedAt || repliedAt;
 
     return true;
   }

@@ -2,20 +2,20 @@ import { verifyChatAccessToken } from "../middlewares/authMiddleware.js";
 
 export class ChatWebSocketController {
   constructor({
-    jwtSecret,
+    authTokenClient,
     realtimeHub,
     conversationRepository,
     sendMessage,
     markConversationRead
   }) {
-    this.jwtSecret = jwtSecret;
+    this.authTokenClient = authTokenClient;
     this.realtimeHub = realtimeHub;
     this.conversationRepository = conversationRepository;
     this.sendMessage = sendMessage;
     this.markConversationRead = markConversationRead;
   }
 
-  handle = (connectionOrSocket, request) => {
+  handle = async (connectionOrSocket, request) => {
     const socket = connectionOrSocket.socket || connectionOrSocket;
     const token = request.query?.token;
 
@@ -24,8 +24,9 @@ export class ChatWebSocketController {
     try {
       actor = verifyChatAccessToken({
         token,
-        jwtSecret: this.jwtSecret
+        authTokenClient: this.authTokenClient
       });
+      actor = await actor;
     } catch (error) {
       socket.close(1008, "Unauthorized");
       return;

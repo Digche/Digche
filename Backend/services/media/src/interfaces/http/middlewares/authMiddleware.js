@@ -1,12 +1,11 @@
-import jwt from "jsonwebtoken";
 import { extractBearerToken } from "./extractBearerToken.js";
 
-export function createAuthMiddleware({ jwtSecret }) {
-  if (!jwtSecret) {
-    throw new Error("JWT_SECRET is required");
+export function createAuthMiddleware({ authTokenClient }) {
+  if (!authTokenClient) {
+    throw new Error("authTokenClient is required");
   }
 
-  return function authMiddleware(req, res, next) {
+  return async function authMiddleware(req, res, next) {
     try {
       const token = extractBearerToken(req);
 
@@ -19,14 +18,16 @@ export function createAuthMiddleware({ jwtSecret }) {
         });
       }
 
-      req.auth = jwt.verify(token, jwtSecret);
+      req.auth = await authTokenClient.verify(token);
 
       return next();
     } catch (error) {
-      return res.status(401).json({
+      const statusCode = error.statusCode === 403 ? 403 : 401;
+
+      return res.status(statusCode).json({
         error: {
-          code: "UNAUTHORIZED",
-          message: "Invalid or expired access token"
+          code: error.code || (statusCode === 403 ? "FORBIDDEN" : "UNAUTHORIZED"),
+          message: error.message || "Invalid or expired access token"
         }
       });
     }

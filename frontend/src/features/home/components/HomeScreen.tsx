@@ -1,31 +1,67 @@
-import CategorySection from "./CategorySection";
+"use client";
+
+import { useEffect } from "react";
 import HomeFooter from "./HomeFooter";
 import HomeHeader from "./HomeHeader";
 import FoodScroll from "./FoodScroll";
-import ProvinceCityDropdown from "./ProvinceCityDropdown";
-import SearchBox from "./SearchBox";
+import ProvinceCityDropdown, {
+  type ProvinceCityValue,
+} from "@/shared/location/ProvinceCityDropdown";
+import CategorySection from "@/features/categories/components/CategorySection";
+import { useAuthStore } from "@/store/auth-store";
+import { useLocationStore } from "@/store/location-store";
+import { getProvinceCityFromAddress } from "@/shared/location/location-text";
 
 export default function HomeScreen() {
-    return (
-      <div className="bg-[#FFF9F4]">
-          <HomeHeader/>
+  const currentUser = useAuthStore((state) => state.currentUser);
 
-          <div className="flex flex-col gap-8 items-center py-5">
-            <ProvinceCityDropdown />
-            {/* <SearchBox /> */}
-          </div>
+  const selectedLocation = useLocationStore((state) => state.selectedLocation);
+  const setSelectedLocation = useLocationStore(
+    (state) => state.setSelectedLocation
+  );
 
+  useEffect(() => {
+    const userAddress = currentUser?.address ?? currentUser?.location;
 
-          <div className="w-[90%] mx-auto h-[1px] mt-2.5 bg-[#D9D9D9]"></div>
+    if (!userAddress) return;
 
-          <CategorySection/>
-          
-          <div className="w-[90%] mx-auto h-[1px] mt-2.5 bg-[#D9D9D9]"></div>
+    const locationFromUser = getProvinceCityFromAddress(userAddress);
 
-          <FoodScroll/>
+    if (!locationFromUser.province || !locationFromUser.city) return;
 
-          <HomeFooter/>
+    setSelectedLocation(locationFromUser);
+  }, [currentUser?.address, currentUser?.location, setSelectedLocation]);
+
+  const handleLocationChange = (value: ProvinceCityValue) => {
+    setSelectedLocation(value);
+  };
+
+  return (
+    <div className="bg-[#FFF9F4]">
+      <HomeHeader />
+
+      <div className="flex flex-col items-center gap-8 py-5">
+        <ProvinceCityDropdown
+          value={selectedLocation}
+          onChange={handleLocationChange}
+          placeholder="انتخاب شهر برای نمایش غذاها"
+          className="max-w-xs"
+        />
+
+        <p className="-mt-5 text-xs text-gray-500">
+          این انتخاب فقط برای نمایش غذاهاست. آدرس تحویل از بخش آدرس‌های من تغییر می‌کند.
+        </p>
       </div>
-    )
 
+      <div className="mx-auto mt-2.5 h-px w-[90%] bg-[#D9D9D9]" />
+
+      <CategorySection />
+
+      <div className="mx-auto mt-2.5 h-px w-[90%] bg-[#D9D9D9]" />
+
+      <FoodScroll />
+
+      <HomeFooter />
+    </div>
+  );
 }

@@ -1,0 +1,20 @@
+services:
+  auth-db:
+    environment:
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:?AUTH_DB_PASSWORD is required}
+
+  chat-db:
+    environment:
+      POSTGRES_PASSWORD: ${CHAT_DB_PASSWORD:?CHAT_DB_PASSWORD is required}
+
+  ticket-db:
+    environment:
+      POSTGRES_PASSWORD: ${TICKET_DB_PASSWORD:?TICKET_DB_PASSWORD is required}
+
+  core-db:
+    environment:
+      POSTGRES_PASSWORD: ${CORE_DB_PASSWORD:?CORE_DB_PASSWORD is required}
+
+  core-service:
+    environment:
+      ConnectionStrings__DefaultConnection: Host=core-db;Database=core_db;Username=core_user;Password=${CORE_DB_PASSWORD:?CORE_DB_PASSWORD is required}

@@ -1,10 +1,10 @@
 "use client";
 
-import { useFoodStore } from "@/store/food-store";
 import { useAuthStore } from "@/store/auth-store";
-import { getCommentsByFoodId } from "@/data/comments";
 import FoodDetailsHero from "./FoodDetailsHero";
 import FoodComments from "./FoodComments";
+import { useFoodDetail } from "../hooks/use-food-detail";
+import { useFoodComments } from "../hooks/use-food-comments";
 
 type FoodDetailsClientProps = {
   foodID: string;
@@ -13,14 +13,33 @@ type FoodDetailsClientProps = {
 export default function FoodDetailsClient({ foodID }: FoodDetailsClientProps) {
   const currentUser = useAuthStore((state) => state.currentUser);
 
-  const food = useFoodStore((state) =>
-    state.foods.find((food) => food.id === Number(foodID))
-  );
+  const {
+    data: food,
+    isLoading: isFoodLoading,
+    isError: isFoodError,
+  } = useFoodDetail(foodID);
 
-  if (!food) {
+  const {
+    data: comments = [],
+    isLoading: isCommentsLoading,
+    isError: isCommentsError,
+  } = useFoodComments(foodID);
+
+  if (isFoodLoading) {
+    return (
+      <div className="rounded-3xl border border-orange-100 bg-white p-10 text-center shadow-sm">
+        <h2 className="text-xl font-bold text-gray-800">
+          در حال دریافت اطلاعات غذا...
+        </h2>
+      </div>
+    );
+  }
+
+  if (isFoodError || !food) {
     return (
       <div className="rounded-3xl border border-orange-100 bg-white p-10 text-center shadow-sm">
         <h2 className="text-xl font-bold text-gray-800">غذا پیدا نشد</h2>
+
         <p className="mt-2 text-sm text-gray-500">
           غذای مورد نظر وجود ندارد یا حذف شده است.
         </p>
@@ -28,12 +47,11 @@ export default function FoodDetailsClient({ foodID }: FoodDetailsClientProps) {
     );
   }
 
-  const comments = getCommentsByFoodId(foodID);
-
   const canAddToCart = currentUser?.role === "customer";
 
   const canEditFood =
-    currentUser?.role === "chef" && food.chefId === currentUser.id;
+    currentUser?.role === "chef" &&
+    String(food.chefId) === String(currentUser.publicId ?? currentUser.id);
 
   return (
     <>
@@ -43,7 +61,32 @@ export default function FoodDetailsClient({ foodID }: FoodDetailsClientProps) {
         canEditFood={canEditFood}
       />
 
-      <FoodComments comments={comments} />
+      {isCommentsLoading ? (
+        <section dir="rtl" className="space-y-4">
+          <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900">
+              در حال دریافت نظر کاربران...
+            </h2>
+          </div>
+        </section>
+      ) : isCommentsError ? (
+        <section dir="rtl" className="space-y-4">
+          <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900">نظر کاربران</h2>
+
+            <p className="mt-2 text-sm text-red-500">
+              دریافت نظر کاربران ناموفق بود.
+            </p>
+          </div>
+        </section>
+      ) : (
+
+        <FoodComments
+          foodId={foodID}
+          comments={comments}
+          canComment={currentUser?.role === "customer"}
+        />
+      )}
     </>
   );
 }

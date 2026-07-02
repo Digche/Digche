@@ -10,4 +10,6 @@ COPY src ./src
 
 EXPOSE 3001
 
+USER node
+
 CMD ["sh", "-c", "npm run db:migrate && npm start"]

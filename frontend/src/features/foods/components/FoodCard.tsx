@@ -8,24 +8,10 @@ import type { MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Star, MapPin } from "lucide-react";
 import FoodCardActions from "./FoodCardActions";
-
-interface FoodItemProps {
-  id: number;
-  title: string;
-  category: string;
-  rating: number;
-  remaining: string;
-  chef: string;
-  chefId: number;
-  location: string;
-  price: string;
-  unit?: string;
-  image: string;
-  description?: string;
-}
+import type { Food } from "../types/food.types";
 
 interface FoodCardProps {
-  item: FoodItemProps;
+  item: Food;
   variant?: "customer" | "chef";
   display?: "scroll" | "grid" | "compact";
   canEditFood?: boolean;
@@ -41,6 +27,8 @@ export default function FoodCard({
   canAddToCart,
   isClickable = false,
 }: FoodCardProps) {
+  console.log("Food image:", item.image);
+
   const router = useRouter();
 
   const resolvedCanEditFood = canEditFood ?? variant === "chef";

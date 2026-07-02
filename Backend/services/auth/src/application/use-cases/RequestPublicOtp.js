@@ -3,11 +3,17 @@ import { PhoneNumber } from "../../domain/value-objects/PhoneNumber.js";
 import { OTP_PURPOSES } from "../../domain/constants/otpPurposes.js";
 import { USER_ROLES } from "../../domain/constants/roles.js";
 import { PUBLIC_AUTH_FLOWS } from "../../domain/constants/authFlows.js";
-import { AppError, TooManyRequestsError } from "../errors/AppError.js";
+import {
+  AppError,
+  ForbiddenError,
+  NotFoundError,
+  TooManyRequestsError
+} from "../errors/AppError.js";
 
 export class RequestPublicOtp {
   constructor({
     userRepository,
+    chefAccountRepository = null,
     otpRepository,
     otpCodeGenerator,
     otpHasher,
@@ -18,6 +24,7 @@ export class RequestPublicOtp {
     otpCooldownSeconds = 60
   }) {
     this.userRepository = userRepository;
+    this.chefAccountRepository = chefAccountRepository;
     this.otpRepository = otpRepository;
     this.otpCodeGenerator = otpCodeGenerator;
     this.otpHasher = otpHasher;
@@ -36,7 +43,7 @@ export class RequestPublicOtp {
       throw new AppError("Invalid public role", 400, "INVALID_PUBLIC_ROLE");
     }
 
-    await this.ensureRegistrationIsAllowed({
+    await this.ensureAuthFlowIsAllowed({
       phone: normalizedPhone,
       role,
       flow: normalizedFlow
@@ -77,13 +84,18 @@ export class RequestPublicOtp {
     };
   }
 
-  async ensureRegistrationIsAllowed({ phone, role, flow }) {
-    if (flow !== PUBLIC_AUTH_FLOWS.REGISTER) {
+  async ensureAuthFlowIsAllowed({ phone, role, flow }) {
+    const user = await this.userRepository.findByPhone(phone);
+
+    if (flow === PUBLIC_AUTH_FLOWS.REGISTER) {
+      this.ensureRegistrationIsAllowed({ user, role });
       return;
     }
 
-    const user = await this.userRepository.findByPhone(phone);
+    await this.ensureLoginIsAllowed({ user, role });
+  }
 
+  ensureRegistrationIsAllowed({ user, role }) {
     if (!user) {
       return;
     }
@@ -94,6 +106,30 @@ export class RequestPublicOtp {
         409,
         "PUBLIC_ACCOUNT_ALREADY_EXISTS"
       );
+    }
+  }
+
+  async ensureLoginIsAllowed({ user, role }) {
+    if (!user || !user.hasRole(role)) {
+      throw new NotFoundError("Public account not found");
+    }
+
+    if (!user.hasCompletedProfile()) {
+      throw new ForbiddenError("User profile is not completed");
+    }
+
+    if (role !== USER_ROLES.CHEF || !this.chefAccountRepository) {
+      return;
+    }
+
+    const chefAccount = await this.chefAccountRepository.findByUserId(user.id);
+
+    if (!chefAccount) {
+      throw new NotFoundError("Chef account not found");
+    }
+
+    if (chefAccount.isSuspended()) {
+      throw new ForbiddenError("Chef account is suspended");
     }
   }
 

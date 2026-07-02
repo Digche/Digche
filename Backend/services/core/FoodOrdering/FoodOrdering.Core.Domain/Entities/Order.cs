@@ -17,9 +17,9 @@ public class Order
     private readonly List<OrderItem> _items = new();
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
-    public ChefProfile? Chef { get; private set; } // فقط برای بارگذاری Eager
+    // public ChefProfile? Chef { get; private set; }
 
-    private Order() { } // برای EF Core
+    private Order() { }
 
     public Order(Guid customerId, Guid chefId, string deliveryAddress, decimal deliveryFee)
     {
@@ -33,7 +33,6 @@ public class Order
         TotalPrice = 0;
     }
 
-    
     public bool AddItem(Dish dish, int quantity)
     {
         if (dish == null || quantity <= 0)
@@ -51,7 +50,6 @@ public class Order
         return true;
     }
 
-    
     public bool RemoveItem(Dish dish, Guid dishId)
     {
         if (dish == null)
@@ -64,7 +62,6 @@ public class Order
         if (item == null)
             return false;
 
-        
         if (!dish.IncreaseStock(item.Quantity))
             return false;
 
@@ -73,7 +70,6 @@ public class Order
         return true;
     }
 
-    
     public bool ClearItems(Dictionary<Guid, Dish> dishDictionary)
     {
         if (dishDictionary == null)
@@ -91,7 +87,7 @@ public class Order
             }
             else
             {
-                return false; // غذایی در دیکشنری نیست
+                return false;
             }
         }
 
@@ -100,10 +96,30 @@ public class Order
         return true;
     }
 
-
-    public bool StartPreparing()
+    // ===== متد جدید برای تأیید توسط آشپز =====
+    public bool Approve()
     {
         if (Status != OrderStatus.Registered)
+            return false;
+
+        Status = OrderStatus.ChefApproved;
+        return true;
+    }
+
+    // ===== تغییر MarkAsPaid (فقط از ChefApproved مجاز است) =====
+    public bool MarkAsPaid()
+    {
+        if (Status != OrderStatus.ChefApproved)
+            return false;
+
+        Status = OrderStatus.Paid;
+        return true;
+    }
+
+    // ===== تغییر StartPreparing (فقط از Paid مجاز است) =====
+    public bool StartPreparing()
+    {
+        if (Status != OrderStatus.Paid)
             return false;
 
         Status = OrderStatus.Preparing;
@@ -134,29 +150,18 @@ public class Order
 
     public bool Cancel()
     {
-        if (Status != OrderStatus.Registered && Status != OrderStatus.Preparing)
+        if (Status != OrderStatus.Registered && Status != OrderStatus.Preparing && Status != OrderStatus.ChefApproved)
             return false;
 
         Status = OrderStatus.Cancelled;
         return true;
     }
 
-    public bool MarkAsPaid()
-    {
-        if (Status != OrderStatus.Registered && Status != OrderStatus.Preparing)
-            return false;
-
-        Status = OrderStatus.Paid;
-        return true;
-    }
-
-
     private void RecalculateTotal()
     {
         TotalPrice = _items.Sum(i => i.TotalPrice) + DeliveryFee;
     }
 
-
-    public override string ToString() => 
+    public override string ToString() =>
         $"Order {Id} - Status: {Status} - Total: {TotalPrice:C}";
 }

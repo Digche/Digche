@@ -23,7 +23,7 @@ const menuItems = [
     title: "داشبورد",
     href: "/chef",
     icon: Home,
-    exact: true
+    exact: true,
   },
   {
     title: "غذاهای من",
@@ -34,14 +34,13 @@ const menuItems = [
     title: "سفارش ها",
     href: "/chef/orders",
     icon: ClipboardList,
-    exact: true
+    exact: true,
   },
   {
     title: "تاریخچه سفارشات",
     href: "/chef/orders/history",
     icon: History,
-        exact: true
-
+    exact: true,
   },
   {
     title: "پیام ها",
@@ -66,11 +65,37 @@ export default function ChefSidebar() {
   const logout = useAuthStore((state) => state.logout);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    setIsOpen(false);
-    router.push("/");
+  const handleOpenLogoutDialog = () => {
+    setIsLogoutDialogOpen(true);
+  };
+
+  const handleCloseLogoutDialog = () => {
+    if (isLoggingOut) return;
+
+    setIsLogoutDialogOpen(false);
+  };
+
+  const handleConfirmLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+
+      setIsOpen(false);
+      setIsLogoutDialogOpen(false);
+
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "خروج از حساب ناموفق بود.");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -94,13 +119,13 @@ export default function ChefSidebar() {
       )}
 
       <aside
-        className={`fixed bottom-0 right-0 top-0 z-50 flex w-[82%] max-w-[340px] flex-col rounded-l-[2rem] bg-white px-6 py-6 shadow-xl transition-transform duration-300 md:right-6 md:top-6 md:bottom-6 md:w-[318px] md:max-w-none md:translate-x-0 md:rounded-[1.6rem] md:shadow-sm ${
+        className={`fixed bottom-0 right-0 top-0 z-50 flex w-[82%] max-w-[340px] flex-col overflow-hidden rounded-l-[2rem] bg-white px-5 py-5 shadow-xl transition-transform duration-300 md:bottom-6 md:right-6 md:top-6 md:w-[318px] md:max-w-none md:translate-x-0 md:rounded-[1.6rem] md:shadow-sm ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="mb-8 flex items-start justify-between">
+        <div className="mb-5 shrink-0 flex items-start justify-between">
           <div className="mx-auto flex flex-col items-center">
-            <Link href="/" className="relative h-28 w-32">
+            <Link href="/" className="relative h-22 w-28">
               <Image
                 src="/icons/Logo.svg"
                 alt="دیگچه"
@@ -108,10 +133,9 @@ export default function ChefSidebar() {
                 className="object-contain"
                 priority
               />
-          </Link>
-            
+            </Link>
 
-            <p className="-mt-2 text-sm text-gray-800">بازار غذای خانگی</p>
+            <p className="-mt-1 text-xs text-gray-800">بازار غذای خانگی</p>
           </div>
 
           <button
@@ -124,27 +148,27 @@ export default function ChefSidebar() {
           </button>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-3">
+        <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pl-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
 
-          const isActive = item.exact
-            ? pathname === item.href
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
-            
+            const isActive = item.exact
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center justify-between rounded-full px-5 py-4 text-sm font-medium transition ${
+                className={`flex items-center justify-between rounded-full px-4 py-3 text-sm font-medium transition ${
                   isActive
                     ? "bg-[#F5D8C6] text-gray-950"
                     : "text-gray-800 hover:bg-[#FFF9F4]"
                 }`}
               >
-                <span>{item.title}</span>
-                <Icon size={21} />
+                <span className="truncate">{item.title}</span>
+                <Icon size={20} className="shrink-0" />
               </Link>
             );
           })}
@@ -152,13 +176,72 @@ export default function ChefSidebar() {
 
         <button
           type="button"
-          onClick={handleLogout}
-          className="mt-6 flex items-center justify-between rounded-full bg-[#D97777] px-6 py-4 text-sm font-bold text-white transition hover:bg-[#cf6969]"
+          onClick={handleOpenLogoutDialog}
+          disabled={isLoggingOut}
+          className="mt-4 flex shrink-0 items-center justify-between rounded-full bg-[#D97777] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#cf6969] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <span>خروج از حساب</span>
-          <LogOut size={21} />
+          <span>{isLoggingOut ? "در حال خروج..." : "خروج از حساب"}</span>
+          <LogOut size={20} />
         </button>
       </aside>
+
+      {isLogoutDialogOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 px-4"
+          onClick={handleCloseLogoutDialog}
+        >
+          <div
+            dir="rtl"
+            onClick={(event) => event.stopPropagation()}
+            className="relative w-full max-w-sm rounded-3xl bg-white p-6 text-right shadow-2xl"
+          >
+            <button
+              type="button"
+              onClick={handleCloseLogoutDialog}
+              disabled={isLoggingOut}
+              className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-label="بستن"
+            >
+              <X size={17} />
+            </button>
+
+            <div className="flex items-center gap-3">
+
+
+              <div>
+                <h2 className="text-lg font-extrabold text-gray-900">
+                  خروج از حساب
+                </h2>
+
+              </div>
+            </div>
+
+            <p className="mt-5 text-sm leading-7 text-gray-600">
+              مطمئنی می‌خوای از حسابت خارج شی؟
+            </p>
+
+            <div dir="rtl" className="mt-6 flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={handleCloseLogoutDialog}
+                disabled={isLoggingOut}
+                className="rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-bold text-gray-700 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                انصراف
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmLogout}
+                disabled={isLoggingOut}
+                className="rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoggingOut ? "در حال خروج..." : "بله، خارج شو"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

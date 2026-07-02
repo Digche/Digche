@@ -3,14 +3,9 @@ import { API_BASE_URL } from "@/config/api";
 export type PublicAuthRole = "client" | "chef";
 export type FrontendAuthRole = "customer" | "chef";
 export type PublicAuthFlow = "login" | "register";
+export type PublicRegistrationMode = "complete_profile" | "add_role";
 
-export type ChefStatus =
-  | "active"
-  | "pending"
-  | "suspended"
-  | "rejected"
-  | "disabled"
-  | string;
+export type ChefStatus = "active" | "suspended";
 
 export type PublicUser = {
   id: string;
@@ -37,10 +32,17 @@ export type PublicOtpSentResponse = {
 
 export type RegistrationRequiredResponse = {
   requiresRegistration: true;
+  registrationMode?: PublicRegistrationMode;
   registrationToken: string;
   phone: string;
   role: PublicAuthRole;
   flow: PublicAuthFlow;
+  existingUser?: {
+    firstName: string | null;
+    lastName: string | null;
+    username: string | null;
+    roles: PublicAuthRole[];
+  };
 };
 
 export type PublicSessionResponse = {
@@ -279,9 +281,9 @@ export function verifyPublicOtp(input: {
 
 export function completePublicRegistration(input: {
   registrationToken: string;
-  firstName: string;
-  lastName: string;
-  username: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
 }) {
   return requestJson<PublicAuthSuccessResponse>("/auth/register/complete", {
     method: "POST",
