@@ -1,177 +1,179 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useMemo, useState } from "react";
-import ProvinceCityDropdown, {
-  type ProvinceCityValue,
-} from "@/shared/location/ProvinceCityDropdown";
+import { FormEvent, useEffect, useState } from "react";
+import ProvinceCityDropdown from "@/shared/location/ProvinceCityDropdown";
+import { buildFullAddress } from "@/shared/location/location-text";
 import type { CustomerAddressPayload } from "../types/customer-address.types";
+
+type AddressFormInitialValues = {
+  title?: string;
+  province?: string;
+  city?: string;
+  details?: string;
+};
 
 type AddressFormProps = {
   onSubmit: (payload: CustomerAddressPayload) => void;
   isSubmitting?: boolean;
   onCancel?: () => void;
+  initialValues?: AddressFormInitialValues;
+  lockCity?: boolean;
 };
 
-type AddressFormState = {
-  title: string;
-  province: string;
-  city: string;
-  details: string;
-};
+function normalizeTitle(title?: string) {
+  const value = String(title ?? "").trim();
+
+  if (!value || value === "آدرس فعلی") {
+    return "خانه";
+  }
+
+  return value;
+}
 
 export default function AddressForm({
   onSubmit,
   isSubmitting = false,
   onCancel,
+  initialValues,
+  lockCity = false,
 }: AddressFormProps) {
-  const [form, setForm] = useState<AddressFormState>({
-    title: "",
-    province: "",
-    city: "",
-    details: "",
-  });
+  const [title, setTitle] = useState(normalizeTitle(initialValues?.title));
+  const [province, setProvince] = useState(initialValues?.province || "");
+  const [city, setCity] = useState(initialValues?.city || "");
+  const [details, setDetails] = useState(initialValues?.details || "");
 
-  const selectedProvinceCity = useMemo<ProvinceCityValue>(
-    () => ({
-      province: form.province,
-      city: form.city,
-    }),
-    [form.province, form.city]
-  );
-
-  const isProvinceCitySelected = Boolean(form.province && form.city);
-
-  const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = event.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleProvinceCityChange = (value: ProvinceCityValue) => {
-    setForm((prev) => ({
-      ...prev,
-      province: value.province,
-      city: value.city,
-    }));
-  };
+  useEffect(() => {
+    setTitle(normalizeTitle(initialValues?.title));
+    setProvince(initialValues?.province || "");
+    setCity(initialValues?.city || "");
+    setDetails(initialValues?.details || "");
+  }, [
+    initialValues?.title,
+    initialValues?.province,
+    initialValues?.city,
+    initialValues?.details,
+  ]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const title = form.title.trim();
-    const province = form.province.trim();
-    const city = form.city.trim();
-    const details = form.details.trim();
+    const finalTitle = normalizeTitle(title);
+    const finalProvince = province.trim();
+    const finalCity = city.trim();
+    const finalDetails = details.trim();
 
-    if (!title) {
-      alert("لطفاً عنوان آدرس را وارد کنید.");
+    if (!finalProvince || !finalCity || !finalDetails) {
+      alert("لطفاً استان، شهر و جزئیات آدرس را کامل وارد کنید.");
       return;
     }
 
-    if (!province || !city) {
-      alert("لطفاً استان و شهر را انتخاب کنید.");
-      return;
-    }
-
-    if (!details) {
-      alert("لطفاً جزئیات آدرس را وارد کنید.");
-      return;
-    }
-
-    const addressLine = [province, city, details].join("، ");
-
-    onSubmit({
-      title,
-      province,
-      city,
-      details,
-      addressLine,
+    const addressLine = buildFullAddress({
+      title: finalTitle,
+      province: finalProvince,
+      city: finalCity,
+      details: finalDetails,
     });
 
-    setForm({
-      title: "",
-      province: "",
-      city: "",
-      details: "",
+    onSubmit({
+      title: finalTitle,
+      province: finalProvince,
+      city: finalCity,
+      details: finalDetails,
+      addressLine,
     });
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-orange-100 bg-[#FFF9F4] p-4"
+      className="rounded-3xl border border-orange-100 bg-[#FFF9F4] p-5 text-right"
     >
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <label className="block">
-          <span className="mb-2 block text-right text-sm font-bold text-gray-900">
+          <span className="mb-2 block text-sm font-bold text-gray-800">
             عنوان آدرس
           </span>
 
-          <input
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            placeholder="مثلاً خانه، محل کار، دانشگاه"
-            className="h-11 w-full rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 text-right text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70"
-          />
+          {lockCity ? (
+            <div className="flex h-12 w-full items-center rounded-2xl border border-[#EFC5A8] bg-white px-4 text-right text-sm font-extrabold text-gray-900">
+              {title || "خانه"}
+            </div>
+          ) : (
+            <input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              disabled={isSubmitting}
+              placeholder="خانه، محل کار..."
+              className="h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-right text-sm text-gray-800 outline-none transition focus:border-[#D48B8B] disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          )}
         </label>
 
-        <label className="block">
-          <span className="mb-2 block text-right text-sm font-bold text-gray-900">
+        <div>
+          <span className="mb-2 block text-sm font-bold text-gray-800">
             استان و شهر
           </span>
 
-          <ProvinceCityDropdown
-            value={selectedProvinceCity}
-            onChange={handleProvinceCityChange}
-            placeholder="اول استان و شهر را انتخاب کنید"
-          />
-        </label>
+          {lockCity ? (
+            <div className="rounded-2xl border border-[#EFC5A8] bg-white px-4 py-3 text-right">
+              <p className="text-xs font-bold text-[#D16565]">شهر تحویل</p>
 
-        <label className="block lg:col-span-2">
-          <span className="mb-2 block text-right text-sm font-bold text-gray-900">
-            جزئیات آدرس
-          </span>
+              <p className="mt-1 text-sm font-extrabold text-gray-900">
+                {province && city ? `${province}، ${city}` : "شهر انتخاب نشده"}
+              </p>
 
-          <textarea
-            name="details"
-            value={form.details}
-            onChange={handleChange}
-            disabled={!isProvinceCitySelected}
-            rows={3}
-            placeholder={
-              isProvinceCitySelected
-                ? "مثلاً خیابان، کوچه، پلاک، واحد..."
-                : "ابتدا استان و شهر را انتخاب کنید"
-            }
-            className="w-full resize-none rounded-xl border border-transparent bg-[#F2CDB5]/55 px-4 py-3 text-right text-sm leading-7 text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#D48B8B] focus:bg-[#F2CDB5]/70 disabled:cursor-not-allowed disabled:opacity-60"
-          />
-        </label>
+              <p className="mt-1 text-xs leading-6 text-gray-500">
+                در مرحله ثبت سفارش، استان و شهر قابل تغییر نیست. فقط جزئیات
+                آدرس را اصلاح کن.
+              </p>
+            </div>
+          ) : (
+            <ProvinceCityDropdown
+              value={{ province, city }}
+              onChange={(value) => {
+                setProvince(value.province);
+                setCity(value.city);
+              }}
+              placeholder="انتخاب استان و شهر"
+            />
+          )}
+        </div>
       </div>
 
-      <div className="mt-4 flex justify-center gap-3">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="h-10 w-36 rounded-xl bg-[#EFC5A8] text-sm font-bold text-gray-900 transition hover:bg-[#e9b892] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isSubmitting ? "در حال ثبت..." : "ثبت آدرس"}
-        </button>
+      <label className="mt-4 block">
+        <span className="mb-2 block text-sm font-bold text-gray-800">
+          جزئیات آدرس
+        </span>
 
+        <textarea
+          value={details}
+          onChange={(event) => setDetails(event.target.value)}
+          disabled={isSubmitting}
+          rows={4}
+          placeholder="خیابان، کوچه، پلاک، واحد..."
+          className="w-full resize-none rounded-2xl border border-transparent bg-white px-4 py-3 text-right text-sm leading-7 text-gray-800 outline-none transition focus:border-[#D48B8B] disabled:cursor-not-allowed disabled:opacity-60"
+        />
+      </label>
+
+      <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="h-10 w-28 rounded-xl bg-gray-100 text-sm font-bold text-gray-700 transition hover:bg-gray-200"
+            disabled={isSubmitting}
+            className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             انصراف
           </button>
         )}
+
+        <button
+          type="submit"
+          disabled={isSubmitting || !province || !city}
+          className="rounded-2xl bg-[#D48B8B] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSubmitting ? "در حال ذخیره..." : "ذخیره آدرس"}
+        </button>
       </div>
     </form>
   );

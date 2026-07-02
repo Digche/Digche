@@ -1,13 +1,9 @@
-// src/features/cart/components/CartSummary.tsx
-
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ShoppingBag, ReceiptText } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
-import { useOrderStore } from "@/store/order-store";
-import { useAuthStore } from "@/store/auth-store";
-import { useClearCart } from "@/features/cart/hooks/use-clear-cart";
 
 const toEnglishDigits = (value: string) => {
   return value
@@ -27,13 +23,9 @@ const formatPrice = (price: number) => {
 };
 
 export default function CartSummary() {
+  const router = useRouter();
+
   const items = useCartStore((state) => state.items);
-  const clearCart = useCartStore((state) => state.clearCart);
-
-  const addOrders = useOrderStore((state) => state.addOrders);
-  const currentUser = useAuthStore((state) => state.currentUser);
-
-  const clearRemoteCart = useClearCart();
 
   const summaryRef = useRef<HTMLElement | null>(null);
   const [summaryHeight, setSummaryHeight] = useState(0);
@@ -76,56 +68,10 @@ export default function CartSummary() {
     };
   }, []);
 
-  const handleCheckout = async () => {
-    if (items.length === 0 || clearRemoteCart.isPending) return;
+  const handleContinue = () => {
+    if (items.length === 0) return;
 
-    const confirmed = window.confirm(
-      "آیا از ثبت و پرداخت این سفارش مطمئن هستید؟"
-    );
-
-    if (!confirmed) return;
-
-    const hasInvalidItem = items.some((item) => !item.chefId);
-
-    if (hasInvalidItem) {
-      alert(
-        "بعضی از آیتم‌های سبد خرید اطلاعات آشپز ندارند. لطفاً سبد را خالی کنید و غذاها را دوباره اضافه کنید."
-      );
-      return;
-    }
-
-    const orderedAt = new Date().toISOString();
-
-    try {
-      await clearRemoteCart.mutateAsync(undefined);
-
-      addOrders(
-        items.map((item) => ({
-          chefId: item.chefId,
-          customerId: currentUser?.id,
-          customerName: currentUser?.name ?? "مشتری دیگچه",
-          customerPhone: currentUser?.phone,
-          foodId: item.id,
-          foodTitle: item.title,
-          foodImage: item.image,
-          quantity: item.quantity,
-          price: item.price,
-          unit: item.unit,
-          status: "preparing",
-          orderedAt,
-        }))
-      );
-
-      clearCart();
-
-      alert("سفارش شما با موفقیت ثبت شد.");
-    } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "خالی کردن سبد خرید در بک‌اند ناموفق بود."
-      );
-    }
+    router.push("/cart/checkout");
   };
 
   return (
@@ -184,14 +130,12 @@ export default function CartSummary() {
 
           <button
             type="button"
-            disabled={items.length === 0 || clearRemoteCart.isPending}
-            onClick={handleCheckout}
+            disabled={items.length === 0}
+            onClick={handleContinue}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#D48B8B] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ShoppingBag size={18} />
-            {clearRemoteCart.isPending
-              ? "در حال ثبت..."
-              : "پرداخت و ثبت سفارش"}
+            ثبت و ادامه
           </button>
         </div>
       </aside>

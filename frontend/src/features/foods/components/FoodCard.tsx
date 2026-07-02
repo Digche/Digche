@@ -202,11 +202,12 @@ export default function FoodCard({
             canAddToCart={resolvedCanAddToCart}
           />
 
-          <span className="text-left text-lg font-bold text-gray-900 min-[420px]:text-right">
+          <span dir="rtl" className="text-left text-lg font-bold text-gray-900 min-[420px]:text-right">
+                        {item.price}
+
             {item.unit && (
-              <span className="ml-1 text-sm font-normal">{item.unit}</span>
+              <span className="ml-1 text-sm font-normal">{" "}{item.unit}</span>
             )}
-            {item.price}
           </span>
         </div>
       </div>

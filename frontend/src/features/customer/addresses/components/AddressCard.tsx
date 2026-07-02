@@ -24,7 +24,7 @@ export default function CustomerAddressCard({
     <article
       className={`rounded-xl border px-5 py-4 transition ${
         isSelected
-          ? "border-[#D48B8B] bg-[#FFF9F4] shadow-sm"
+          ? "border-[#D48B8B] bg- shadow-sm"
           : "border-gray-200 bg-white hover:border-orange-100"
       }`}
     >
@@ -48,7 +48,7 @@ export default function CustomerAddressCard({
           </button>
         </div>
 
-        <div className="min-w-0 flex-1 text-right">
+        <div className="min-w-0 flex-1 text-right bg-amber-500">
           <div className="flex items-center justify-end gap-2">
             <h3 className="truncate text-sm font-extrabold text-gray-950">
               {address.title}
