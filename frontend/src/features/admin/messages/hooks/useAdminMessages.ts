@@ -29,7 +29,9 @@ export function useAdminMessages() {
 
       try {
         const response = await getAdminSupportTickets();
-        const mappedMessages = (response.tickets ?? []).map(mapTicketToMessage);
+        const mappedMessages = (response.tickets ?? []).map((ticket) =>
+          mapTicketToMessage(ticket)
+        );
 
         setMessages(mappedMessages);
         setLoadError("");
