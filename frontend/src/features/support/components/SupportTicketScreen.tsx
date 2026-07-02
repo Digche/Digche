@@ -323,7 +323,7 @@ function MyTicketsSection({
 }: MyTicketsSectionProps) {
   return (
     <div className="rounded-[1.4rem] bg-[#FFF1E8] p-5 sm:p-6">
-      <div className="flex items-center justify-between gap-4 border-b border-gray-300 pb-3">
+      <div className="flex flex-row-reverse items-center justify-between gap-4 border-b border-gray-300 pb-3">
         <button
           type="button"
           onClick={onRetry}
@@ -369,29 +369,33 @@ function MyTicketsSection({
                   className="flex w-full items-center justify-between gap-4 px-4 py-4 text-right transition hover:bg-orange-50"
                   aria-expanded={isOpen}
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF1E8] text-gray-700">
-                    <Menu size={20} />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                      <TicketStatusBadge ticket={ticket} />
-                      <h3 className="truncate text-sm font-extrabold text-gray-950">
-                        {ticket.subject}
-                      </h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF1E8] text-gray-700">
+                      <Menu size={20} />
                     </div>
 
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="text-xs text-gray-500">
                       {formatTicketDate(ticket.createdAt)}
                     </p>
                   </div>
 
-                  <ChevronDown
-                    size={18}
-                    className={`shrink-0 text-gray-500 transition ${
-                      isOpen ? "rotate-180" : ""
-                    }`}
-                  />
+                  <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <TicketStatusBadge ticket={ticket} />
+                        <h3 className="truncate text-sm font-extrabold text-gray-950">
+                          {ticket.subject}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <ChevronDown
+                      size={18}
+                      className={`shrink-0 text-gray-500 transition ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </div>
                 </button>
 
                 {isOpen && (

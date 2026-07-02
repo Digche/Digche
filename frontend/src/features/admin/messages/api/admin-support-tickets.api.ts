@@ -3,10 +3,19 @@ import { adminApiRequest } from "../../auth/services/admin-api-client";
 export type AdminTicketRole = "client" | "chef";
 export type AdminTicketStatus = "unreviewed" | "reviewed";
 
+export type AdminTicketCreatorProfile = {
+  id: string;
+  displayName?: string | null;
+  photoUrl?: string | null;
+  phone?: string | null;
+  roles?: AdminTicketRole[] | null;
+};
+
 export type AdminSupportTicket = {
   id: string;
   creatorId: string;
   creatorRole: AdminTicketRole;
+  creatorProfile?: AdminTicketCreatorProfile | null;
   subject: string;
   description: string;
   status: AdminTicketStatus;
