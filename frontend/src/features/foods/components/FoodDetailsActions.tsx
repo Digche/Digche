@@ -3,7 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Edit3, ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
+import {
+  Edit3,
+  ShoppingCart,
+  Plus,
+  Minus,
+  Trash2,
+  X,
+  MessageSquareText,
+} from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import type { Food } from "../types/food.types";
 import { useDeleteChefFood } from "@/features/chef/hooks/use-delete-chef-food";
@@ -15,6 +23,17 @@ interface FoodDetailsActionsProps {
   food: Food;
   canEditFood: boolean;
   canAddToCart: boolean;
+}
+
+function getChefChatHref(food: Food) {
+  const params = new URLSearchParams({
+    chefId: String(food.chefId),
+    chefName: food.chef || "آشپز دیگچه",
+    foodId: String(food.id),
+    foodTitle: food.title,
+  });
+
+  return `/customer/messages?${params.toString()}`;
 }
 
 export default function FoodDetailsActions({
@@ -47,6 +66,9 @@ export default function FoodDetailsActions({
   const deleteFood = useDeleteChefFood();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const chefChatHref = getChefChatHref(food);
+  const canMessageChef = canAddToCart && Boolean(food.chefId);
 
   const handleAddToCart = async () => {
     if (isCartPending) return;
@@ -173,7 +195,7 @@ export default function FoodDetailsActions({
               </p>
 
               <div
-                dir="rtl"
+                dir="ltr"
                 className="mt-6 flex items-center justify-center gap-5"
               >
                 <button
@@ -204,43 +226,67 @@ export default function FoodDetailsActions({
   if (canAddToCart) {
     if (quantity === 0) {
       return (
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={isCartPending}
-          className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#D48B8B] px-5 text-sm font-bold text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
-        >
-          <ShoppingCart size={20} />
-          {isCartPending ? "در حال افزودن..." : "افزودن به سبد خرید"}
-        </button>
+        <div className="grid w-full grid-cols-[1fr_1.35fr] gap-3">
+          {canMessageChef && (
+            <Link
+              href={chefChatHref}
+              className="flex h-14 items-center justify-center gap-2 rounded-full bg-[#FDF7F2] px-4 text-sm font-bold text-[#D16565] transition hover:bg-orange-50"
+            >
+              <MessageSquareText size={19} />
+              پیام
+            </Link>
+          )}
+
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={isCartPending}
+            className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#D48B8B] px-5 text-sm font-bold text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
+          >
+            <ShoppingCart size={20} />
+            {isCartPending ? "در حال افزودن..." : "افزودن به سبد خرید"}
+          </button>
+        </div>
       );
     }
 
     return (
-      <div className="mx-auto flex h-14 w-40 max-w-sm items-center justify-between rounded-full border border-gray-200 bg-white p-1 shadow-sm">
-        <button
-          type="button"
-          onClick={handleIncreaseQuantity}
-          disabled={isCartPending}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D48B8B] text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60"
-          aria-label="زیاد کردن تعداد"
-        >
-          <Plus size={18} />
-        </button>
+      <div className="flex w-full items-center justify-center gap-3">
+        {canMessageChef && (
+          <Link
+            href={chefChatHref}
+            className="flex h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-[#FDF7F2] px-5 text-sm font-bold text-[#D16565] transition hover:bg-orange-50"
+          >
+            <MessageSquareText size={19} />
+            پیام
+          </Link>
+        )}
 
-        <span className="min-w-8 text-center text-lg font-bold text-gray-900">
-          {quantity}
-        </span>
+        <div className="flex h-14 w-40 max-w-sm items-center justify-between rounded-full border border-gray-200 bg-white p-1 shadow-sm">
+          <button
+            type="button"
+            onClick={handleIncreaseQuantity}
+            disabled={isCartPending}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D48B8B] text-white transition hover:bg-[#c97b7b] disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="زیاد کردن تعداد"
+          >
+            <Plus size={18} />
+          </button>
 
-        <button
-          type="button"
-          onClick={handleDecreaseQuantity}
-          disabled={isCartPending}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FDF7F2] text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
-          aria-label="کم کردن تعداد"
-        >
-          <Minus size={18} />
-        </button>
+          <span className="min-w-8 text-center text-lg font-bold text-gray-900">
+            {quantity}
+          </span>
+
+          <button
+            type="button"
+            onClick={handleDecreaseQuantity}
+            disabled={isCartPending}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FDF7F2] text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label="کم کردن تعداد"
+          >
+            <Minus size={18} />
+          </button>
+        </div>
       </div>
     );
   }
