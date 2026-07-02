@@ -20,6 +20,7 @@ public class OrderRepository : IOrderRepository
     public async Task<IEnumerable<Order>> GetByCustomerIdAsync(Guid customerId, CancellationToken cancellation = default)
         => await _context.Orders
             .Where(o => o.CustomerId == customerId)
+            .Include(o => o.Items).ThenInclude(i => i.Dish)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync(cancellation);
 

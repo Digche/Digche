@@ -45,17 +45,17 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    // [HttpGet("customer")]
-    // public async Task<IActionResult> GetMyOrders()
-    // {
-    //     var query = new GetCustomerOrdersQuery();
-    //     var result = await _mediator.Send(query);
+    [HttpGet("customer")]
+    public async Task<IActionResult> GetMyOrders()
+    {
+        var query = new GetCustomerOrdersQuery();
+        var result = await _mediator.Send(query);
 
-    //     if (!result.IsSuccess)
-    //         return BadRequest(new { message = result.ErrorMessage });
+        if (!result.IsSuccess)
+            return BadRequest(new { message = result.ErrorMessage });
 
-    //     return Ok(result);
-    // }
+        return Ok(result);
+    }
 
     // [HttpGet("chef")]
     // [Authorize(Roles = "chef")]
